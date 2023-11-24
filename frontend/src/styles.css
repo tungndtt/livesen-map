@@ -1,0 +1,23 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+  margin: 0px;
+  height: 100vh;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.leaflet-div-icon {
+  background-color: #f4f4f4;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.leaflet-editing-icon {
+  background-color: #f4f4f4;
+  border-radius: 50%;
+  display: inline-block;
+}

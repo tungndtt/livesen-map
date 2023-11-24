@@ -1,0 +1,13 @@
+flask
+flask-cors
+xarray
+dask
+netCDF4
+rioxarray
+rasterio
+shapely
+psycopg2-binary
+schedule
+requests
+bcrypt
+PyJWT

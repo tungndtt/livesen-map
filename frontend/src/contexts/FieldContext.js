@@ -1,0 +1,185 @@
+import { createContext, useContext, useState, useEffect } from "react";
+import { useAuthenticationContext } from "./AuthenticationContext";
+import { useRegionInterestContext } from "./RegionInterestContext";
+import { usePeriodContext } from "./PeriodContext";
+import { useNotiContext } from "./NotiContext";
+
+const FieldContext = createContext({
+  fields: undefined,
+  registerField: (_name) => new Promise(() => {}),
+  unregisterField: () => new Promise(() => {}),
+  selectedField: undefined,
+  setSelectedField: (_selectedField) => {},
+  ndvi: undefined,
+  setNdvi: (_ndvi) => {},
+  getFieldNdvi: () => new Promise(() => {}),
+});
+
+const parseField = (field) => {
+  const {
+    id,
+    name,
+    coordinates,
+    straubing_distance: straubingDistance,
+    area,
+    ndvi_rasters: ndviRasters,
+  } = field;
+  const periodNdvi = {};
+  ndviRasters?.forEach((ndviRaster) => {
+    const [period, raster] = ndviRaster.split("_");
+    periodNdvi[period] = raster;
+  });
+
+  return {
+    id,
+    name,
+    coordinates: coordinates.map(function t(e) {
+      return e[0] instanceof Number ? { lng: e[0], lat: e[1] } : e.map(t);
+    }),
+    straubingDistance,
+    area,
+    periodNdvi,
+  };
+};
+
+export default function FieldProvider({ children }) {
+  const { authenticationToken } = useAuthenticationContext();
+  const { roi } = useRegionInterestContext();
+  const { selectedPeriod } = usePeriodContext();
+  const notify = useNotiContext();
+  const [fields, setFields] = useState(undefined);
+  const [selectedField, setSelectedField] = useState(undefined);
+  const [ndvi, setNdvi] = useState(undefined);
+  const serverUrl = process.env.REACT_APP_SERVER_URL;
+
+  useEffect(() => {
+    if (authenticationToken) {
+      fetch(`${serverUrl}/field/all`, {
+        headers: { "Auth-Token": authenticationToken },
+        method: "GET",
+      })
+        .then(async (response) => {
+          const fetchedFields = await response.json();
+          setFields(fetchedFields.map((field) => parseField(field)));
+        })
+        .catch((error) => notify({ message: error, isError: true }));
+    } else {
+      setFields(undefined);
+      setSelectedField(undefined);
+      setNdvi(undefined);
+    }
+  }, [authenticationToken]);
+
+  useEffect(() => {
+    setNdvi(undefined);
+  }, [selectedField?.id, selectedPeriod]);
+
+  const registerField = (name) => {
+    return new Promise((resolve, reject) => {
+      if (!roi || roi?.length < 3) {
+        reject("No valid region is specified");
+      }
+      fetch(`${serverUrl}/field/register`, {
+        headers: {
+          "Content-Type": "application/json",
+          "Auth-Token": authenticationToken,
+        },
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          coordinates: roi.map(({ lat, lng }) => [lng, lat]),
+        }),
+      })
+        .then(async (response) => {
+          const registeredField = await response.json();
+          if (response.ok) {
+            setFields((prevFields) => [
+              parseField(registeredField),
+              ...prevFields,
+            ]);
+            resolve("Successfully register region of interest");
+          } else reject(data);
+        })
+        .catch((error) => reject(error));
+    });
+  };
+
+  const unregisterField = () => {
+    return new Promise((resolve, reject) => {
+      fetch(`${serverUrl}/field/unregister/${selectedField.id}`, {
+        headers: { "Auth-Token": authenticationToken },
+        method: "DELETE",
+      })
+        .then(async (response) => {
+          const body = await response.json();
+          const deleteMessage = body["data"];
+          if (response.ok) {
+            setFields((prevFields) =>
+              prevFields.filter(
+                (prevField) => prevField.id !== selectedField.id
+              )
+            );
+            resolve(deleteMessage);
+          } else reject(deleteMessage);
+        })
+        .catch((error) => reject(error));
+    });
+  };
+
+  const getFieldNdvi = () => {
+    return new Promise((resolve, reject) => {
+      const field = fields.find((field) => field.id === selectedField.id);
+      if (field && selectedPeriod in field?.periodNdvi) {
+        setNdvi(field?.periodNdvi[selectedPeriod]);
+        resolve("Fetching the field ndvi raster");
+      }
+      fetch(
+        `${serverUrl}/field/process_ndvi/${selectedField.id}?period=${selectedPeriod}`,
+        {
+          headers: { "Auth-Token": authenticationToken },
+          method: "GET",
+        }
+      )
+        .then(async (response) => {
+          const body = await response.json();
+          const data = body["data"];
+          if (response.ok) {
+            const ndviRaster = data.split("_")[1];
+            setFields((prevFields) => {
+              const index = prevFields.findIndex(
+                (prevField) => prevField.id === selectedField.id
+              );
+              if (index !== -1) {
+                prevFields[index].periodNdvi[selectedPeriod] = ndviRaster;
+                return [...prevFields];
+              } else return prevFields;
+            });
+            setNdvi(ndviRaster);
+            resolve("Successfully processed. Fetching the field ndvi raster");
+          } else reject(data);
+        })
+        .catch((error) => reject(error));
+    });
+  };
+
+  return (
+    <FieldContext.Provider
+      value={{
+        fields,
+        registerField,
+        unregisterField,
+        selectedField,
+        setSelectedField,
+        ndvi,
+        setNdvi,
+        getFieldNdvi,
+      }}
+    >
+      {children}
+    </FieldContext.Provider>
+  );
+}
+
+export function useFieldContext() {
+  return useContext(FieldContext);
+}
