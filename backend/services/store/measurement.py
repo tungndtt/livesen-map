@@ -28,22 +28,19 @@ def __extract_nonempty(data):
     return cols, vals
 
 
-def insert_measurement(user_id, field_id, period_id, data):
+def insert_measurement(cursor, user_id, field_id, period_id, data):
     cols, vals = __extract_nonempty(data)
     insert_cols = ", ".join(cols)
     inserted_vals = ", ".join(["%s" * len(vals)])
-    inserted_measurement = None
-    db_cursor = DbCursor()
-    with db_cursor as cursor:
-        cursor.execute(
-            f"""
-            INSERT INTO measurement(user_id, field_id, period_id, {insert_cols})
-            VALUES (%s, %s, %s, {inserted_vals}) RETURNING *
-            """,
-            (user_id, field_id, period_id, *vals,)
-        )
-        inserted_measurement = __parse_record(cursor.fetchone())
-    return inserted_measurement if db_cursor.error is None else None
+    cursor.execute(
+        f"""
+        INSERT INTO measurement(user_id, field_id, period_id, {insert_cols})
+        VALUES (%s, %s, %s, {inserted_vals})
+        RETURNING *
+        """,
+        (user_id, field_id, period_id, *vals,)
+    )
+    return __parse_record(cursor.fetchone())
 
 
 def update_measurement(user_id, measurement_id, data):

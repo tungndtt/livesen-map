@@ -1,5 +1,5 @@
 from flask import Blueprint, request, send_from_directory, jsonify
-from services.store.field import get_field_coordinates, insert_field, delete_field, list_fields, insert_field_ndvi_raster
+from services.store.field import get_field, insert_field, delete_field, list_fields, insert_field_ndvi_raster
 from services.raster.extractor import extract_raster
 from api.authentication import authentication_required
 import os
@@ -53,13 +53,13 @@ def unregister_field(_, __, field_id):
 
 @api.route("/process_ndvi/<field_id>", methods=["GET"])
 @authentication_required
-def process_field_ndvi(_, __, field_id):
-    coordinates = get_field_coordinates(field_id)
-    if coordinates is None:
-        return "Cannot find the field", 404
+def process_field_ndvi(user_id, _, field_id):
+    field = get_field(user_id, field_id)
+    if field is None:
+        return jsonify({"data": "Cannot find the field"}), 404
     period = request.args.get("period")
     nc_file = os.path.join(DOWNLOADER.data_folder, period + ".nc")
-    tiff_file = extract_raster(coordinates, nc_file)
+    tiff_file = extract_raster(field["coordinates"], nc_file)
     if tiff_file is None:
         return jsonify({"data": "No ndvi-scan of field in given period"}), 500
     else:

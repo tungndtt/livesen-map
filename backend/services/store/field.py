@@ -16,14 +16,18 @@ def __parse_record(record):
     }
 
 
-def get_field_coordinates(field_id):
-    coordinates = None
+def get_field(user_id, field_id):
+    field = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            "SELECT ST_AsGeoJSON(region) FROM field where id = %s", (field_id,))
-        coordinates = cursor.fetchone()[0]["coordinates"]
-    return coordinates if db_cursor.error is None else None
+            """
+            SELECT id, user_id, name, ST_AsGeoJSON(region), straubing_distance, area, ndvi_rasters
+            FROM field
+            WHERE id = %s, user_id = %s
+            """, (field_id, user_id,))
+        field = __parse_record(cursor.fetchone())
+    return field if db_cursor.error is None else None
 
 
 def insert_field(user_id, name, region):

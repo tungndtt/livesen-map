@@ -25,28 +25,24 @@ def update_subfield_recommended_fertilizer_amount(subfield_id, recommended_ferti
     return db_cursor.error is None
 
 
-def insert_subfield(user_id, field_id, period_id, region):
-    inserted_subfield = None
-    db_cursor = DbCursor()
-    with db_cursor as cursor:
-        cursor.execute(
-            """
-            INSERT INTO subfield(user_id, field_id, period_id, region)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id
-            """,
-            (user_id, field_id, period_id, region,)
-        )
-        subfield_id = cursor.fetchone()[0]
-        cursor.execute(
-            """
-            UPDATE subfield SET area = ST_Area(region) WHERE id = %s
-            RETURNING id, field_id, period_id, ST_AsGeoJSON(region), area, recommended_fertilizer_amount
-            """,
-            (subfield_id, )
-        )
-        inserted_subfield = __parse_record(cursor.fetchone())
-    return inserted_subfield if db_cursor.error is None else None
+def insert_subfield(cursor, user_id, field_id, period_id, region):
+    cursor.execute(
+        """
+        INSERT INTO subfield(user_id, field_id, period_id, region)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
+        """,
+        (user_id, field_id, period_id, region,)
+    )
+    subfield_id = cursor.fetchone()[0]
+    cursor.execute(
+        """
+        UPDATE subfield SET area = ST_Area(region) WHERE id = %s
+        RETURNING id, field_id, period_id, ST_AsGeoJSON(region), area, recommended_fertilizer_amount
+        """,
+        (subfield_id, )
+    )
+    return __parse_record(cursor.fetchone())
 
 
 def list_subfields(user_id, field_id, period_id):
