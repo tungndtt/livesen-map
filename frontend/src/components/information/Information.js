@@ -13,6 +13,7 @@ import PublicIcon from "@mui/icons-material/Public";
 import PersonIcon from "@mui/icons-material/Person";
 import RegionInterest from "./RegionInterest";
 import FieldSeason from "./field-season/FieldSeason";
+import Profile from "./Profile";
 
 const tabs = [
   {
@@ -25,7 +26,11 @@ const tabs = [
     icon: <InsightsIcon />,
     component: <FieldSeason />,
   },
-  { name: "Profile", icon: <PersonIcon />, component: <MrsInfo /> },
+  {
+    name: "Profile",
+    icon: <PersonIcon />,
+    component: <Profile />,
+  },
 ];
 
 export default function Information() {

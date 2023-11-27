@@ -2,9 +2,8 @@ import { createContext, useState, useContext } from "react";
 
 const AuthenticationContext = createContext({
   authenticationToken: "",
-  signIn: (_email, _password) => new Promise({}),
-  signUp: (_email, _password, _name, _address, _company_name, _company_size) =>
-    new Promise({}),
+  signIn: (_email, _password) => new Promise(() => {}),
+  signUp: (_email, _password, _options) => new Promise(() => {}),
   signOut: () => {},
 });
 
@@ -12,28 +11,14 @@ export default function AuthenticationProvider({ children }) {
   const [authenticationToken, setAuthenticationToken] = useState(
     localStorage.getItem("authentication_token") ?? "test"
   );
-  const serverUrl = process.env.REACT_APP_SERVER_URL;
+  const serverUrl = process.env.REACT_APP_SERVER_URL + "/authentication";
 
-  const signIn = (
-    email,
-    password,
-    name,
-    address,
-    company_name,
-    company_size
-  ) => {
+  const signIn = (email, password) => {
     new Promise((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/sign_in`, {
+      fetch(`${serverUrl}/sign_in`, {
         headers: { "Content-Type": "application/json" },
         method: "POST",
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          address,
-          company_name,
-          company_size,
-        }),
+        body: JSON.stringify({ email, password }),
       })
         .then(async (response) => {
           const responseBody = await response.json();
@@ -49,21 +34,18 @@ export default function AuthenticationProvider({ children }) {
     });
   };
 
-  const signUp = (email, password) => {
+  const signUp = (email, password, options) => {
     new Promise((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/sign_up`, {
+      fetch(`${serverUrl}/sign_up`, {
         headers: { "Content-Type": "application/json" },
         method: "POST",
-        body: { email, password },
+        body: { email, password, ...options },
       })
         .then(async (response) => {
           const responseBody = await response.json();
           const data = responseBody["data"];
-          if (response.ok) {
-            resolve(data);
-          } else {
-            reject(data);
-          }
+          if (response.ok) resolve(data);
+          else reject(data);
         })
         .catch((error) => reject(error));
     });

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
-import { useNotiContext } from "./NotiContext";
+import { useNotificationContext } from "./NotificationContext";
 
 const PeriodContext = createContext({
   periods: undefined,
@@ -10,14 +10,14 @@ const PeriodContext = createContext({
 
 export default function RegionInterestProvider({ children }) {
   const { authenticationToken } = useAuthenticationContext();
-  const notify = useNotiContext();
+  const notify = useNotificationContext();
   const [periods, setPeriods] = useState(undefined);
   const [selectedPeriod, setSelectedPeriod] = useState(undefined);
-  const serverUrl = process.env.REACT_APP_SERVER_URL;
+  const serverUrl = process.env.REACT_APP_SERVER_URL + "/period";
 
   useEffect(() => {
     if (authToken) {
-      fetch(`${serverUrl}/roi/process_periods`, {
+      fetch(serverUrl, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
       })

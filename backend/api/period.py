@@ -7,7 +7,7 @@ from config import DOWNLOADER
 api = Blueprint("period", __name__, url_prefix="/period")
 
 
-@api.route("/all", methods=["GET"])
+@api.route("/", methods=["GET"])
 @authentication_required
 def list_scan_periods(_, __):
     return [

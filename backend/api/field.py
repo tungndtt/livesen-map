@@ -15,7 +15,7 @@ def get_field_ndvi(_, __, filename):
     return send_from_directory(RASTEXTRACTOR.data_folder, filename)
 
 
-@api.route("/all", methods=["GET"])
+@api.route("/", methods=["GET"])
 @authentication_required
 def list_all_fields(user_id, _):
     fields = list_fields(user_id)

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
 import { useRegionInterestContext } from "./RegionInterestContext";
 import { usePeriodContext } from "./PeriodContext";
-import { useNotiContext } from "./NotiContext";
+import { useNotificationContext } from "./NotificationContext";
 
 const FieldContext = createContext({
   fields: undefined,
@@ -46,15 +46,15 @@ export default function FieldProvider({ children }) {
   const { authenticationToken } = useAuthenticationContext();
   const { roi } = useRegionInterestContext();
   const { selectedPeriod } = usePeriodContext();
-  const notify = useNotiContext();
+  const notify = useNotificationContext();
   const [fields, setFields] = useState(undefined);
   const [selectedField, setSelectedField] = useState(undefined);
   const [ndvi, setNdvi] = useState(undefined);
-  const serverUrl = process.env.REACT_APP_SERVER_URL;
+  const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
 
   useEffect(() => {
     if (authenticationToken) {
-      fetch(`${serverUrl}/field/all`, {
+      fetch(serverUrl, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
       })
@@ -79,7 +79,7 @@ export default function FieldProvider({ children }) {
       if (!roi || roi?.length < 3) {
         reject("No valid region is specified");
       }
-      fetch(`${serverUrl}/field/register`, {
+      fetch(`${serverUrl}/register`, {
         headers: {
           "Content-Type": "application/json",
           "Auth-Token": authenticationToken,
@@ -106,7 +106,7 @@ export default function FieldProvider({ children }) {
 
   const unregisterField = () => {
     return new Promise((resolve, reject) => {
-      fetch(`${serverUrl}/field/unregister/${selectedField.id}`, {
+      fetch(`${serverUrl}/unregister/${selectedField.id}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "DELETE",
       })
@@ -134,7 +134,7 @@ export default function FieldProvider({ children }) {
         resolve("Fetching the field ndvi raster");
       }
       fetch(
-        `${serverUrl}/field/process_ndvi/${selectedField.id}?period=${selectedPeriod}`,
+        `${serverUrl}/process_ndvi/${selectedField.id}?period=${selectedPeriod}`,
         {
           headers: { "Auth-Token": authenticationToken },
           method: "GET",

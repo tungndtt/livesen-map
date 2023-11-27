@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from api import authentication, field, season, subfield, measurement, period
+from api import authentication, user, field, season, subfield, measurement, period
 from services.download import downloader
 from services.store import storage
 from services.mail import mailer
@@ -15,6 +15,7 @@ if __name__ == "__main__":
         app = Flask(__name__)
         CORS(app)
         app.register_blueprint(authentication.api)
+        app.register_blueprint(user.api)
         app.register_blueprint(field.api)
         app.register_blueprint(season.api)
         app.register_blueprint(subfield.api)

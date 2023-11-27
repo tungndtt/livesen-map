@@ -30,13 +30,12 @@ api = Blueprint("authentication", __name__, url_prefix="/authentication")
 def sign_in():
     data = request.json()
     email, password = data["email"], data["password"]
-    record = get_user(email)
-    if record is None:
+    user = get_user(email)
+    if user is None:
         return jsonify({"data": "Given email does not exist"}), 404
     else:
-        uid, _, encrypted_password = record
-        if check(password, encrypted_password):
-            return jsonify({"data": generate_token(uid, 2*60)}), 200
+        if check(password, user["password"]):
+            return jsonify({"data": generate_token(user["id"], 2*60)}), 200
         else:
             return jsonify({"data": "Given email/password is invalid"}), 401
 

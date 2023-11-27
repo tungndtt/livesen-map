@@ -45,26 +45,29 @@ def insert_user(data):
     return inserted_measurement if db_cursor.error is None else None
 
 
-def update_measurement(user_id, data):
+def update_user(user_id, data):
     if "email" in data:
         return None
     cols, vals = __extract_nonempty(data)
     update_cols = " = %s, ".join(cols)
-    updated_measurement = None
+    updated_user = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
             f"UPDATE 'user' SET {update_cols} WHERE id = %s RETURNING *",
             (*vals, user_id,)
         )
-        updated_measurement = __parse_record(cursor.fetchone())
-    return updated_measurement if db_cursor.error is None else None
+        updated_user = __parse_record(cursor.fetchone())
+    return updated_user if db_cursor.error is None else None
 
 
-def get_user(email):
+def get_user(user_id, email):
     user = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
-        cursor.execute("SELECT * FROM 'user' where email = %s", (email,))
+        if user_id:
+            cursor.execute("SELECT * FROM 'user' where id = %s", (user_id,))
+        elif email:
+            cursor.execute("SELECT * FROM 'user' where email = %s", (email,))
         user = __parse_record(cursor.fetchone())
     return user if db_cursor.error is None else None

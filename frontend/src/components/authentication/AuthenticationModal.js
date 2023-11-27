@@ -1,14 +1,32 @@
 import { useState } from "react";
 import { Box, Button, Modal, Link, TextField, Typography } from "@mui/material";
-import { useAuthContext } from "../../contexts/AuthContext";
-import { useNotiContext } from "../../contexts/NotiContext";
+import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
+import { useNotificationContext } from "../../contexts/NotificationContext";
+
+const fields = [
+  { name: "name", label: "Name" },
+  { name: "address", label: "Address" },
+  { name: "company_name", label: "Company Name" },
+  { name: "company_size", lael: "Company Size", isNumber: true },
+];
 
 export default function AuthenticationModal() {
-  const { authToken, signIn, signUp } = useAuthContext();
-  const notify = useNotiContext();
+  const { authToken, signIn, signUp } = useAuthenticationContext();
+  const notify = useNotificationContext();
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [options, setOptions] = useState({});
+
+  const onChangeOptions = (e) => {
+    setOptions((prevOptions) => {
+      const option = e.target.name;
+      const value = e.target.value;
+      if (value) prevOptions[option] = value;
+      else delete prevOptions?.[option];
+      return { ...prevOptions };
+    });
+  };
 
   return (
     <Modal open={!authToken}>
@@ -17,6 +35,7 @@ export default function AuthenticationModal() {
           {isSignIn ? "Login" : "Registration"}
         </Typography>
         <TextField
+          fullWidth
           required
           id="email"
           label="Email"
@@ -24,6 +43,7 @@ export default function AuthenticationModal() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <TextField
+          fullWidth
           required
           password
           id="password"
@@ -31,12 +51,44 @@ export default function AuthenticationModal() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
+        {!isSignIn &&
+          fields.map(({ name, label, isNumber }) => (
+            <TextField
+              fullWidth
+              key={name}
+              name={name}
+              label={label}
+              value={options?.[name] ?? ""}
+              error={
+                isNumber &&
+                name in options &&
+                !(options[name] instanceof Number)
+              }
+              onChange={onChangeOptions}
+            />
+          ))}
         <Button
+          disabled={
+            !email ||
+            !password ||
+            (!isSignIn &&
+              fields.filter(
+                ({ name, isNumber }) =>
+                  isNumber &&
+                  name in options &&
+                  !(options[name] instanceof Number)
+              ))
+          }
           onClick={() => {
-            if (!email || !password) return;
+            if (!isSignIn) {
+              fields.forEach(({ name, isNumber }) => {
+                if (name in options && isNumber) options[name] = +options[name];
+              });
+            }
             const promise = isSignIn
               ? signIn(email, password)
-              : signUp(email, password);
+              : signUp(email, password, options);
             promise
               .then((message) => notify({ message: message, isError: false }))
               .catch((error) => notify({ message: error, isError: true }));

@@ -6,10 +6,10 @@ from api.authentication import authentication_required
 api = Blueprint("season", __name__, url_prefix="/season")
 
 
-@api.route("/all", methods=["GET"])
+@api.route("/<field_id>/<period_id>", methods=["GET"])
 @authentication_required
-def list_all_seasons(user_id, _):
-    seasons = list_seasons(user_id)
+def list_all_seasons(user_id, _, field_id, period_id):
+    seasons = list_seasons(user_id, field_id, period_id)
     if seasons is not None:
         return seasons, 200
     else:
@@ -19,7 +19,11 @@ def list_all_seasons(user_id, _):
 @api.route("/upregister", methods=["POST"])
 @authentication_required
 def upregister_season(user_id, data):
-    pass
+    upserted_season = upsert_season(user_id, data)
+    if upserted_season is not None:
+        return upserted_season, 201
+    else:
+        return jsonify({"data": "Failed to upregister the season"}), 500
 
 
 @api.route("/unregister/<field_id>/<period_id>", methods=["DELETE"])

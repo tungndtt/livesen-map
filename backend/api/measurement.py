@@ -1,19 +1,19 @@
 from flask import Blueprint, jsonify
+from api.authentication import authentication_required
 from services.store.storage import DbCursor
 from services.store.field import get_field
 from services.store.measurement import list_measurements, insert_measurement, update_measurement
 from services.store.subfield import insert_subfield
 from services.raster.splitter import Splitter
-from api.authentication import authentication_required
-from config import RASTEXTRACTOR
 from utils.helper import find_farthest_point_inside_polygon
+from config import RASTEXTRACTOR
 import os
 
 
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
 
 
-@api.route("/all/<field_id>/<period_id>", methods=["GET"])
+@api.route("/<field_id>/<period_id>", methods=["GET"])
 @authentication_required
 def list_all_measurements(user_id, _, field_id, period_id):
     measurements = list_measurements(user_id, field_id, period_id)
@@ -51,12 +51,13 @@ def determine_measurement_positions(user_id, _, field_id, period_id):
                 "latitude": measurement_position.y,
                 "ndvi_value": ndvi
             }
-            inserted_measurements.append(insert_measurement(
-                cursor, user_id, field_id, period_id, data)
+            inserted_measurements.append(
+                insert_measurement(cursor, user_id, field_id, period_id, data)
             )
         for subfield, _ in split_results:
-            inserted_subfields.append(insert_subfield(
-                cursor, user_id, field_id, period_id, subfield.__str__())
+            inserted_subfields.append(
+                insert_subfield(cursor, user_id, field_id,
+                                period_id, subfield.__str__())
             )
     if db_cursor.error is None:
         return jsonify({"measurements": inserted_measurements, "subfields": inserted_subfields}), 201

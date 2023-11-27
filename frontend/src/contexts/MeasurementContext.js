@@ -42,16 +42,14 @@ export default function MeasurementProvider({ children }) {
   const { selectedPeriod } = usePeriodContext();
   const notify = useNotificationContext();
   const [measurements, setMeasurements] = useState(undefined);
+  const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
 
   useEffect(() => {
     if (authenticationToken && selectedFieldId && selectedPeriod) {
-      fetch(
-        `${serverUrl}/measurement/all/${selectedFieldId}/${selectedPeriod}`,
-        {
-          headers: { "Auth-Token": authenticationToken },
-          method: "GET",
-        }
-      )
+      fetch(`${serverUrl}/${selectedFieldId}/${selectedPeriod}`, {
+        headers: { "Auth-Token": authenticationToken },
+        method: "GET",
+      })
         .then(async (response) => {
           const fetchedMeasurements = await response.json();
           setMeasurements(
