@@ -49,9 +49,11 @@ export default function Profile() {
   }, [authenticationToken]);
 
   const updateUser = () => {
-    if ("company_size" in options) {
-      options["company_size"] = +options["company_size"];
-    }
+    fields.forEach(({ name, isNumber }) => {
+      if (isNumber && name in options) {
+        options[name] = +options[name];
+      }
+    });
     fetch(`${serverUrl}/upgister`, {
       headers: {
         "Content-Type": "application/json",

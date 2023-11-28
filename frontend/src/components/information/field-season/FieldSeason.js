@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   Box,
+  Button,
   FormControl,
   InputLabel,
   MenuItem,
@@ -23,6 +24,10 @@ const tabs = [
 export default function FieldSeason() {
   const { fields, selectedField, setSelectedField } = useFieldContext();
   const { periods, selectedPeriod, setSelectedPeriod } = usePeriodContext();
+  const [selections, setSelections] = useState({
+    field: selectedField?.id,
+    period: selectedPeriod,
+  });
   const [tab, setTab] = useState(0);
 
   return (
@@ -41,9 +46,14 @@ export default function FieldSeason() {
           <Select
             labelId="field-select-label"
             id="field-select"
-            value={selectedField?.id}
+            value={selections.field}
             label="Field"
-            onChange={(e) => setSelectedField({ id: e.target.value })}
+            onChange={(e) =>
+              setSelections((prevSelections) => ({
+                ...prevSelections,
+                field: e.target.value,
+              }))
+            }
           >
             <MenuItem value={undefined}>
               <em>None</em>
@@ -60,9 +70,14 @@ export default function FieldSeason() {
           <Select
             labelId="period-select-label"
             id="period-select"
-            value={selectedPeriod}
+            value={selections.period}
             label="Period"
-            onChange={(e) => setSelectedPeriod(e.target.value)}
+            onChange={(e) =>
+              setSelections((prevSelections) => ({
+                ...prevSelections,
+                period: e.target.value,
+              }))
+            }
           >
             <MenuItem value={undefined}>
               <em>None</em>
@@ -74,6 +89,18 @@ export default function FieldSeason() {
             ))}
           </Select>
         </FormControl>
+        <Button
+          onClick={() => {
+            if (selections.field !== selectedField?.id) {
+              setSelectedField({ id: selections.field });
+            }
+            if (selections.period !== selectedPeriod) {
+              setSelectedPeriod(selections.period);
+            }
+          }}
+        >
+          Retrieve data
+        </Button>
       </Box>
       <Tabs
         value={tab}

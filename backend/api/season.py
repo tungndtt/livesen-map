@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from services.store.season import list_seasons, upsert_season, delete_season
+from services.store.season import get_season, upsert_season, delete_season
 from api.authentication import authentication_required
 
 
@@ -8,18 +8,18 @@ api = Blueprint("season", __name__, url_prefix="/season")
 
 @api.route("/<field_id>/<period_id>", methods=["GET"])
 @authentication_required
-def list_all_seasons(user_id, _, field_id, period_id):
-    seasons = list_seasons(user_id, field_id, period_id)
-    if seasons is not None:
-        return seasons, 200
+def retrieve_seasons(user_id, _, field_id, period_id):
+    season = get_season(user_id, field_id, period_id)
+    if season is not None:
+        return season, 200
     else:
-        return jsonify({"data": "Failed to retrieve the seasons"}), 500
+        return jsonify({"data": "Failed to retrieve the season"}), 500
 
 
-@api.route("/upregister", methods=["POST"])
+@api.route("/upregister/<field_id>/<period_id>", methods=["POST"])
 @authentication_required
-def upregister_season(user_id, data):
-    upserted_season = upsert_season(user_id, data)
+def upregister_season(user_id, field_id, period_id, data):
+    upserted_season = upsert_season(user_id, field_id, period_id, data)
     if upserted_season is not None:
         return upserted_season, 201
     else:

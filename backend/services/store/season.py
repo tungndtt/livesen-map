@@ -20,9 +20,7 @@ def __parse_record(record):
     }
 
 
-def upsert_season(user_id, data):
-    if "field_id" not in data or "period_id" not in data:
-        return None
+def upsert_season(user_id, field_id, period_id, data):
     cols, vals = [], []
     for col in [
         "max_allowed_fertilizer", "intercrop",
@@ -51,7 +49,7 @@ def upsert_season(user_id, data):
             SET {update_cols}
             RETURNING *
             """,
-            (user_id, data["field_id"], data["period_id"], *vals, *vals,)
+            (user_id, field_id, period_id, *vals, *vals,)
         )
         upserted_season = __parse_record(cursor.fetchone())
     return upserted_season if db_cursor.error is None else None
@@ -67,13 +65,13 @@ def delete_season(user_id, field_id, period_id):
     return db_cursor.error is None
 
 
-def list_seasons(user_id, field_id, period_id):
-    seasons = None
+def get_season(user_id, field_id, period_id):
+    season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
             "SELECT * FROM season WHERE user_id = %s, field_id = %s, period_id = %s",
             (user_id, field_id, period_id,)
         )
-        seasons = [__parse_record(record) for record in cursor.fetchall()]
-    return seasons if db_cursor.error is None else None
+        season = __parse_record(cursor.fetchone())
+    return season if db_cursor.error is None else None
