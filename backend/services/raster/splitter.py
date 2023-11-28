@@ -5,10 +5,13 @@ from shapely.geometry import Polygon, Point, box
 from shapely.ops import unary_union
 from math import floor
 import numpy as np
+from config import RASTEXTRACTOR
+import os
 
 
 class Splitter:
     def __init__(self, tiff_file, coordinates, init_split=2, split_factor=2, max_subfields=100):
+        tiff_file = os.path.join(RASTEXTRACTOR.data_folder, tiff_file)
         self.__raster = rasterio.open(tiff_file)
         self.__polygon = Polygon(coordinates)
         self.__init_split = init_split

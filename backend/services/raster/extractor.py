@@ -5,7 +5,7 @@ from shapely.geometry import Polygon, box
 import numpy as np
 import uuid
 import os
-from config import RASTEXTRACTOR
+from config import RASTEXTRACTOR, DOWNLOADER
 
 
 __crs = "epsg:4326"
@@ -95,6 +95,7 @@ def __extract_polygon_raster(polygon, in_tiff_file, out_tiff_file):
 
 
 def extract_raster(polygon, in_nc_file, out_tiff_file=None):
+    in_nc_file = os.path.join(DOWNLOADER.data_folder, in_nc_file)
     if not os.path.isdir(RASTEXTRACTOR.data_folder):
         os.mkdir(RASTEXTRACTOR.data_folder)
     if out_tiff_file is None:
@@ -125,7 +126,7 @@ def extract_raster(polygon, in_nc_file, out_tiff_file=None):
 
 
 if __name__ == "__main__":
-    def pyarr_to_clydedacruz(pyarr: list[list[float]]):
+    def pyarr_to_clydedacruz(pyarr):
         clydedacruz = ""
         for i, point in enumerate(pyarr):
             x, y = point
@@ -133,7 +134,7 @@ if __name__ == "__main__":
             clydedacruz += "," if i < len(pyarr) - 1 else ""
         print(clydedacruz)
 
-    def clydedacruz_to_pyarr(clydedacruz: str):
+    def clydedacruz_to_pyarr(clydedacruz):
         pyarr = []
         points = clydedacruz.split(",")
         for point in points:
@@ -142,7 +143,7 @@ if __name__ == "__main__":
         print(pyarr)
 
     import json
-    in_nc_file = os.path.join("data", "download", "20200621.nc")
+    in_nc_file = "20200621.nc"
     with open(os.path.join("data", "geometry", "polygons.json"), "r") as f:
         polygons = json.load(f)
     for size in polygons.keys():

@@ -1,13 +1,12 @@
 from flask import Blueprint, jsonify
 from api.authentication import authentication_required
 from services.store.storage import DbCursor
-from services.store.field import get_field
+from services.store.field import get_field, insert_field_ndvi_raster
 from services.store.measurement import list_measurements, insert_measurement, update_measurement
 from services.store.subfield import insert_subfield
+from services.raster.extractor import extract_raster
 from services.raster.splitter import Splitter
 from utils.helper import find_farthest_point_inside_polygon
-from config import RASTEXTRACTOR
-import os
 
 
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
@@ -34,9 +33,14 @@ def determine_measurement_positions(user_id, _, field_id, period_id):
     tiff_file = None
     for ndvi_raster in field["ndvi_rasters"]:
         if ndvi_raster.startswith(period_id):
-            raster_file = ndvi_raster[len(period_id) + 1:]
-            tiff_file = os.path.join(RASTEXTRACTOR.data_folder, raster_file)
+            tiff_file = ndvi_raster[len(period_id) + 1:]
             break
+    if tiff_file is None:
+        tiff_file = extract_raster(coordinates, period_id + ".nc")
+        if tiff_file is None:
+            return jsonify({"data": "No ndvi-scan of field in given period"}), 500
+        elif not insert_field_ndvi_raster(field_id, period_id + "_" + tiff_file):
+            return jsonify({"data": "Failed to process field ndvi"}), 500
     split_results = Splitter(tiff_file, coordinates).split()
     measurement_positions = [
         (find_farthest_point_inside_polygon(subfield), ndvi)

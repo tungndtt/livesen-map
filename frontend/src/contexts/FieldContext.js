@@ -133,13 +133,10 @@ export default function FieldProvider({ children }) {
         setNdvi(field?.periodNdvi[selectedPeriod]);
         resolve("Fetching the field ndvi raster");
       }
-      fetch(
-        `${serverUrl}/process_ndvi/${selectedField.id}?period=${selectedPeriod}`,
-        {
-          headers: { "Auth-Token": authenticationToken },
-          method: "GET",
-        }
-      )
+      fetch(`${serverUrl}/process_ndvi/${selectedField.id}/${selectedPeriod}`, {
+        headers: { "Auth-Token": authenticationToken },
+        method: "GET",
+      })
         .then(async (response) => {
           const body = await response.json();
           const data = body["data"];
