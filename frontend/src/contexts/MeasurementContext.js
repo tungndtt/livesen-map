@@ -49,7 +49,7 @@ const parseSubfield = (subfield) => {
 
 export default function MeasurementProvider({ children }) {
   const { authenticationToken } = useAuthenticationContext();
-  const { selectedFieldId } = useFieldContext();
+  const { selectedField } = useFieldContext();
   const { selectedPeriod } = usePeriodContext();
   const notify = useNotificationContext();
   const [measurements, setMeasurements] = useState(undefined);
@@ -73,13 +73,13 @@ export default function MeasurementProvider({ children }) {
   };
 
   useEffect(() => {
-    if (authenticationToken && selectedFieldId && selectedPeriod) {
+    if (authenticationToken && selectedField?.id && selectedPeriod) {
       Promise.all([
-        fetch(`${serverUrl}/subfield/${selectedFieldId}/${selectedPeriod}`, {
+        fetch(`${serverUrl}/subfield/${selectedField.id}/${selectedPeriod}`, {
           headers: { "Auth-Token": authenticationToken },
           method: "GET",
         }),
-        fetch(`${serverUrl}/${selectedFieldId}/${selectedPeriod}`, {
+        fetch(`${serverUrl}/${selectedField.id}/${selectedPeriod}`, {
           headers: { "Auth-Token": authenticationToken },
           method: "GET",
         }),
@@ -111,12 +111,12 @@ export default function MeasurementProvider({ children }) {
       setMeasurements(undefined);
       setSelectedMeasurements(undefined);
     }
-  }, [authenticationToken, selectedFieldId, selectedPeriod]);
+  }, [authenticationToken, selectedField?.id, selectedPeriod]);
 
   const determineMeasurementPositions = () => {
     return new Promise((resolve, reject) => {
       fetch(
-        `${serverUrl}/determine_positions/${selectedFieldId}/${selectedPeriod}`,
+        `${serverUrl}/determine_positions/${selectedField}/${selectedPeriod}`,
         {
           headers: { "Auth-Token": authenticationToken },
           method: "GET",
