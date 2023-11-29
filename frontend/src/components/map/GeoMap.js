@@ -1,11 +1,12 @@
 import { MapContainer, TileLayer } from "react-leaflet";
 import FieldLayer from "./FieldLayer";
+import MeasurementLayer from "./MeasurementLayer";
 import RegionInterestLayer from "./RegionInterestLayer";
 
 export default function GeoMap() {
   return (
     <MapContainer
-      center={[51.1642292, 10.4541194]}
+      center={[10.4541194, 51.1642292]}
       zoom={4}
       scrollWheelZoom={true}
       style={{ position: "absolute", right: 0, width: "70%", height: "100%" }}
@@ -15,6 +16,7 @@ export default function GeoMap() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <FieldLayer />
+      <MeasurementLayer />
       <RegionInterestLayer />
     </MapContainer>
   );

@@ -5,7 +5,9 @@ import LayersIcon from "@mui/icons-material/Layers";
 import LayersClearIcon from "@mui/icons-material/LayersClear";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFieldContext } from "../../../contexts/FieldContext";
+import { usePeriodContext } from "../../../contexts/PeriodContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
+import { useMemo } from "react";
 
 export default function FieldTab() {
   const {
@@ -17,9 +19,13 @@ export default function FieldTab() {
     ndvi,
     setNdvi,
   } = useFieldContext();
+  const { selectedPeriod } = usePeriodContext();
   const notify = useNotificationContext();
 
-  const field = fields.find(({ id }) => id === selectedField?.id);
+  const field = useMemo(
+    () => fields?.find(({ id }) => id === selectedField?.id),
+    [fields, selectedField?.id]
+  );
 
   const onUnregisterField = () => {
     unregisterField()
@@ -52,7 +58,7 @@ export default function FieldTab() {
         sx={{ mb: 2 }}
         fullWidth
         disabled
-        label="Field Name"
+        label="Field name"
         value={field?.name}
       />
       <Box
@@ -68,7 +74,7 @@ export default function FieldTab() {
         <TextField
           fullWidth
           disabled
-          label="Straubing Distance"
+          label="Straubing distance"
           value={field?.straubingDistance}
         />
       </Box>
@@ -79,7 +85,7 @@ export default function FieldTab() {
         multiline={true}
         rows={5}
         label="Coordinates"
-        value={JSON.stringify(selectedField?.coordinates) ?? "[]"}
+        value={JSON.stringify(field?.coordinates) ?? "[]"}
       />
       <Box
         sx={{
@@ -105,29 +111,29 @@ export default function FieldTab() {
           onClick={toggleFieldDisplay}
         >
           {!selectedField || !selectedField?.coordinates
-            ? "Show Region"
-            : "Hide Region"}
+            ? "Show field"
+            : "Hide field"}
         </Button>
         <Button
           variant="outlined"
           color="success"
-          disabled={!selectedRoiId || !selectedPeriod}
+          disabled={!selectedField || !selectedPeriod}
           fullWidth
           endIcon={ndvi ? <LayersClearIcon /> : <LayersIcon />}
           onClick={toggleNdviDisplay}
         >
-          {ndvi ? "Hide NDVI Layer" : "Show NDVI Layer"}
+          {ndvi ? "Hide ndvi" : "Show ndvi"}
         </Button>
       </Box>
       <Button
         variant="outlined"
         color="error"
-        disabled={!selectedRoiId}
+        disabled={!selectedField}
         fullWidth
         endIcon={<DeleteIcon />}
         onClick={onUnregisterField}
       >
-        Delete Field
+        Delete field
       </Button>
     </Box>
   );

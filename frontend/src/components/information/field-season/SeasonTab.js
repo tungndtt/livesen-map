@@ -64,7 +64,10 @@ export default function SeasonTab() {
           } else notify({ message: responseBody["data"], isError: true });
         })
         .catch((error) => notify({ message: error, isError: true }));
-    } else setSeason(undefined);
+    } else {
+      setSeason(undefined);
+      setOptions(undefined);
+    }
   }, [selectedField?.id, selectedPeriod, authenticationToken]);
 
   const updateSeason = () => {
@@ -103,9 +106,10 @@ export default function SeasonTab() {
     setOptions((prevOptions) => {
       const option = e.target.name;
       const value = e.target.value;
-      if (value) prevOptions[option] = value;
-      else delete prevOptions?.[option];
-      return { ...prevOptions };
+      const options = { ...prevOptions };
+      if (value) options[option] = value;
+      else delete options?.[option];
+      return options;
     });
   };
 

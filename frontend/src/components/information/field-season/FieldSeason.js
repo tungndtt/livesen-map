@@ -66,12 +66,12 @@ export default function FieldSeason() {
           </Select>
         </FormControl>
         <FormControl fullWidth size="small">
-          <InputLabel id="period-select-label">Period</InputLabel>
+          <InputLabel id="period-select-label">Season</InputLabel>
           <Select
             labelId="period-select-label"
             id="period-select"
             value={selections.period}
-            label="Period"
+            label="Season"
             onChange={(e) =>
               setSelections((prevSelections) => ({
                 ...prevSelections,

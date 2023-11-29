@@ -1,8 +1,8 @@
 import ReactDOM from "react-dom";
 import NotificationProvider from "./contexts/NotificationContext";
 import AuthenticationProvider from "./contexts/AuthenticationContext";
-import PeriodProvider from "./contexts/PeriodContext";
 import RegionInterestProvider from "./contexts/RegionInterestContext";
+import PeriodProvider from "./contexts/PeriodContext";
 import FieldProvider from "./contexts/FieldContext";
 import MeasurementProvider from "./contexts/MeasurementContext";
 import App from "./App";
@@ -12,15 +12,15 @@ const rootElement = document.getElementById("root");
 ReactDOM.render(
   <NotificationProvider>
     <AuthenticationProvider>
-      <PeriodProvider>
-        <RegionInterestProvider>
+      <RegionInterestProvider>
+        <PeriodProvider>
           <FieldProvider>
             <MeasurementProvider>
               <App />
             </MeasurementProvider>
           </FieldProvider>
-        </RegionInterestProvider>
-      </PeriodProvider>
+        </PeriodProvider>
+      </RegionInterestProvider>
     </AuthenticationProvider>
   </NotificationProvider>,
   rootElement

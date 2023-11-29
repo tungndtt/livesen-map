@@ -19,7 +19,7 @@ const fields = [
 ];
 
 export default function Profile() {
-  const { authenticationToken } = useAuthenticationContext();
+  const { authenticationToken, signOut } = useAuthenticationContext();
   const notify = useNotificationContext();
   const [user, setUser] = useState(undefined);
   const [options, setOptions] = useState(user);
@@ -81,9 +81,10 @@ export default function Profile() {
     setOptions((prevOptions) => {
       const option = e.target.name;
       const value = e.target.value;
-      if (value) prevOptions[option] = value;
-      else delete prevOptions?.[option];
-      return { ...prevOptions };
+      const options = { ...prevOptions };
+      if (value) options[option] = value;
+      else delete options?.[option];
+      return options;
     });
   };
 
@@ -102,7 +103,6 @@ export default function Profile() {
           ),
         }}
         password={!showPassword}
-        required
         name="password"
         label="Password"
         value={options?.["password"]}
@@ -133,6 +133,7 @@ export default function Profile() {
       >
         Update profile
       </Button>
+      <Button onClick={() => signOut()}>Logout</Button>
     </Box>
   );
 }

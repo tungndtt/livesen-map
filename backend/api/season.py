@@ -8,7 +8,7 @@ api = Blueprint("season", __name__, url_prefix="/season")
 
 @api.route("/<field_id>/<period_id>", methods=["GET"])
 @authentication_required
-def retrieve_seasons(user_id, _, field_id, period_id):
+def retrieve_season(user_id, _, field_id, period_id):
     season = get_season(user_id, field_id, period_id)
     if season is not None:
         return season, 200

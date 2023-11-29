@@ -124,8 +124,9 @@ def __init_tables():
         CREATE TABLE IF NOT EXISTS measurement (
             id serial PRIMARY KEY,
             user_id integer not null,
-            field_id integer,
-            period_id text,
+            field_id integer not null,
+            period_id text not null,
+            subfield_id integer not null,
             longitude double precision,
             latitude double precision,
             nitrate_measurement double precision,
@@ -133,7 +134,8 @@ def __init_tables():
             potassium_measurement double precision,
             ndvi_value double precision,
             FOREIGN KEY (user_id) REFERENCES 'user'(id),
-            FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id)
+            FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id),
+            FOREIGN KEY (subfield_id) REFERENCES subfield(id),
         )
         """
         for cmd in [

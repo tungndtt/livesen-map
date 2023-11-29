@@ -7,7 +7,7 @@ def __parse_record(record):
     return {
         col: record[i]
         for i, col in enumerate([
-            "id", "field_id", "period_id",
+            "id", "field_id", "period_id", "subfield_id",
             "longitude", "latitude",
             "nitrate_measurement", "phosphor_measurement", "potassium_measurement"
             "ndvi_value"
@@ -28,17 +28,17 @@ def __extract_nonempty(data):
     return cols, vals
 
 
-def insert_measurement(cursor, user_id, field_id, period_id, data):
+def insert_measurement(cursor, user_id, field_id, period_id, subfield_id, data):
     cols, vals = __extract_nonempty(data)
     insert_cols = ", ".join(cols)
     inserted_vals = ", ".join(["%s" * len(vals)])
     cursor.execute(
         f"""
-        INSERT INTO measurement(user_id, field_id, period_id, {insert_cols})
-        VALUES (%s, %s, %s, {inserted_vals})
+        INSERT INTO measurement(user_id, field_id, period_id, subfield_id, {insert_cols})
+        VALUES (%s, %s, %s, %s, {inserted_vals})
         RETURNING *
         """,
-        (user_id, field_id, period_id, *vals,)
+        (user_id, field_id, period_id, subfield_id, *vals,)
     )
     return __parse_record(cursor.fetchone())
 
