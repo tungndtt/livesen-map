@@ -38,7 +38,7 @@ def insert_user(data):
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            f"INSERT INTO 'user'({insert_cols}) VALUES ({inserted_vals}) RETURNING *",
+            f"""INSERT INTO "user"({insert_cols}) VALUES ({inserted_vals}) RETURNING *""",
             (*vals,)
         )
         inserted_measurement = __parse_record(cursor.fetchone())
@@ -54,20 +54,22 @@ def update_user(user_id, data):
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            f"UPDATE 'user' SET {update_cols} WHERE id = %s RETURNING *",
+            f"""UPDATE "user" SET {update_cols} WHERE id = %s RETURNING *""",
             (*vals, user_id,)
         )
         updated_user = __parse_record(cursor.fetchone())
     return updated_user if db_cursor.error is None else None
 
 
-def get_user(user_id, email):
+def get_user(user_id=None, email=None):
     user = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         if user_id:
-            cursor.execute("SELECT * FROM 'user' where id = %s", (user_id,))
+            cursor.execute(
+                """SELECT * FROM "user" where id = %s""", (user_id,))
         elif email:
-            cursor.execute("SELECT * FROM 'user' where email = %s", (email,))
+            cursor.execute(
+                """SELECT * FROM "user" where email = %s""", (email,))
         user = __parse_record(cursor.fetchone())
     return user if db_cursor.error is None else None

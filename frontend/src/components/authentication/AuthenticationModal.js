@@ -11,7 +11,7 @@ const fields = [
 ];
 
 export default function AuthenticationModal() {
-  const { authToken, signIn, signUp } = useAuthenticationContext();
+  const { authenticationToken, signIn, signUp } = useAuthenticationContext();
   const notify = useNotificationContext();
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState("");
@@ -20,16 +20,16 @@ export default function AuthenticationModal() {
 
   const onChangeOptions = (e) => {
     setOptions((prevOptions) => {
-      const option = e.target.name;
+      const name = e.target.name;
       const value = e.target.value;
-      if (value) prevOptions[option] = value;
-      else delete prevOptions?.[option];
+      if (value) prevOptions[name] = value;
+      else delete prevOptions?.[name];
       return { ...prevOptions };
     });
   };
 
   return (
-    <Modal open={!authToken}>
+    <Modal open={!authenticationToken}>
       <Box>
         <Typography variant="body1">
           {isSignIn ? "Login" : "Registration"}
@@ -62,8 +62,8 @@ export default function AuthenticationModal() {
               value={options?.[name] ?? ""}
               error={
                 isNumber &&
-                name in options &&
-                !(options[name] instanceof Number)
+                options?.[name] !== undefined &&
+                !(options?.[name] instanceof Number)
               }
               onChange={onChangeOptions}
             />
@@ -76,14 +76,15 @@ export default function AuthenticationModal() {
               fields.filter(
                 ({ name, isNumber }) =>
                   isNumber &&
-                  name in options &&
-                  !(options[name] instanceof Number)
+                  options?.[name] !== undefined &&
+                  !(options?.[name] instanceof Number)
               ))
           }
           onClick={() => {
             if (!isSignIn) {
               fields.forEach(({ name, isNumber }) => {
-                if (name in options && isNumber) options[name] = +options[name];
+                if (options?.[name] !== undefined && isNumber)
+                  options[name] = +options[name];
               });
             }
             const promise = isSignIn

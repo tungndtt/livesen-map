@@ -6,10 +6,10 @@ import RegionInterestLayer from "./RegionInterestLayer";
 export default function GeoMap() {
   return (
     <MapContainer
-      center={[10.4541194, 51.1642292]}
+      center={[51.1642292, 10.4541194]}
       zoom={4}
       scrollWheelZoom={true}
-      style={{ position: "absolute", right: 0, width: "70%", height: "100%" }}
+      style={{ position: "absolute", left: 0, width: "55%", height: "100%" }}
     >
       <TileLayer
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'

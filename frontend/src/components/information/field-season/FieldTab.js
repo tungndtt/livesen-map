@@ -57,6 +57,7 @@ export default function FieldTab() {
       <TextField
         sx={{ mb: 2 }}
         fullWidth
+        size="small"
         disabled
         label="Field name"
         value={field?.name}
@@ -70,9 +71,16 @@ export default function FieldTab() {
           mb: 2,
         }}
       >
-        <TextField fullWidth disabled label="Field Area" value={field?.area} />
         <TextField
           fullWidth
+          size="small"
+          disabled
+          label="Field Area"
+          value={field?.area}
+        />
+        <TextField
+          fullWidth
+          size="small"
           disabled
           label="Straubing distance"
           value={field?.straubingDistance}

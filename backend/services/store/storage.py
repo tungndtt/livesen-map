@@ -1,12 +1,11 @@
 # initdb -U <username> -A password -E utf8 -W -D <data-folder>
 # pg_ctl -D <data-folder> -l <log-file> start/stop
 # pg_ctl status -D <data-folder>
-import psycopg2
-from psycopg2 import pool, sql
+from psycopg2 import pool, sql, connect
 from config import STORAGE, APP
 
 
-__dbpool = None
+_dbpool = None
 
 
 def __init_database():
@@ -19,7 +18,7 @@ def __init_database():
         "port": STORAGE.port,
     }
     # Connect to the PostgreSQL server
-    conn = psycopg2.connect(**db_params)
+    conn = connect(**db_params)
     # Create a cursor
     cursor = conn.cursor()
     conn.autocommit = True
@@ -51,13 +50,10 @@ def __init_database():
 
 def __init_tables():
     with DbCursor() as cursor:
-        cursor.execute(
-            "SELECT * FROM pg_extension WHERE extname = %s", ("postgis",))
-        if cursor.fetchone() is None:
-            cursor.execute("CREATE EXTENSION postgis")
+        cursor.execute("CREATE EXTENSION IF NOT EXISTS postgis")
         # SQL CREATE TABLE statement
         create_table_user_cmd = """
-        CREATE TABLE IF NOT EXISTS 'user' (
+        CREATE TABLE IF NOT EXISTS "user" (
             id serial PRIMARY KEY,
             name text,
             address text,
@@ -76,7 +72,7 @@ def __init_tables():
             area double precision,
             straubing_distance double precision,
             ndvi_rasters text[] not null default '{}',
-            FOREIGN KEY (user_id) REFERENCES 'user'(id)
+            FOREIGN KEY (user_id) REFERENCES "user"(id)
         )
         """
         create_table_season_cmd = """
@@ -88,7 +84,6 @@ def __init_tables():
             intercrop boolean,
             soil_type text,
             variety text,
-            seed_date timestamp with time zone,
             seed_density double precision,
             first_fertilizer_amount double precision,
             second_fertilizer_amount double precision,
@@ -103,7 +98,7 @@ def __init_tables():
             recommended_fertilizer_amount double precision default -1.0,
             yield double precision default -1.0,
             PRIMARY KEY (field_id, period_id),
-            FOREIGN KEY (user_id) REFERENCES 'user'(id),
+            FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id)
         )
         """
@@ -116,7 +111,7 @@ def __init_tables():
             area double precision,
             region GEOMETRY(POLYGON, 4326) not null,
             recommended_fertilizer_amount double precision default -1.0,
-            FOREIGN KEY (user_id) REFERENCES 'user'(id),
+            FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id)
         )
         """
@@ -133,9 +128,9 @@ def __init_tables():
             phosphor_measurement double precision,
             potassium_measurement double precision,
             ndvi_value double precision,
-            FOREIGN KEY (user_id) REFERENCES 'user'(id),
+            FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id),
-            FOREIGN KEY (subfield_id) REFERENCES subfield(id),
+            FOREIGN KEY (subfield_id) REFERENCES subfield(id)
         )
         """
         for cmd in [
@@ -149,7 +144,7 @@ def __init_tables():
         if APP.dev_mode:
             cursor.execute(
                 """
-                INSERT INTO 'user'(id, name, address, company_name, company_size, email, password)
+                INSERT INTO "user"(id, name, address, company_name, company_size, email, password)
                 VALUES (1, 'test', 'test address', 'test company', 1, 'user@test.com', 'test_password')
                 ON CONFLICT (id) DO NOTHING
                 """
@@ -157,7 +152,7 @@ def __init_tables():
 
 
 def init():
-    global __dbpool
+    global _dbpool
     __init_database()
     db_params = {
         "dbname": STORAGE.dbname,
@@ -166,7 +161,7 @@ def init():
         "host": STORAGE.host,
         "port": STORAGE.port,
     }
-    __dbpool = pool.ThreadedConnectionPool(minconn=1, maxconn=64, **db_params)
+    _dbpool = pool.ThreadedConnectionPool(minconn=1, maxconn=64, **db_params)
     __init_tables()
 
 
@@ -175,13 +170,13 @@ class DbCursor:
         self.error = None
 
     def __enter__(self):
-        global __dbpool
-        self.__conn = __dbpool.getconn()
+        global _dbpool
+        self.__conn = _dbpool.getconn()
         self.__cursor = self.__conn.cursor()
         return self.__cursor
 
     def __exit__(self, *args):
-        global __dbpool
+        global _dbpool
         try:
             self.__conn.commit()
         except Exception as error:
@@ -190,4 +185,4 @@ class DbCursor:
             self.error = error
         finally:
             self.__cursor.close()
-            __dbpool.putconn(self.__conn)
+            _dbpool.putconn(self.__conn)

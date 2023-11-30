@@ -30,7 +30,7 @@ export default function AuthenticationProvider({ children }) {
             reject(data);
           }
         })
-        .catch((error) => reject(error));
+        .catch((error) => reject(error.message));
     });
   };
 
@@ -47,7 +47,7 @@ export default function AuthenticationProvider({ children }) {
           if (response.ok) resolve(data);
           else reject(data);
         })
-        .catch((error) => reject(error));
+        .catch((error) => reject(error.message));
     });
   };
 

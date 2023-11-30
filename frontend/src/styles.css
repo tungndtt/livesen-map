@@ -21,3 +21,30 @@ body {
   border-radius: 50%;
   display: inline-block;
 }
+
+.general-container {
+  width: 100%;
+  padding: 15px;
+  display: flex; 
+  flex-direction: column;
+  gap: 15px;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}

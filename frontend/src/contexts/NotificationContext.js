@@ -26,7 +26,7 @@ export default function NotificationProvider({ children }) {
           severity={notification?.isError ? "error" : "success"}
           sx={{ width: "100%" }}
         >
-          {notification?.message}
+          {notification?.message ?? ""}
         </Alert>
       </Snackbar>
     </NotificationContext.Provider>

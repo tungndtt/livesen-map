@@ -1,44 +1,62 @@
 import { useEffect, useState } from "react";
 import { Box, Button, TextField } from "@mui/material";
-import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
+import SendIcon from "@mui/icons-material/Send";
+import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { usePeriodContext } from "../../../contexts/PeriodContext";
-import { useNotificationContext } from "./NotificationContext";
+import { useNotificationContext } from "../../../contexts/NotificationContext";
 
-const fields = [
-  {
-    name: "max_allowed_fertilizer",
-    label: "Max Allowed Fertilizer",
-    isNumber: true,
-  },
-  { name: "soil_type", label: "Soil Type" },
-  { name: "variety", label: "Variety" },
-  { name: "seed_density", lael: "Seed Density", isNumber: true },
-  {
-    name: "first_fertilizer_amount",
-    lael: "First Fertilizer Amount",
-    isNumber: true,
-  },
-  {
-    name: "second_fertilizer_amount",
-    lael: "Second Fertilizer Amount",
-    isNumber: true,
-  },
-  { name: "first_soil_tillage", label: "First Soil Tillage" },
-  { name: "second_soil_tillage", label: "Second Soil Tillage" },
-  { name: "first_crop_protection", label: "First Crop Protection" },
-  { name: "second_crop_protection", label: "Second Crop Protection" },
-  { name: "nitrate", label: "Nitrate", isNumber: true },
-  { name: "phosphor", label: "Phosphor", isNumber: true },
-  { name: "potassium", label: "Potassium", isNumber: true },
-  { name: "ph", label: "Ph", isNumber: true },
-  {
-    name: "recommended_fertilizer_amount",
-    label: "Recommended Fertilizer Amount",
-    isNumber: true,
-    disabled: true,
-  },
-  { name: "yield", label: "Yield", isNumber: true, disabled: true },
+const fieldGroups = [
+  [
+    {
+      name: "max_allowed_fertilizer",
+      label: "Max Allowed Fertilizer",
+      isNumber: true,
+    },
+    { name: "seed_density", label: "Seed Density", isNumber: true },
+  ],
+  [
+    { name: "soil_type", label: "Soil Type" },
+    { name: "variety", label: "Variety" },
+  ],
+
+  [
+    {
+      name: "first_fertilizer_amount",
+      label: "1. Fertilizer Amount",
+      isNumber: true,
+    },
+    {
+      name: "second_fertilizer_amount",
+      label: "2. Fertilizer Amount",
+      isNumber: true,
+    },
+  ],
+  [
+    { name: "first_soil_tillage", label: "1. Soil Tillage" },
+    { name: "second_soil_tillage", label: "2. Soil Tillage" },
+  ],
+  [
+    { name: "first_crop_protection", label: "1. Crop Protection" },
+    { name: "second_crop_protection", label: "2. Crop Protection" },
+  ],
+  [
+    { name: "nitrate", label: "Nitrate", isNumber: true },
+    { name: "phosphor", label: "Phosphor", isNumber: true },
+    { name: "potassium", label: "Potassium", isNumber: true },
+  ],
+  [
+    { name: "ph", label: "Ph", isNumber: true },
+    { name: "yield", label: "Yield", isNumber: true, disabled: true },
+  ],
+  [
+    {
+      name: "recommended_fertilizer_amount",
+      label: "Recommended Fertilizer Amount",
+      isNumber: true,
+      disabled: true,
+    },
+  ],
 ];
 
 export default function SeasonTab() {
@@ -63,7 +81,7 @@ export default function SeasonTab() {
             setOptions(responseBody);
           } else notify({ message: responseBody["data"], isError: true });
         })
-        .catch((error) => notify({ message: error, isError: true }));
+        .catch((error) => notify({ message: error.message, isError: true }));
     } else {
       setSeason(undefined);
       setOptions(undefined);
@@ -72,11 +90,6 @@ export default function SeasonTab() {
 
   const updateSeason = () => {
     if (selectedField?.id && selectedPeriod && authenticationToken) {
-      fields.forEach(({ name, isNumber }) => {
-        if (isNumber && name in options) {
-          options[name] = +options[name];
-        }
-      });
       fetch(`${serverUrl}/upregister/${selectedField.id}/${selectedPeriod}`, {
         headers: {
           "Content-Type": "application/json",
@@ -98,45 +111,58 @@ export default function SeasonTab() {
             notify({ message: responseBody["data"], isError: true });
           }
         })
-        .catch((error) => notify({ message: error, isError: true }));
+        .catch((error) => notify({ message: error.message, isError: true }));
     }
   };
 
   const onChangeOptions = (e) => {
     setOptions((prevOptions) => {
-      const option = e.target.name;
-      const value = e.target.value;
-      const options = { ...prevOptions };
-      if (value) options[option] = value;
-      else delete options?.[option];
-      return options;
+      const name = e.target.name;
+      const value =
+        e.target.type === "number" ? +e.target.value : e.target.value;
+      return { ...prevOptions, [name]: value };
     });
   };
 
   return (
-    <Box>
-      {fields.map(({ name, label, isNumber, disabled }) => (
-        <TextField
-          fullWidth
-          disabled={disabled}
-          key={name}
-          name={name}
-          label={label}
-          value={options?.[name] ?? ""}
-          onChange={onChangeOptions}
-          error={
-            isNumber && name in options && !(options[name] instanceof Number)
-          }
-        />
+    <Box
+      className="general-container"
+      sx={{ p: 0, overflow: "auto", maxHeight: "calc(100vh - 190px)", pr: 1 }}
+    >
+      {fieldGroups.map((fieldGroup) => (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          {fieldGroup.map(({ name, label, isNumber, disabled }) => (
+            <TextField
+              fullWidth
+              size="small"
+              disabled={disabled}
+              key={name}
+              name={name}
+              label={label}
+              type={isNumber ? "number" : "text"}
+              value={options?.[name] ?? ""}
+              onChange={onChangeOptions}
+            />
+          ))}
+        </Box>
       ))}
       <Button
-        disabled={
-          fields.every(({ name }) => options?.[name] === season?.[name]) ||
-          fields.filter(
-            ({ name, isNumber }) =>
-              isNumber && name in options && !(options[name] instanceof Number)
-          )
-        }
+        fullWidth
+        size="small"
+        variant="outlined"
+        color="warning"
+        endIcon={<SendIcon />}
+        disabled={fieldGroups
+          .flat()
+          .every(({ name }) => options?.[name] === season?.[name])}
         onClick={updateSeason}
       >
         Update season

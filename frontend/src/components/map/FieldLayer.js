@@ -69,7 +69,7 @@ export default function FieldLayer() {
         })
         .catch((error) => {
           signOut();
-          notify({ message: error, isError: true });
+          notify({ message: error.message, isError: true });
           setLoadingNdvi(false);
         });
     }
@@ -80,12 +80,12 @@ export default function FieldLayer() {
 
   useEffect(() => {
     if (fieldLayerRef.current) container.removeLayer(fieldLayerRef.current);
-    if (!selectedField?.coordinates) {
+    if (selectedField?.coordinates) {
       fieldLayerRef.current = L.polygon(selectedField.coordinates);
       container.addLayer(fieldLayerRef.current);
       map.fitBounds(fieldLayerRef.current.getBounds());
     }
-  }, [context, map, selectedField]);
+  }, [context, map, selectedField?.coordinates]);
 
   return (
     <Modal

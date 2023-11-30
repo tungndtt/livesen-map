@@ -102,7 +102,7 @@ export default function MeasurementProvider({ children }) {
           for (let i = 0; i < errors.length; i++) {
             const error = errors[i];
             if (error) {
-              notify({ message: error, isError: true });
+              notify({ message: error.message, isError: true });
               break;
             }
           }
@@ -130,7 +130,7 @@ export default function MeasurementProvider({ children }) {
             resolve("Measurement poisitions were determined");
           } else reject(responseBody["data"]);
         })
-        .catch((error) => reject(error));
+        .catch((error) => reject(error.message));
     });
   };
 

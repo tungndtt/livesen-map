@@ -62,7 +62,7 @@ export default function FieldProvider({ children }) {
           const fetchedFields = await response.json();
           setFields(fetchedFields.map((field) => parseField(field)));
         })
-        .catch((error) => notify({ message: error, isError: true }));
+        .catch((error) => notify({ message: error.message, isError: true }));
     } else {
       setFields(undefined);
       setSelectedField(undefined);
@@ -100,7 +100,7 @@ export default function FieldProvider({ children }) {
             resolve("Successfully register region of interest");
           } else reject(data);
         })
-        .catch((error) => reject(error));
+        .catch((error) => reject(error.message));
     });
   };
 
@@ -122,7 +122,7 @@ export default function FieldProvider({ children }) {
             resolve(deleteMessage);
           } else reject(deleteMessage);
         })
-        .catch((error) => reject(error));
+        .catch((error) => reject(error.message));
     });
   };
 
@@ -155,7 +155,7 @@ export default function FieldProvider({ children }) {
             resolve("Successfully processed. Fetching the field ndvi raster");
           } else reject(data);
         })
-        .catch((error) => reject(error));
+        .catch((error) => reject(error.message));
     });
   };
 

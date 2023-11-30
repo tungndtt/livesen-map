@@ -16,7 +16,7 @@ export default function RegionInterestProvider({ children }) {
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/period";
 
   useEffect(() => {
-    if (authToken) {
+    if (authenticationToken) {
       fetch(serverUrl, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
@@ -32,14 +32,14 @@ export default function RegionInterestProvider({ children }) {
             })
           );
         })
-        .catch((periodError) => {
-          notify({ message: periodError, isError: true });
+        .catch((error) => {
+          notify({ message: error.message, isError: true });
         });
     } else {
       setPeriods(undefined);
       setSelectedPeriod(undefined);
     }
-  }, [authToken]);
+  }, [authenticationToken]);
 
   return (
     <PeriodContext.Provider

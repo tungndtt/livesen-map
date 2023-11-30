@@ -71,13 +71,13 @@ export default function MeasurementTab() {
                     setSelectedMeasurement(
                       id,
                       "positions",
-                      id in selectedMeasurements.positions
+                      selectedMeasurements?.positions?.[id]
                         ? undefined
                         : position
                     )
                   }
                 >
-                  {id in selectedMeasurements.positions
+                  {selectedMeasurements?.positions?.[id]
                     ? "Hide measurement position"
                     : "Show measurement position"}
                 </Button>
@@ -86,13 +86,13 @@ export default function MeasurementTab() {
                     setSelectedMeasurement(
                       id,
                       "subfields",
-                      id in selectedMeasurements.subfields
+                      selectedMeasurements?.subfields?.[id]
                         ? undefined
                         : subfield.coordinates
                     )
                   }
                 >
-                  {id in selectedMeasurements.subfields
+                  {selectedMeasurements?.subfields?.[id]
                     ? "Hide measurement subfield"
                     : "Show measurement subfield"}
                 </Button>
@@ -145,21 +145,13 @@ function MeasurementValues({ measurement }) {
 
   const onChangeOptions = (e) => {
     setOptions((prevOptions) => {
-      const option = e.target.name;
-      const value = e.target.value;
-      const options = { ...prevOptions };
-      if (value) options[option] = value;
-      else delete options?.[option];
-      return options;
+      const name = e.target.name;
+      const value = +e.target.value;
+      return { ...prevOptions, [name]: value };
     });
   };
 
   const updateMeasurementValues = () => {
-    fields.forEach(({ name, isNumber }) => {
-      if (isNumber && name in options) {
-        options[name] = +options[name];
-      }
-    });
     updateMeasurement(measurement.id, options)
       .then((message) => notify({ message: message, isError: false }))
       .catch((error) => notify({ message: error, isError: true }));
@@ -172,18 +164,15 @@ function MeasurementValues({ measurement }) {
           fullWidth
           name={name}
           label={label}
-          value={measurement?.[name]}
+          type="number"
+          value={options?.[name]}
           onChange={onChangeOptions}
-          error={name in options && !(options[name] instanceof Number)}
         />
       ))}
       <Button
-        disabled={
-          fields.every(({ name }) => options?.[name] === measurement[name]) ||
-          fields.filter(
-            ({ name }) => name in options && !(options[name] instanceof Number)
-          )
-        }
+        disabled={fields.every(
+          ({ name }) => options?.[name] === measurement?.[name]
+        )}
         onClick={updateMeasurementValues}
       >
         Update measurement values

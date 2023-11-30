@@ -6,7 +6,7 @@ from services.hash.hasher import encrypt
 api = Blueprint("user", __name__, url_prefix="/user")
 
 
-@api.route("/", methods=["GET"])
+@api.route("", methods=["GET"])
 @authentication_required
 def retrieve_user(user_id, _):
     user = get_user(user_id)

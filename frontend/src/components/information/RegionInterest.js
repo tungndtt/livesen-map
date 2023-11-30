@@ -39,9 +39,10 @@ export default function RegionInterest() {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+    <Box className="general-container">
       <TextField
         size="small"
+        fullWidth
         required
         id="region-name"
         label="Region Name"
@@ -50,6 +51,7 @@ export default function RegionInterest() {
       />
       <TextField
         disabled
+        fullWidth
         id="region-coordinates"
         multiline={true}
         rows={5}
@@ -64,6 +66,7 @@ export default function RegionInterest() {
       />
       <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
         <Button
+          size="small"
           fullWidth
           disabled={!roi || !roiName}
           variant="outlined"
@@ -78,6 +81,7 @@ export default function RegionInterest() {
           Register region
         </Button>
         <Button
+          size="small"
           fullWidth
           disabled={!roi}
           variant="outlined"

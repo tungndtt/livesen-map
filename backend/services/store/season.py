@@ -9,8 +9,7 @@ def __parse_record(record):
         for i, col in enumerate([
             "user_id", "field_id", "period_id",
             "max_allowed_fertilizer", "intercrop",
-            "soil_type", "variety",
-            "seed_date", "seed_density",
+            "soil_type", "variety", "seed_density",
             "first_fertilizer_amount", "second_fertilizer_amount",
             "first_soil_tillage", "second_soil_tillage",
             "first_crop_protection", "second_crop_protection",
