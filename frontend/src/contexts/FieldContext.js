@@ -34,7 +34,7 @@ const parseField = (field) => {
     id,
     name,
     coordinates: coordinates.map(function t(e) {
-      return e[0] instanceof Number ? { lng: e[0], lat: e[1] } : e.map(t);
+      return typeof e[0] === "number" ? { lng: e[0], lat: e[1] } : e.map(t);
     }),
     straubingDistance,
     area,
@@ -91,14 +91,14 @@ export default function FieldProvider({ children }) {
         }),
       })
         .then(async (response) => {
-          const registeredField = await response.json();
+          const responseBody = await response.json();
           if (response.ok) {
             setFields((prevFields) => [
-              parseField(registeredField),
+              parseField(responseBody),
               ...prevFields,
             ]);
             resolve("Successfully register region of interest");
-          } else reject(data);
+          } else reject(responseBody["data"]);
         })
         .catch((error) => reject(error.message));
     });
@@ -111,16 +111,15 @@ export default function FieldProvider({ children }) {
         method: "DELETE",
       })
         .then(async (response) => {
-          const body = await response.json();
-          const deleteMessage = body["data"];
           if (response.ok) {
             setFields((prevFields) =>
               prevFields.filter(
                 (prevField) => prevField.id !== selectedField.id
               )
             );
-            resolve(deleteMessage);
-          } else reject(deleteMessage);
+            setSelectedField(undefined);
+            resolve("Successfully unregister the field");
+          } else reject("Failed to unregister the field");
         })
         .catch((error) => reject(error.message));
     });
@@ -132,30 +131,34 @@ export default function FieldProvider({ children }) {
       if (field && selectedPeriod in field?.periodNdvi) {
         setNdvi(field?.periodNdvi[selectedPeriod]);
         resolve("Fetching the field ndvi raster");
+      } else {
+        fetch(
+          `${serverUrl}/process_ndvi/${selectedField.id}/${selectedPeriod}`,
+          {
+            headers: { "Auth-Token": authenticationToken },
+            method: "GET",
+          }
+        )
+          .then(async (response) => {
+            const body = await response.json();
+            const data = body["data"];
+            if (response.ok) {
+              const [period, ndviRaster] = data.split("_");
+              setFields((prevFields) => {
+                const index = prevFields.findIndex(
+                  (prevField) => prevField.id === selectedField.id
+                );
+                if (index !== -1) {
+                  prevFields[index].periodNdvi[period] = ndviRaster;
+                  return [...prevFields];
+                } else return prevFields;
+              });
+              setNdvi(ndviRaster);
+              resolve("Successfully processed. Fetching the field ndvi raster");
+            } else reject(data);
+          })
+          .catch((error) => reject(error.message));
       }
-      fetch(`${serverUrl}/process_ndvi/${selectedField.id}/${selectedPeriod}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
-        .then(async (response) => {
-          const body = await response.json();
-          const data = body["data"];
-          if (response.ok) {
-            const ndviRaster = data.split("_")[1];
-            setFields((prevFields) => {
-              const index = prevFields.findIndex(
-                (prevField) => prevField.id === selectedField.id
-              );
-              if (index !== -1) {
-                prevFields[index].periodNdvi[selectedPeriod] = ndviRaster;
-                return [...prevFields];
-              } else return prevFields;
-            });
-            setNdvi(ndviRaster);
-            resolve("Successfully processed. Fetching the field ndvi raster");
-          } else reject(data);
-        })
-        .catch((error) => reject(error.message));
     });
   };
 

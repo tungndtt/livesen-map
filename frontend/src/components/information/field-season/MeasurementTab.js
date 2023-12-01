@@ -9,6 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { usePeriodContext } from "../../../contexts/PeriodContext";
 import { useMeasurementContext } from "../../../contexts/MeasurementContext";
@@ -32,7 +33,7 @@ export default function MeasurementTab() {
   };
 
   return (
-    <Box>
+    <Box className="general-container subtab-container">
       {measurements ? (
         measurements.map((measurement, i) => {
           const { id, position, ndvi_value, subfield } = measurement;
@@ -82,6 +83,9 @@ export default function MeasurementTab() {
                     : "Show measurement position"}
                 </Button>
                 <Button
+                  fullWidth
+                  size="small"
+                  variant="outlined"
                   onClick={() =>
                     setSelectedMeasurement(
                       id,
@@ -103,12 +107,14 @@ export default function MeasurementTab() {
         })
       ) : (
         <>
-          <Typography>
-            No measurement positions available. <br />
-            Make sure field and season selected before determining the
-            measurement positions
+          <Typography m={4}>
+            <b>No measurement positions available</b>
           </Typography>
           <Button
+            fullWidth
+            size="small"
+            variant="outlined"
+            endIcon={<ScatterPlotIcon />}
             disabled={!selectedField || !selectedPeriod}
             onClick={determineMeasurement}
           >

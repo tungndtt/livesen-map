@@ -35,7 +35,7 @@ def upsert_season(user_id, field_id, period_id, data):
             cols.append(col)
             vals.append(data[col])
     insert_cols = ", ".join(cols)
-    update_cols = " = %s, ".join(cols)
+    update_cols = " = %s, ".join(cols) + " = %s"
     upsert_vals = ", ".join(["%s" * len(vals)])
     upserted_season = None
     db_cursor = DbCursor()
@@ -58,7 +58,7 @@ def delete_season(user_id, field_id, period_id):
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            "DELETE FROM season WHERE user_id = %s, field_id = %s, period_id = %s",
+            "DELETE FROM season WHERE user_id = %s AND field_id = %s AND period_id = %s",
             (user_id, field_id, period_id,)
         )
     return db_cursor.error is None
@@ -69,7 +69,7 @@ def get_season(user_id, field_id, period_id):
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            "SELECT * FROM season WHERE user_id = %s, field_id = %s, period_id = %s",
+            "SELECT * FROM season WHERE user_id = %s AND field_id = %s AND period_id = %s",
             (user_id, field_id, period_id,)
         )
         season = __parse_record(cursor.fetchone())

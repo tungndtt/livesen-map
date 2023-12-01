@@ -30,6 +30,13 @@ body {
   gap: 15px;
 }
 
+.subtab-container {
+  padding: 5px 0px; 
+  overflow: auto;
+  max-height: calc(100vh - 200px); 
+  padding-right: 10px;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
 }

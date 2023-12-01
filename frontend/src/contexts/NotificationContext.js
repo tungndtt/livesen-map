@@ -16,7 +16,7 @@ export default function NotificationProvider({ children }) {
       {children}
       <Snackbar
         open={Boolean(notification)}
-        autoHideDuration={4000}
+        autoHideDuration={1500}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{ zIndex: 9999 }}
         onClose={onClose}

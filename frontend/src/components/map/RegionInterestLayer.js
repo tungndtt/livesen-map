@@ -23,7 +23,7 @@ export default function DrawController() {
     const layers = Object.values(fgRef.current._layers);
     if (layers.length > 0) {
       layers.forEach((layer, i) => {
-        if (i === layer.length - 1) return;
+        if (i === layers.length - 1) return;
         fgRef.current.removeLayer(layer);
       });
     }

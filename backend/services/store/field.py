@@ -1,4 +1,5 @@
 from services.store.storage import DbCursor
+from json import loads as json_parse
 
 
 def __parse_record(record):
@@ -9,7 +10,7 @@ def __parse_record(record):
         "id": id,
         "user_id": user_id,
         "name": name,
-        "coordinates": geojson["coordinates"],
+        "coordinates": json_parse(geojson)["coordinates"],
         "straubing_distance": straubing_distance,
         "area": area,
         "ndvi_rasters": ndvi_rasters
@@ -24,7 +25,7 @@ def get_field(user_id, field_id):
             """
             SELECT id, user_id, name, ST_AsGeoJSON(region), straubing_distance, area, ndvi_rasters
             FROM field
-            WHERE id = %s, user_id = %s
+            WHERE id = %s AND user_id = %s
             """, (field_id, user_id,))
         field = __parse_record(cursor.fetchone())
     return field if db_cursor.error is None else None
@@ -50,8 +51,8 @@ def insert_field(user_id, name, region):
             SET straubing_distance = ST_Distance(
                 (SELECT region FROM field WHERE id = %s),
                 ST_GeomFromText(%s, 4326)
-            )
-            AND area = ST_Area(region)
+            ),
+            area = ST_Area(region)
             WHERE id = %s
             RETURNING id, user_id, name, ST_AsGeoJSON(region), straubing_distance, area, ndvi_rasters
             """,
@@ -69,7 +70,8 @@ def delete_field(field_id):
             "DELETE FROM field where id = %s RETURNING ndvi_rasters",
             (field_id,)
         )
-        deleted_field_ndvi_rasters = cursor.fetchone()[0]
+        record = cursor.fetchone()
+        deleted_field_ndvi_rasters = None if record is None else record[0]
     return deleted_field_ndvi_rasters if db_cursor.error is None else None
 
 
@@ -97,7 +99,7 @@ def insert_field_ndvi_raster(field_id, ndvi_raster):
         raster_data_list = cursor.fetchone()[0]
         raster_data_list.append(ndvi_raster)
         cursor.execute(
-            "UPDATE roi SET ndvi_rasters = %s WHERE id = %s",
+            "UPDATE field SET ndvi_rasters = %s WHERE id = %s",
             (raster_data_list, field_id,)
         )
     return db_cursor.error is None

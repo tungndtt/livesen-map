@@ -20,8 +20,8 @@ export default function FieldSeason() {
   const { fields, selectedField, setSelectedField } = useFieldContext();
   const { periods, selectedPeriod, setSelectedPeriod } = usePeriodContext();
   const [selections, setSelections] = useState({
-    field: selectedField?.id,
-    period: selectedPeriod,
+    field: selectedField?.id || "",
+    period: selectedPeriod || "",
   });
   const [tab, setTab] = useState(0);
 
@@ -51,7 +51,7 @@ export default function FieldSeason() {
                 }))
               }
             >
-              <MenuItem value={undefined}>
+              <MenuItem value={""}>
                 <em>None</em>
               </MenuItem>
               {fields?.map(({ id, name }) => (
@@ -75,7 +75,7 @@ export default function FieldSeason() {
                 }))
               }
             >
-              <MenuItem value={undefined}>
+              <MenuItem value={""}>
                 <em>None</em>
               </MenuItem>
               {periods?.map(({ id, data }) => (

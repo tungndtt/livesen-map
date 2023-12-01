@@ -6,7 +6,7 @@ from api.authentication import authentication_required
 api = Blueprint("season", __name__, url_prefix="/season")
 
 
-@api.route("/<field_id>/<period_id>", methods=["GET"])
+@api.route("/<int:field_id>/<period_id>", methods=["GET"])
 @authentication_required
 def retrieve_season(user_id, _, field_id, period_id):
     season = get_season(user_id, field_id, period_id)
@@ -16,7 +16,7 @@ def retrieve_season(user_id, _, field_id, period_id):
         return jsonify({"data": "Failed to retrieve the season"}), 500
 
 
-@api.route("/upregister/<field_id>/<period_id>", methods=["POST"])
+@api.route("/upregister/<int:field_id>/<period_id>", methods=["POST"])
 @authentication_required
 def upregister_season(user_id, field_id, period_id, data):
     upserted_season = upsert_season(user_id, field_id, period_id, data)
@@ -26,7 +26,7 @@ def upregister_season(user_id, field_id, period_id, data):
         return jsonify({"data": "Failed to upregister the season"}), 500
 
 
-@api.route("/unregister/<field_id>/<period_id>", methods=["DELETE"])
+@api.route("/unregister/<int:field_id>/<period_id>", methods=["DELETE"])
 @authentication_required
 def unregister_season(user_id, _, field_id, period_id):
     if delete_season(user_id, field_id, period_id):

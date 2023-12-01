@@ -12,7 +12,7 @@ from utils.helper import find_farthest_point_inside_polygon
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
 
 
-@api.route("/<field_id>/<period_id>", methods=["GET"])
+@api.route("/<int:field_id>/<period_id>", methods=["GET"])
 @authentication_required
 def list_all_measurements(user_id, _, field_id, period_id):
     measurements = list_measurements(user_id, field_id, period_id)
@@ -22,7 +22,7 @@ def list_all_measurements(user_id, _, field_id, period_id):
         return jsonify({"data": "Failed to retrieve measurements within given period"}), 500
 
 
-@api.route("/subfield/<field_id>/<period_id>", methods=["GET"])
+@api.route("/subfield/<int:field_id>/<period_id>", methods=["GET"])
 @authentication_required
 def list_all_subfields(user_id, _, field_id, period_id):
     subfields = list_subfields(user_id, field_id, period_id)
@@ -32,7 +32,7 @@ def list_all_subfields(user_id, _, field_id, period_id):
         return jsonify({"data": "Failed to retrieve all subfields"}), 500
 
 
-@api.route("/determine_positions/<field_id>/<period_id>", methods=["GET"])
+@api.route("/determine_positions/<int:field_id>/<period_id>", methods=["GET"])
 @authentication_required
 def determine_measurement_positions(user_id, _, field_id, period_id):
     field = get_field(user_id, field_id)
@@ -79,7 +79,7 @@ def determine_measurement_positions(user_id, _, field_id, period_id):
         return jsonify({"data": "Failed to determine the measurement positions"}), 500
 
 
-@api.route("/upgister/<measurement_id>", methods=["PUT"])
+@api.route("/upgister/<int:measurement_id>", methods=["PUT"])
 @authentication_required
 def upgister_measurement(user_id, data, measurement_id):
     updated_measurement = update_measurement(user_id, measurement_id, data)

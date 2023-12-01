@@ -45,12 +45,12 @@ def insert_measurement(cursor, user_id, field_id, period_id, subfield_id, data):
 
 def update_measurement(user_id, measurement_id, data):
     cols, vals = __extract_nonempty(data)
-    update_cols = " = %s, ".join(cols)
+    update_cols = " = %s, ".join(cols) + " = %s"
     updated_measurement = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            f"UPDATE measurement SET {update_cols} WHERE user_id = %s, id = %s RETURNING *",
+            f"UPDATE measurement SET {update_cols} WHERE user_id = %s AND id = %s RETURNING *",
             (*vals, user_id, measurement_id,)
         )
         updated_measurement = __parse_record(cursor.fetchone())
@@ -62,7 +62,7 @@ def list_measurements(user_id, field_id, period_id):
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            "SELECT * FROM measurement WHERE user_id = %s, field_id = %s, period_id = %s",
+            "SELECT * FROM measurement WHERE user_id = %s AND field_id = %s AND period_id = %s",
             (user_id, field_id, period_id,)
         )
         measurements = [__parse_record(record) for record in cursor.fetchall()]

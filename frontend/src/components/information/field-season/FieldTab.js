@@ -43,7 +43,7 @@ export default function FieldTab() {
   };
 
   const toggleNdviDisplay = () => {
-    if (ndvi) {
+    if (!ndvi) {
       getFieldNdvi()
         .then((message) => notify({ message: message, isError: false }))
         .catch((error) => notify({ message: error, isError: true }));
@@ -53,14 +53,14 @@ export default function FieldTab() {
   };
 
   return (
-    <Box>
+    <Box className="subtab-container">
       <TextField
         sx={{ mb: 2 }}
         fullWidth
         size="small"
         disabled
         label="Field name"
-        value={field?.name}
+        value={field?.name ?? ""}
       />
       <Box
         sx={{
@@ -76,14 +76,14 @@ export default function FieldTab() {
           size="small"
           disabled
           label="Field Area"
-          value={field?.area}
+          value={field?.area ?? ""}
         />
         <TextField
           fullWidth
           size="small"
           disabled
           label="Straubing distance"
-          value={field?.straubingDistance}
+          value={field?.straubingDistance ?? ""}
         />
       </Box>
       <TextField

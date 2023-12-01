@@ -74,7 +74,7 @@ export default function FieldLayer() {
         });
     }
     return () => {
-      container.removeLayer(ndviLayerRef.current);
+      if (ndviLayerRef.current) container.removeLayer(ndviLayerRef.current);
     };
   }, [context, map, ndvi]);
 
@@ -85,6 +85,9 @@ export default function FieldLayer() {
       container.addLayer(fieldLayerRef.current);
       map.fitBounds(fieldLayerRef.current.getBounds());
     }
+    return () => {
+      if (fieldLayerRef.current) container.removeLayer(fieldLayerRef.current);
+    };
   }, [context, map, selectedField?.coordinates]);
 
   return (

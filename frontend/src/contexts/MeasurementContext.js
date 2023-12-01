@@ -40,7 +40,7 @@ const parseSubfield = (subfield) => {
   } = subfield;
   return {
     coordinates: coordinates.map(function t(e) {
-      return e[0] instanceof Number ? { lng: e[0], lat: e[1] } : e.map(t);
+      return typeof e[0] === "number" ? { lng: e[0], lat: e[1] } : e.map(t);
     }),
     area,
     recommendedFertilizerAmount,
@@ -87,11 +87,7 @@ export default function MeasurementProvider({ children }) {
         .then(async ([subfieldResponse, measurementResponse]) => {
           const subfieldResponseBody = await subfieldResponse.json();
           const measurementResponseBody = await measurementResponse.json();
-          if (!subfieldResponse.ok) {
-            notify({ message: subfieldResponseBody["data"], isError: true });
-          } else if (!measurementResponse.ok) {
-            notify({ message: measurementResponseBody["data"], isError: true });
-          } else {
+          if (subfieldResponse.ok && measurementResponse.ok) {
             initializeMeasurements(
               measurementResponseBody,
               subfieldResponseBody

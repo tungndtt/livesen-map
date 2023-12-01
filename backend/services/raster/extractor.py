@@ -24,7 +24,7 @@ def __read_ndvi_data(nc_file):
 
 def __extract_bbox_raster(polygon, in_nc_file, out_tiff_file):
     ndvi = __read_ndvi_data(in_nc_file)
-    min_x, min_y, max_x, max_y = Polygon(polygon).bounds
+    min_x, min_y, max_x, max_y = Polygon(*polygon).bounds
     clipped_bbox = ndvi.rio.clip_box(min_x, min_y, max_x, max_y)
     # # maximum improvement factor
     # max_improvement_factor = 6
@@ -60,7 +60,7 @@ def __extract_polygon_raster(polygon, in_tiff_file, out_tiff_file):
             "crs": __crs,
         })
         with rasterio.open(out_tiff_file, "w", **out_meta) as dest:
-            geometry = Polygon(polygon)
+            geometry = Polygon(*polygon)
             # process maximal 1 MB chunk per step
             step = min(
                 1024**2 // (raster_data.width * 32),

@@ -1,4 +1,5 @@
 from services.store.storage import DbCursor
+from json import loads as json_parse
 
 
 def __parse_record(record):
@@ -9,7 +10,7 @@ def __parse_record(record):
         "id": id,
         "field_id": field_id,
         "period_id": period_id,
-        "coordinates": geojson["coordinates"],
+        "coordinates": json_parse(geojson)["coordinates"],
         "area": area,
         "recommended_fertilizer_amount": recommended_fertilizer_amount
     }
@@ -53,7 +54,7 @@ def list_subfields(user_id, field_id, period_id):
             """
             SELECT id, field_id, period_id, ST_AsGeoJSON(region), area, recommended_fertilizer_amount
             FROM subfield
-            WHERE user_id = %s, field_id = %s, period_id = %s
+            WHERE user_id = %s AND field_id = %s AND period_id = %s
             """,
             (user_id, field_id, period_id,)
         )

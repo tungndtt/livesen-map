@@ -79,7 +79,7 @@ export default function SeasonTab() {
           if (response.ok) {
             setSeason(responseBody);
             setOptions(responseBody);
-          } else notify({ message: responseBody["data"], isError: true });
+          }
         })
         .catch((error) => notify({ message: error.message, isError: true }));
     } else {
@@ -125,12 +125,10 @@ export default function SeasonTab() {
   };
 
   return (
-    <Box
-      className="general-container"
-      sx={{ p: 0, overflow: "auto", maxHeight: "calc(100vh - 190px)", pr: 1 }}
-    >
-      {fieldGroups.map((fieldGroup) => (
+    <Box className="general-container subtab-container">
+      {fieldGroups.map((fieldGroup, i) => (
         <Box
+          key={i}
           sx={{
             display: "flex",
             flexDirection: "row",

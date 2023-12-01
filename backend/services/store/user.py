@@ -47,9 +47,9 @@ def insert_user(data):
 
 def update_user(user_id, data):
     if "email" in data:
-        return None
+        del data["email"]
     cols, vals = __extract_nonempty(data)
-    update_cols = " = %s, ".join(cols)
+    update_cols = " = %s, ".join(cols) + " = %s"
     updated_user = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
