@@ -21,7 +21,7 @@ export default function RegionInterest() {
       if (coordinates) {
         setRoi(
           coordinates.map(function t(coord) {
-            return coord[0] instanceof Number
+            return typeof coord[0] === "number"
               ? { lng: coord[0], lat: coord[1] }
               : coord.map(t);
           })
@@ -36,6 +36,7 @@ export default function RegionInterest() {
       if (name) setRoiName(name);
     };
     reader.readAsText(e.target.files?.[0]);
+    e.target.value = null;
   };
 
   return (
