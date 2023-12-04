@@ -8,21 +8,9 @@ import proj4 from "proj4";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useFieldContext } from "../../contexts/FieldContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
+import ndvi2RBGA from "../../utils/ndvi2RBGA";
 
 window.proj4 = proj4;
-
-const valueToHex = [];
-const componentToHex = (c) => {
-  let hex = c.toString(16);
-  return hex.length == 1 ? "0" + hex : hex;
-};
-for (let i = 1; i < 255; i++) {
-  const redHex = componentToHex(i);
-  const blueHex = componentToHex(i);
-  const greenHex = componentToHex(i);
-  valueToHex.push(`#${redHex}${blueHex}${greenHex}FF`);
-}
-valueToHex.push("#FFFFFF00");
 
 export default function FieldLayer() {
   const { authenticationToken, signOut } = useAuthenticationContext();
@@ -52,7 +40,7 @@ export default function FieldLayer() {
                 ndviLayerRef.current = new GeoRasterLayer({
                   georaster: georaster,
                   opacity: 1,
-                  pixelValuesToColorFn: (values) => valueToHex[values[0] - 1],
+                  pixelValuesToColorFn: (values) => ndvi2RBGA(values[0]),
                   resolution: georaster.width * georaster.height,
                 });
                 container.addLayer(ndviLayerRef.current);

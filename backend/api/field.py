@@ -1,6 +1,7 @@
 from flask import Blueprint, send_from_directory, jsonify
 from services.store.field import get_field, insert_field, delete_field, list_fields, insert_field_ndvi_raster
-from services.raster.extractor import extract_raster
+# from services.raster.extractor import extract_raster
+from services.field_operation.field_ndvi import get_field_ndvi
 from shapely.geometry import Polygon
 from api.authentication import authentication_required
 import os
@@ -12,7 +13,7 @@ api = Blueprint("field", __name__, url_prefix="/field")
 
 @api.route("/ndvi/<path:filename>", methods=["GET"])
 @authentication_required
-def get_field_ndvi(_, __, filename):
+def retrieve_field_ndvi(_, __, filename):
     return send_from_directory(RASTEXTRACTOR.data_folder, filename)
 
 
@@ -62,7 +63,7 @@ def process_field_ndvi(user_id, _, field_id, period_id):
     for raster_data in field["ndvi_rasters"]:
         if raster_data.startswith(period_id):
             return jsonify({"data": raster_data}), 200
-    tiff_file = extract_raster(field["coordinates"], period_id + ".nc")
+    tiff_file = get_field_ndvi(field["coordinates"], period_id + ".nc")
     if tiff_file is None:
         return jsonify({"data": "No ndvi-scan of field in given period"}), 404
     else:

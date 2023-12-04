@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
-import { Box, Button, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  InputAdornment,
+  TextField,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 
@@ -16,6 +24,7 @@ export default function Profile() {
   const notify = useNotificationContext();
   const [user, setUser] = useState(undefined);
   const [options, setOptions] = useState(user);
+  const [showPassword, setShowPassword] = useState(false);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/user";
 
   useEffect(() => {
@@ -58,7 +67,7 @@ export default function Profile() {
       .then(async (response) => {
         const responseBody = await response.json();
         if (response.ok) {
-          setUser({ ...options, ...responseBody });
+          setUser(responseBody);
           notify({
             message: "Successfully update the user information",
             isError: false,
@@ -100,6 +109,24 @@ export default function Profile() {
           onChange={onChangeOptions}
         />
       ))}
+      <TextField
+        size="small"
+        fullWidth
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+        type={showPassword ? "text" : "password"}
+        name="password"
+        label="Password"
+        value={options?.["password"] ?? ""}
+        onChange={onChangeOptions}
+      />
       <Button
         fullWidth
         size="small"

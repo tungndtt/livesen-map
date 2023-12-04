@@ -57,7 +57,10 @@ class Splitter:
             bbox,
             side1_split, side2_split
         )
-        return [(subfield, self.__compute_intensity(subfield)) for subfield in subfields]
+        subfield_ndvi = [(subfield, self.__compute_intensity(subfield))
+                         for subfield in subfields]
+        self.__raster.close()
+        return subfield_ndvi
 
     def __merge_classified_subfields(self, field, side1_split, side2_split):
         categories = [[], [], []]

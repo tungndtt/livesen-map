@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.store.user import get_user, insert_user
+from services.store.user import get_user
 from services.jwt.token import generate_token, verify_token
 from services.hash.hasher import encrypt, check
 from services.mail.mailer import send_email
@@ -50,7 +50,7 @@ def sign_up():
         data = {"email": email, "password": encrypted_password}
         duration = 10
         registration_token = generate_token(data, duration)
-        registration_link = f"{APP.host}:{APP.port}/register?registration_token={registration_token}"
+        registration_link = f"{APP.host}:{APP.port}/user/register?registration_token={registration_token}"
         subject = "Livesen Registration"
         content = f"""
         <html>
@@ -76,20 +76,3 @@ def sign_up():
             return jsonify({"data": "Cannot send the activation email"}), 500
     else:
         return jsonify({"data": "Registered email already existed"}), 406
-
-
-@api.route("/register", methods=["GET"])
-def register():
-    registration_token = request.args.get("registration_token")
-    data = verify_token(registration_token)
-    if data is None:
-        return jsonify({"data": "Registration token is invalid"}), 408
-    else:
-        email, password = data["email"], data["password"]
-        if get_user(email) is None:
-            if insert_user(email, password):
-                return jsonify({"data": "Registration is successful"}), 201
-            else:
-                return jsonify({"data": "Cannot register user"}), 406
-        else:
-            return jsonify({"data": "User was already registered"}), 406

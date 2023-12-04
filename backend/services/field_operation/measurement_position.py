@@ -1,8 +1,10 @@
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Point, Polygon
 import random
 
 
-def find_farthest_point_inside_polygon(polygon, num_points=100):
+def find_measurement_position(coordinates, num_points=100):
+    polygon = coordinates if isinstance(coordinates, Polygon)\
+        else Polygon(*coordinates)
     centroid = polygon.centroid
     if polygon.contains(centroid):
         return centroid
@@ -20,13 +22,3 @@ def find_farthest_point_inside_polygon(polygon, num_points=100):
                 max_distance = distance
                 farthest_point = point
     return farthest_point
-
-
-if __name__ == "__main__":
-    # Example usage:
-    # Create your polygon here (replace with your actual polygon)
-    polygon = Polygon([(0, 0), (0, 3), (3, 3), (3, 0)])
-
-    # Find the farthest point inside the polygon
-    farthest_point = find_farthest_point_inside_polygon(polygon)
-    print(f"The farthest point inside the polygon: {farthest_point}")

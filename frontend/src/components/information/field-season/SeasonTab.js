@@ -1,62 +1,78 @@
 import { useEffect, useState } from "react";
-import { Box, Button, TextField } from "@mui/material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { usePeriodContext } from "../../../contexts/PeriodContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
 
 const fieldGroups = [
-  [
-    {
-      name: "max_allowed_fertilizer",
-      label: "Max Allowed Fertilizer",
-      isNumber: true,
-    },
-    { name: "seed_density", label: "Seed Density", isNumber: true },
-  ],
-  [
-    { name: "soil_type", label: "Soil Type" },
-    { name: "variety", label: "Variety" },
-  ],
-
-  [
-    {
-      name: "first_fertilizer_amount",
-      label: "1. Fertilizer Amount",
-      isNumber: true,
-    },
-    {
-      name: "second_fertilizer_amount",
-      label: "2. Fertilizer Amount",
-      isNumber: true,
-    },
-  ],
-  [
-    { name: "first_soil_tillage", label: "1. Soil Tillage" },
-    { name: "second_soil_tillage", label: "2. Soil Tillage" },
-  ],
-  [
-    { name: "first_crop_protection", label: "1. Crop Protection" },
-    { name: "second_crop_protection", label: "2. Crop Protection" },
-  ],
-  [
-    { name: "nitrate", label: "Nitrate", isNumber: true },
-    { name: "phosphor", label: "Phosphor", isNumber: true },
-    { name: "potassium", label: "Potassium", isNumber: true },
-  ],
-  [
-    { name: "ph", label: "Ph", isNumber: true },
-    { name: "yield", label: "Yield", isNumber: true, disabled: true },
-  ],
-  [
-    {
-      name: "recommended_fertilizer_amount",
-      label: "Recommended Fertilizer Amount",
-      isNumber: true,
-      disabled: true,
-    },
-  ],
+  { name: "soil_type", label: "Soil Type" },
+  { name: "variety", label: "Variety" },
+  { name: "seed_density", label: "Seed Density", isNumber: true },
+  {
+    label: "Fertilizer Amount",
+    fields: [
+      {
+        name: "max_allowed_fertilizer",
+        label: "Max Allowed Fertilizer",
+        isNumber: true,
+      },
+      {
+        name: "first_fertilizer_amount",
+        label: "1. Fertilizer Amount",
+        isNumber: true,
+      },
+      {
+        name: "second_fertilizer_amount",
+        label: "2. Fertilizer Amount",
+        isNumber: true,
+      },
+      {
+        name: "recommended_fertilizer_amount",
+        label: "Recommended Fertilizer Amount",
+        isNumber: true,
+        disabled: true,
+      },
+    ],
+  },
+  {
+    label: "Soil Tillage",
+    fields: [
+      { name: "first_soil_tillage", label: "1. Soil Tillage" },
+      { name: "second_soil_tillage", label: "2. Soil Tillage" },
+    ],
+  },
+  {
+    label: "Crop Protection",
+    fields: [
+      { name: "first_crop_protection", label: "1. Crop Protection" },
+      { name: "second_crop_protection", label: "2. Crop Protection" },
+    ],
+  },
+  {
+    label: "Nutrient Values",
+    fields: [
+      { name: "nitrate", label: "Nitrate", isNumber: true },
+      { name: "phosphor", label: "Phosphor", isNumber: true },
+      { name: "potassium", label: "Potassium", isNumber: true },
+      { name: "ph", label: "Ph", isNumber: true },
+    ],
+  },
+  { name: "yield", label: "Yield", isNumber: true, disabled: true },
 ];
 
 export default function SeasonTab() {
@@ -126,32 +142,63 @@ export default function SeasonTab() {
 
   return (
     <Box className="general-container subtab-container">
-      {fieldGroups.map((fieldGroup, i) => (
-        <Box
-          key={i}
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 1,
-          }}
+      <FormControl fullWidth size="small">
+        <InputLabel id="intercop-select-label">Intercrop</InputLabel>
+        <Select
+          labelId="intercop-select-label"
+          id="intercrop-select"
+          value={options?.["intercrop"] ?? false}
+          name="intercrop"
+          label="Intercrop"
+          onChange={onChangeOptions}
         >
-          {fieldGroup.map(({ name, label, isNumber, disabled }) => (
-            <TextField
-              fullWidth
-              size="small"
-              disabled={disabled}
-              key={name}
-              name={name}
-              label={label}
-              type={isNumber ? "number" : "text"}
-              value={options?.[name] ?? ""}
-              onChange={onChangeOptions}
-            />
-          ))}
-        </Box>
-      ))}
+          <MenuItem value={true}>True</MenuItem>
+          <MenuItem value={false}>False</MenuItem>
+        </Select>
+      </FormControl>
+      {fieldGroups.map((fieldGroup) =>
+        fieldGroup?.fields ? (
+          <Accordion key={fieldGroup?.label}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography>{fieldGroup?.label}</Typography>
+            </AccordionSummary>
+            <AccordionDetails
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              {fieldGroup.map(({ name, label, isNumber, disabled }) => (
+                <TextField
+                  key={name}
+                  fullWidth
+                  size="small"
+                  disabled={disabled}
+                  name={name}
+                  label={label}
+                  type={isNumber ? "number" : "text"}
+                  value={options?.[name] ?? ""}
+                  onChange={onChangeOptions}
+                />
+              ))}
+            </AccordionDetails>
+          </Accordion>
+        ) : (
+          <TextField
+            key={fieldGroup?.label}
+            fullWidth
+            size="small"
+            disabled={fieldGroup?.disabled}
+            name={fieldGroup?.name}
+            label={fieldGroup?.label}
+            type={fieldGroup?.isNumber ? "number" : "text"}
+            value={options?.[fieldGroup?.name] ?? ""}
+            onChange={onChangeOptions}
+          />
+        )
+      )}
       <Button
         fullWidth
         size="small"
