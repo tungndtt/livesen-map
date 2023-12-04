@@ -38,7 +38,7 @@ export default function MeasurementTab() {
         measurements.map((measurement, i) => {
           const { id, position, ndvi_value, subfield } = measurement;
           return (
-            <Accordion key={id}>
+            <Accordion key={id} defaultExpanded>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>Measurement {i}</Typography>
               </AccordionSummary>

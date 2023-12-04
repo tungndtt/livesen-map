@@ -15,8 +15,8 @@ export default function RegionInterest() {
   const onUploadRegionInterest = (e) => {
     const reader = new FileReader();
     reader.onload = function (event) {
-      const content = event.target.result;
-      const regionInterest = JSON.parse(content);
+      const content = event.target?.result;
+      const regionInterest = JSON.parse(content ?? "{}");
       const coordinates = regionInterest?.["coordinates"];
       if (coordinates) {
         setRoi(

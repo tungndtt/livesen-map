@@ -147,18 +147,19 @@ export default function SeasonTab() {
         <Select
           labelId="intercop-select-label"
           id="intercrop-select"
-          value={options?.["intercrop"] ?? false}
+          value={options?.["intercrop"] ?? 0}
+          type="number"
           name="intercrop"
           label="Intercrop"
           onChange={onChangeOptions}
         >
-          <MenuItem value={true}>True</MenuItem>
-          <MenuItem value={false}>False</MenuItem>
+          <MenuItem value={0}>False</MenuItem>
+          <MenuItem value={1}>True</MenuItem>
         </Select>
       </FormControl>
       {fieldGroups.map((fieldGroup) =>
         fieldGroup?.fields ? (
-          <Accordion key={fieldGroup?.label}>
+          <Accordion key={fieldGroup?.label} defaultExpanded disableGutters>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{fieldGroup?.label}</Typography>
             </AccordionSummary>
@@ -170,7 +171,7 @@ export default function SeasonTab() {
                 gap: 1,
               }}
             >
-              {fieldGroup.map(({ name, label, isNumber, disabled }) => (
+              {fieldGroup.fields.map(({ name, label, isNumber, disabled }) => (
                 <TextField
                   key={name}
                   fullWidth
@@ -205,9 +206,14 @@ export default function SeasonTab() {
         variant="outlined"
         color="warning"
         endIcon={<SendIcon />}
-        disabled={fieldGroups
-          .flat()
-          .every(({ name }) => options?.[name] === season?.[name])}
+        disabled={fieldGroups.every(function check(fieldGroup) {
+          if (fieldGroup?.fields) {
+            return fieldGroup.fields.every(check);
+          } else {
+            const name = fieldGroup.name;
+            return options?.[name] === season?.[name];
+          }
+        })}
         onClick={updateSeason}
       >
         Update season

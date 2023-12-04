@@ -7,7 +7,7 @@ const fields = [
   { name: "name", label: "Name" },
   { name: "address", label: "Address" },
   { name: "company_name", label: "Company Name" },
-  { name: "company_size", lael: "Company Size", isNumber: true },
+  { name: "company_size", label: "Company Size", isNumber: true },
 ];
 
 export default function AuthenticationModal() {
@@ -29,13 +29,29 @@ export default function AuthenticationModal() {
   };
 
   return (
-    <Modal open={!authenticationToken}>
-      <Box>
+    <Modal
+      open={!authenticationToken}
+      sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+    >
+      <Box
+        sx={{
+          width: "400px",
+          height: "fit-content",
+          p: 2,
+          borderRadius: 2,
+          backgroundColor: "white",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
         <Typography variant="body1">
-          {isSignIn ? "Login" : "Registration"}
+          <b>{isSignIn ? "Login" : "Registration"}</b>
         </Typography>
         <TextField
           fullWidth
+          size="small"
           required
           id="email"
           label="Email"
@@ -44,8 +60,9 @@ export default function AuthenticationModal() {
         />
         <TextField
           fullWidth
+          size="small"
           required
-          password
+          type="password"
           id="password"
           label="Password"
           value={password}
@@ -55,38 +72,22 @@ export default function AuthenticationModal() {
         {!isSignIn &&
           fields.map(({ name, label, isNumber }) => (
             <TextField
-              fullWidth
               key={name}
+              fullWidth
+              size="small"
+              type={isNumber ? "number" : "text"}
               name={name}
               label={label}
               value={options?.[name] ?? ""}
-              error={
-                isNumber &&
-                options?.[name] !== undefined &&
-                !(options?.[name] instanceof Number)
-              }
               onChange={onChangeOptions}
             />
           ))}
         <Button
-          disabled={
-            !email ||
-            !password ||
-            (!isSignIn &&
-              fields.filter(
-                ({ name, isNumber }) =>
-                  isNumber &&
-                  options?.[name] !== undefined &&
-                  !(options?.[name] instanceof Number)
-              ))
-          }
+          fullWidth
+          size="small"
+          variant="outlined"
+          disabled={!email || !password}
           onClick={() => {
-            if (!isSignIn) {
-              fields.forEach(({ name, isNumber }) => {
-                if (options?.[name] !== undefined && isNumber)
-                  options[name] = +options[name];
-              });
-            }
             const promise = isSignIn
               ? signIn(email, password)
               : signUp(email, password, options);

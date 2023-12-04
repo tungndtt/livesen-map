@@ -123,7 +123,7 @@ export default function Profile() {
         }}
         type={showPassword ? "text" : "password"}
         name="password"
-        label="Password"
+        label="New Password"
         value={options?.["password"] ?? ""}
         onChange={onChangeOptions}
       />

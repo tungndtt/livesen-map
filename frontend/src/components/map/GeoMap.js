@@ -7,7 +7,7 @@ export default function GeoMap() {
   return (
     <MapContainer
       center={[51.1642292, 10.4541194]}
-      zoom={4}
+      zoom={6}
       scrollWheelZoom={true}
       style={{ position: "absolute", left: 0, width: "55%", height: "100%" }}
     >
