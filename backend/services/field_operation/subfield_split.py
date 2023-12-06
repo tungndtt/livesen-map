@@ -6,7 +6,7 @@ import numpy as np
 import math
 
 
-def __pixel_based_nochunk_split(raster_file):
+def __pixel_based_chunk_split(raster_file):
     width, height = raster_file.width, raster_file.height
     n = 3
     result = [[] for _ in range(n)]
