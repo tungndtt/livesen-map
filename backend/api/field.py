@@ -1,11 +1,10 @@
 from flask import Blueprint, send_from_directory, jsonify
 from services.store.field import get_field, insert_field, delete_field, list_fields, insert_field_ndvi_raster
-# from services.raster.extractor import extract_raster
 from services.field_operation.field_ndvi import get_field_ndvi
 from shapely.geometry import Polygon
 from api.authentication import authentication_required
 import os
-from config import RASTEXTRACTOR
+from config import NDVI
 
 
 api = Blueprint("field", __name__, url_prefix="/field")
@@ -14,7 +13,7 @@ api = Blueprint("field", __name__, url_prefix="/field")
 @api.route("/ndvi/<path:filename>", methods=["GET"])
 @authentication_required
 def retrieve_field_ndvi(_, __, filename):
-    return send_from_directory(RASTEXTRACTOR.data_folder, filename)
+    return send_from_directory(NDVI.data_folder, filename)
 
 
 @api.route("", methods=["GET"])
@@ -47,7 +46,7 @@ def unregister_field(_, __, field_id):
         try:
             for ndvi_raster in ndvi_rasters:
                 _, tiff_file = ndvi_raster.split("_")
-                os.remove(os.path.join(RASTEXTRACTOR.data_folder, tiff_file))
+                os.remove(os.path.join(NDVI.data_folder, tiff_file))
             return jsonify({"data": "Successfully unregister the field"}), 204
         except Exception as error:
             print("[Field API]", error)

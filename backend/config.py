@@ -17,11 +17,11 @@ class Mailer:
         self.password = config["password"]
 
 
-class Rastextractor:
+class Ndvi:
     data_folder = None
 
     def parse(self, config):
-        self.data_folder = os.path.join(".", *config["data_folder"])
+        self.data_folder = config["data_folder"]
 
 
 class Downloader:
@@ -32,7 +32,7 @@ class Downloader:
     def parse(self, config):
         self.user = config["user"]
         self.password = config["password"]
-        self.data_folder = os.path.join(".", *config["data_folder"])
+        self.data_folder = config["data_folder"]
 
 
 class Storage:
@@ -64,21 +64,21 @@ class App:
 __initialized = False
 JWTOKEN = Jwtoken()
 MAILER = Mailer()
-RASTEXTRACTOR = Rastextractor()
+NDVI = Ndvi()
 DOWNLOADER = Downloader()
 STORAGE = Storage()
 APP = App()
 
 
 def __init():
-    global __initialized, JWTOKEN, MAILER, RASTEXTRACTOR, DOWNLOADER, STORAGE
+    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE
     if not __initialized:
         import json
         with open("config.json", "r") as f:
             config = json.load(f)
         JWTOKEN.parse(config["jwtoken"])
         MAILER.parse(config["mailer"])
-        RASTEXTRACTOR.parse(config["rastextractor"])
+        NDVI.parse(config["ndvi"])
         DOWNLOADER.parse(config["downloader"])
         STORAGE.parse(config["storage"])
         APP.parse(config["app"])

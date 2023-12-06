@@ -5,7 +5,7 @@ from shapely.geometry import Polygon, box
 import numpy as np
 import uuid
 import os
-from config import RASTEXTRACTOR, DOWNLOADER
+from config import NDVI, DOWNLOADER
 
 
 __crs = "epsg:4326"
@@ -33,14 +33,17 @@ def __extract_polygon(polygon, in_tiff_file, out_tiff_file):
             "height": raster_data.height,
             "width": raster_data.width,
             "count": 1,
-            "dtype": "uint8",
+            "dtype": "float32",
             "crs": __crs,
         })
         with rasterio.open(out_tiff_file, "w", **out_meta) as dest:
-            # process maximal 1 MB chunk per step
-            step = min(
-                1024**2 // (raster_data.width * 32),
-                raster_data.height
+            step = max(
+                # process maximal 1 MB chunk per step
+                min(
+                    1024**2 // (raster_data.width * 32),
+                    raster_data.height
+                ),
+                1
             )
             for row in range(0, raster_data.height, step):
                 window_height = min(step, raster_data.height - row)
@@ -56,34 +59,35 @@ def __extract_polygon(polygon, in_tiff_file, out_tiff_file):
                     out_shape=(window.height, window.width),
                     transform=raster_data.window_transform(window)
                 )
-                windowed_raster_data = np.where(
+                rescaled_windowed_raster_data = np.where(
                     windowed_mask, 0, windowed_raster_data
-                )
-                rescaled_windowed_raster_data = np.round(
-                    windowed_raster_data/125 - 1
-                )
+                )/125 - 1
                 dest.write(rescaled_windowed_raster_data,
                            indexes=1, window=window)
 
 
 def get_field_ndvi(coordinates, in_nc_file, out_tiff_file=None):
     in_nc_file = os.path.join(DOWNLOADER.data_folder, in_nc_file)
-    if not os.path.isdir(RASTEXTRACTOR.data_folder):
-        os.mkdir(RASTEXTRACTOR.data_folder)
+    if not os.path.isdir(NDVI.data_folder):
+        os.mkdir(NDVI.data_folder)
     if out_tiff_file is None:
         tiff_file = str(uuid.uuid1()) + ".tiff"
     else:
         tiff_file = out_tiff_file
-    out_tiff_file = os.path.join(RASTEXTRACTOR.data_folder, tiff_file)
+    out_tiff_file = os.path.join(NDVI.data_folder, tiff_file)
     temp_tiff_file_1 = os.path.join(
-        RASTEXTRACTOR.data_folder, "temp_1_%s" % tiff_file
+        NDVI.data_folder, "temp_1_%s" % tiff_file
     )
     temp_tiff_file_2 = os.path.join(
-        RASTEXTRACTOR.data_folder, "temp_2_%s" % tiff_file
+        NDVI.data_folder, "temp_2_%s" % tiff_file
     )
     try:
-        polygon = coordinates if isinstance(coordinates, Polygon)\
-            else Polygon(*coordinates)
+        if isinstance(coordinates, Polygon):
+            polygon = coordinates
+        else:
+            shell = coordinates[0]
+            holes = coordinates[1:]
+            polygon = Polygon(shell, holes)
         __extract_bbox(polygon, in_nc_file, temp_tiff_file_1)
         __extract_polygon(polygon, temp_tiff_file_1, temp_tiff_file_2)
         os.system("gdal_translate %s %s -co TILED=YES -co COMPRESS=DEFLATE" %

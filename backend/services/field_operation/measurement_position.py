@@ -3,8 +3,12 @@ import random
 
 
 def find_measurement_position(coordinates, num_points=100):
-    polygon = coordinates if isinstance(coordinates, Polygon)\
-        else Polygon(*coordinates)
+    if isinstance(coordinates, Polygon):
+        polygon = coordinates
+    else:
+        shell = coordinates[0]
+        holes = coordinates[1:]
+        polygon = Polygon(shell, holes)
     centroid = polygon.centroid
     if polygon.contains(centroid):
         return centroid

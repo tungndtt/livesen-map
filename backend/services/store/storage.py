@@ -72,7 +72,7 @@ def __init_tables():
             area double precision,
             straubing_distance double precision,
             ndvi_rasters text[] not null default '{}',
-            FOREIGN KEY (user_id) REFERENCES "user"(id)
+            FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
         )
         """
         create_table_season_cmd = """
@@ -99,7 +99,7 @@ def __init_tables():
             yield double precision default -1.0,
             PRIMARY KEY (field_id, period_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (field_id) REFERENCES field(id)
+            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
         )
         """
         create_table_subfield_cmd = """
@@ -112,7 +112,7 @@ def __init_tables():
             region GEOMETRY(POLYGON, 4326) not null,
             recommended_fertilizer_amount double precision default -1.0,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id)
+            FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id) ON DELETE CASCADE
         )
         """
         create_table_measurement_cmd = """
@@ -130,7 +130,7 @@ def __init_tables():
             ndvi_value double precision,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id),
-            FOREIGN KEY (subfield_id) REFERENCES subfield(id)
+            FOREIGN KEY (subfield_id) REFERENCES subfield(id) ON DELETE CASCADE
         )
         """
         for cmd in [
