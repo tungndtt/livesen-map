@@ -33,7 +33,7 @@ body {
 .subtab-container {
   padding: 5px 2px; 
   overflow: auto;
-  max-height: calc(100vh - 200px); 
+  max-height: calc(100vh - 205px); 
   padding-right: 10px;
 }
 

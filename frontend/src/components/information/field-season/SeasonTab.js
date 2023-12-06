@@ -23,6 +23,7 @@ const fieldGroups = [
   { name: "soil_type", label: "Soil Type" },
   { name: "variety", label: "Variety" },
   { name: "seed_density", label: "Seed Density", isNumber: true },
+  { name: "yield", label: "Yield", isNumber: true, disabled: true },
   {
     label: "Fertilizer Amount",
     fields: [
@@ -72,7 +73,6 @@ const fieldGroups = [
       { name: "ph", label: "Ph", isNumber: true },
     ],
   },
-  { name: "yield", label: "Yield", isNumber: true, disabled: true },
 ];
 
 export default function SeasonTab() {
@@ -159,7 +159,16 @@ export default function SeasonTab() {
       </FormControl>
       {fieldGroups.map((fieldGroup) =>
         fieldGroup?.fields ? (
-          <Accordion key={fieldGroup?.label} defaultExpanded disableGutters>
+          <Accordion
+            key={fieldGroup?.label}
+            defaultExpanded
+            disableGutters
+            sx={{
+              boxShadow: "none",
+              border: "1px solid #c7c7c7",
+              borderRadius: "4px",
+            }}
+          >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography>{fieldGroup?.label}</Typography>
             </AccordionSummary>
