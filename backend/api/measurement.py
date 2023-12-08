@@ -5,7 +5,7 @@ from services.store.field import get_field, insert_field_ndvi_raster
 from services.store.measurement import list_measurements, insert_measurement, update_measurement
 from services.store.subfield import list_subfields, insert_subfield
 from services.field_operation.field_ndvi import get_field_ndvi
-from services.field_operation.subfield_split import get_subfields_region_based_split
+from services.field_operation.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from services.field_operation.measurement_position import find_measurement_position
 
 
@@ -50,7 +50,8 @@ def determine_measurement_positions(user_id, _, field_id, period_id):
             return jsonify({"data": "No ndvi-scan of field in given period"}), 500
         elif not insert_field_ndvi_raster(field_id, period_id + "_" + tiff_file):
             return jsonify({"data": "Failed to process field ndvi"}), 500
-    subfield_groups = get_subfields_region_based_split(coordinates, tiff_file)
+    subfield_groups = get_subfields_pixel_based_split(tiff_file)
+    # subfield_groups = get_subfields_region_based_split(coordinates, tiff_file)
     measurement_positions = []
     for subfield_ndvis in subfield_groups:
         for subfield, ndvi in subfield_ndvis:

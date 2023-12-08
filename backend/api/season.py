@@ -18,7 +18,7 @@ def retrieve_season(user_id, _, field_id, period_id):
 
 @api.route("/upregister/<int:field_id>/<period_id>", methods=["POST"])
 @authentication_required
-def upregister_season(user_id, field_id, period_id, data):
+def upregister_season(user_id, data, field_id, period_id):
     upserted_season = upsert_season(user_id, field_id, period_id, data)
     if upserted_season is not None:
         return upserted_season, 201

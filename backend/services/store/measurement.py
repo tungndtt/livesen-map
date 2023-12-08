@@ -31,7 +31,7 @@ def __extract_nonempty(data):
 def insert_measurement(cursor, user_id, field_id, period_id, subfield_id, data):
     cols, vals = __extract_nonempty(data)
     insert_cols = ", ".join(cols)
-    inserted_vals = ", ".join(["%s" * len(vals)])
+    inserted_vals = ", ".join(["%s" for _ in range(len(vals))])
     cursor.execute(
         f"""
         INSERT INTO measurement(user_id, field_id, period_id, subfield_id, {insert_cols})

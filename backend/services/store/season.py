@@ -36,7 +36,7 @@ def upsert_season(user_id, field_id, period_id, data):
             vals.append(data[col])
     insert_cols = ", ".join(cols)
     update_cols = " = %s, ".join(cols) + " = %s"
-    upsert_vals = ", ".join(["%s" * len(vals)])
+    upsert_vals = ", ".join(["%s" for _ in range(len(vals))])
     upserted_season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:

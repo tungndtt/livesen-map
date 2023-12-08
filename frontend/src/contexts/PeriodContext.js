@@ -22,15 +22,19 @@ export default function RegionInterestProvider({ children }) {
         method: "GET",
       })
         .then(async (response) => {
-          const data = await response.json();
-          setPeriods(
-            data.map((e) => {
-              const year = e.substring(0, 4);
-              const month = e.substring(4, 6);
-              const day = e.substring(6);
-              return { id: e, data: `${day}-${month}-${year}` };
-            })
-          );
+          const responseBody = await response.json();
+          if (response.ok) {
+            setPeriods(
+              responseBody.map((e) => {
+                const year = e.substring(0, 4);
+                const month = e.substring(4, 6);
+                const day = e.substring(6);
+                return { id: e, data: `${day}-${month}-${year}` };
+              })
+            );
+          } else {
+            notify({ message: responseBody["data"], isError: true });
+          }
         })
         .catch((error) => {
           notify({ message: error.message, isError: true });

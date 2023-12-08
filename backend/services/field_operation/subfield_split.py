@@ -1,9 +1,22 @@
 import rasterio
 from rasterio import features, mask, windows, warp, transform
-from shapely.geometry import Polygon, Point, box
+from shapely.geometry import Polygon, MultiPolygon, Point, box
 from shapely import unary_union
 import numpy as np
 import math
+
+
+def __ndvi_range(raster_file):
+    width, height = raster_file.width, raster_file.height
+    step = max(min(1024**2 // (width * 32), height), 1)
+    ndvi_min, ndvi_max = 1.0, 0.0
+    for row in range(0, height, step):
+        window_height = min(step, height - row)
+        window = windows.Window(0, row, width, window_height)
+        windowed_raster = raster_file.read(1, window=window)
+        ndvi_min = min(ndvi_min, np.nanmin(windowed_raster))
+        ndvi_max = max(ndvi_max, np.nanmax(windowed_raster))
+    return ndvi_min, ndvi_max
 
 
 def __pixel_based_chunk_split(raster_file):
@@ -40,15 +53,18 @@ def __pixel_based_chunk_split(raster_file):
     return result
 
 
-def __pixel_based_nochunk_split(raster_file):
+def __pixel_based_nochunk_split(raster_file, max_subfields=100):
     n = 3
     result = [[] for _ in range(n)]
-    ndvi_ranges = [(i/n, (i+1)/n) for i in range(n)]
+    ndvi_min, ndvi_max = __ndvi_range(raster_file)
+    d = ndvi_max - ndvi_min
+    ndvi_ranges = [(ndvi_min + d*i/n, ndvi_min + d*(i+1)/n) for i in range(n)]
     raster_data = raster_file.read(1)
     transformed_bounds = warp.transform_bounds(raster_file.crs, "epsg:4326",
                                                *raster_file.bounds)
     raster_transform = transform.from_bounds(*transformed_bounds,
                                              width=raster_file.width, height=raster_file.height)
+    field_area = 0
     for i, ndvi_range in enumerate(ndvi_ranges):
         raster_mask = np.logical_and(
             ~np.isnan(raster_data),
@@ -63,8 +79,39 @@ def __pixel_based_nochunk_split(raster_file):
             holes = [] if len(coordinates) == 1 else coordinates[1:]
             polygons.append(Polygon(shell, holes))
         union = unary_union(polygons)
-        result[i] = [union] if union.geom_type == "Polygon"\
-            else [polygon for polygon in union.geoms]
+        if union.geom_type == "Polygon":
+            result[i].append(union)
+            field_area += union.area
+        else:
+            for polygon in union.geoms:
+                result[i].append(polygon)
+                field_area += polygon.area
+    minimum_subfield_area = field_area / max_subfields
+    small_subfields = []
+
+    def __merge_and_remove_small_subfields(i):
+        nonlocal small_subfields
+        subfields = MultiPolygon(result[i]) if len(small_subfields) == 0\
+            else unary_union(result[i] + small_subfields)
+        result[i] = []
+        small_subfields = []
+        if subfields.geom_type == "Polygon":
+            if subfields.area >= minimum_subfield_area:
+                result[i].append(subfields)
+            else:
+                small_subfields.append(subfields)
+        else:
+            for polygon in subfields.geoms:
+                if polygon.area >= minimum_subfield_area:
+                    result[i].append(polygon)
+                else:
+                    small_subfields.append(polygon)
+    for i in range(n-1):
+        __merge_and_remove_small_subfields(i)
+        __merge_and_remove_small_subfields(i+1)
+    for i in range(n-1, 0, -1):
+        __merge_and_remove_small_subfields(i)
+        __merge_and_remove_small_subfields(i-1)
     return result
 
 
@@ -75,7 +122,8 @@ def __region_based_split(coordinates, max_regions=100):
         shell = coordinates[0]
         holes = coordinates[1:]
         field = Polygon(shell, holes)
-    field_bounds = field.minimum_rotated_rectangle.exterior.coords
+    # field_bounds = field.minimum_rotated_rectangle.exterior.coords
+    field_bounds = box(*field.bounds).exterior.coords
     n = math.floor(math.sqrt(max_regions))
     width = Point(field_bounds[0]).distance(Point(field_bounds[1]))
     height = Point(field_bounds[0]).distance(Point(field_bounds[3]))
@@ -95,6 +143,7 @@ def __region_based_split(coordinates, max_regions=100):
             )
         return coords
     regions = []
+    sum_region_area = 0
     for r in range(nrows):
         for c in range(ncols):
             v1, v2, v3, v4 = (
@@ -104,6 +153,7 @@ def __region_based_split(coordinates, max_regions=100):
                 vertex(r+1, c),
             )
             region = Polygon([v1, v2, v3, v4, v1])
+            sum_region_area += region.area
             intersection = field.intersection(region)
             if not intersection.is_empty:
                 if intersection.geom_type == "MultiPolygon":
@@ -111,7 +161,7 @@ def __region_based_split(coordinates, max_regions=100):
                         regions.append(intersected_region)
                 else:
                     regions.append(intersection)
-    return regions
+    return regions, sum_region_area/(nrows * ncols)
 
 
 def __compute_avg_ndvi(raster_file, subfields):
@@ -179,20 +229,26 @@ def get_subfields_pixel_based_split(tiff_file):
 
 def get_subfields_region_based_split(coordinates, tiff_file):
     with rasterio.open(tiff_file) as raster_file:
-        regions = __region_based_split(coordinates, 100)
+        regions, avg_region_area = __region_based_split(coordinates, 400)
         region_ndvis = __compute_avg_ndvi(raster_file, regions)
         n = 3
         subfield_groups = [[] for _ in range(n)]
-        ndvi_ranges = [(i+1)/n for i in range(n)]
+        ndvi_min, ndvi_max = __ndvi_range(raster_file)
+        d = ndvi_max - ndvi_min
+        ndvi_ranges = [ndvi_min + d*(i+1)/n for i in range(n)]
         for region, avg_ndvi in region_ndvis:
             for i in range(n):
                 if avg_ndvi <= ndvi_ranges[i]:
                     subfield_groups[i].append(region)
                     break
+        minimum_allowed_area = avg_region_area * 0.5
         for i in range(n):
             union = unary_union(subfield_groups[i])
-            subfield_groups[i] = [union] if union.geom_type == "Polygon"\
-                else [subfield for subfield in union.geoms]
+            if union.geom_type == "Polygon" and union.area >= minimum_allowed_area:
+                subfield_groups[i] = [union]
+            else:
+                subfield_groups[i] = [subfield for subfield in union.geoms
+                                      if subfield.area >= minimum_allowed_area]
         result = []
         for subfields in subfield_groups:
             result.append(__compute_avg_ndvi(raster_file, subfields))

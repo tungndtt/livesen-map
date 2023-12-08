@@ -9,12 +9,12 @@ const AuthenticationContext = createContext({
 
 export default function AuthenticationProvider({ children }) {
   const [authenticationToken, setAuthenticationToken] = useState(
-    localStorage.getItem("authentication_token") ?? "test"
+    localStorage.getItem("authentication_token")
   );
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/authentication";
 
   const signIn = (email, password) => {
-    new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       fetch(`${serverUrl}/sign_in`, {
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -35,11 +35,11 @@ export default function AuthenticationProvider({ children }) {
   };
 
   const signUp = (email, password, options) => {
-    new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       fetch(`${serverUrl}/sign_up`, {
         headers: { "Content-Type": "application/json" },
         method: "POST",
-        body: { email, password, ...options },
+        body: JSON.stringify({ email, password, ...options }),
       })
         .then(async (response) => {
           const responseBody = await response.json();

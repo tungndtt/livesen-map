@@ -93,6 +93,7 @@ export default function SeasonTab() {
         .then(async (response) => {
           const responseBody = await response.json();
           if (response.ok) {
+            console.log(responseBody);
             setSeason(responseBody);
             setOptions(responseBody);
           }
@@ -147,14 +148,14 @@ export default function SeasonTab() {
         <Select
           labelId="intercop-select-label"
           id="intercrop-select"
-          value={options?.["intercrop"] ?? 0}
-          type="number"
+          value={options?.["intercrop"] ?? false}
+          type="checkbox"
           name="intercrop"
           label="Intercrop"
           onChange={onChangeOptions}
         >
-          <MenuItem value={0}>False</MenuItem>
-          <MenuItem value={1}>True</MenuItem>
+          <MenuItem value={false}>False</MenuItem>
+          <MenuItem value={true}>True</MenuItem>
         </Select>
       </FormControl>
       {fieldGroups.map((fieldGroup) =>
@@ -166,7 +167,7 @@ export default function SeasonTab() {
             sx={{
               boxShadow: "none",
               border: "1px solid #c7c7c7",
-              borderRadius: "4px",
+              borderRadius: "2px",
             }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -177,7 +178,7 @@ export default function SeasonTab() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 1,
+                gap: 2,
               }}
             >
               {fieldGroup.fields.map(({ name, label, isNumber, disabled }) => (
@@ -215,14 +216,17 @@ export default function SeasonTab() {
         variant="outlined"
         color="warning"
         endIcon={<SendIcon />}
-        disabled={fieldGroups.every(function check(fieldGroup) {
-          if (fieldGroup?.fields) {
-            return fieldGroup.fields.every(check);
-          } else {
-            const name = fieldGroup.name;
-            return options?.[name] === season?.[name];
-          }
-        })}
+        disabled={
+          options?.["intercrop"] === season?.["intercrop"] &&
+          fieldGroups.every(function check(fieldGroup) {
+            if (fieldGroup?.fields) {
+              return fieldGroup.fields.every(check);
+            } else {
+              const name = fieldGroup.name;
+              return options?.[name] === season?.[name];
+            }
+          })
+        }
         onClick={updateSeason}
       >
         Update season

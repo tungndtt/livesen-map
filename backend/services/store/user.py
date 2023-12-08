@@ -33,7 +33,7 @@ def insert_user(data):
         return None
     cols, vals = __extract_nonempty(data)
     insert_cols = ", ".join(cols)
-    inserted_vals = ", ".join(["%s" * len(vals)])
+    inserted_vals = ", ".join(["%s" for _ in range(len(vals))])
     inserted_measurement = None
     db_cursor = DbCursor()
     with db_cursor as cursor:

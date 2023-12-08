@@ -21,7 +21,8 @@ export default function AuthenticationModal() {
   const onChangeOptions = (e) => {
     setOptions((prevOptions) => {
       const name = e.target.name;
-      const value = e.target.value;
+      const value =
+        e.target.type === "number" ? +e.target.value : e.target.value;
       if (value) prevOptions[name] = value;
       else delete prevOptions?.[name];
       return { ...prevOptions };

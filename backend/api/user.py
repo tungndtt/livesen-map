@@ -10,7 +10,7 @@ api = Blueprint("user", __name__, url_prefix="/user")
 @api.route("", methods=["GET"])
 @authentication_required
 def retrieve_user(user_id, _):
-    user = get_user(user_id)
+    user = get_user(user_id=user_id)
     if user is not None:
         del user["password"]
         return user, 200
@@ -38,9 +38,9 @@ def register():
     if data is None:
         return jsonify({"data": "Registration token is invalid"}), 408
     else:
-        email, password = data["email"], data["password"]
-        if get_user(email) is None:
-            if insert_user(email, password):
+        email = data["email"]
+        if get_user(email=email) is None:
+            if insert_user(data):
                 return jsonify({"data": "Registration is successful"}), 201
             else:
                 return jsonify({"data": "Cannot register user"}), 406

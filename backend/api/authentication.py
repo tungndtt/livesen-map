@@ -28,9 +28,9 @@ api = Blueprint("authentication", __name__, url_prefix="/authentication")
 
 @api.route("/sign_in", methods=["POST"])
 def sign_in():
-    data = request.json()
+    data = request.get_json()
     email, password = data["email"], data["password"]
-    user = get_user(email)
+    user = get_user(email=email)
     if user is None:
         return jsonify({"data": "Given email does not exist"}), 404
     else:
@@ -42,15 +42,15 @@ def sign_in():
 
 @api.route("/sign_up", methods=["POST"])
 def sign_up():
-    data = request.json()
+    data = request.get_json()
     email, password = data["email"], data["password"]
-    record = get_user(email)
+    record = get_user(email=email)
     if record is None:
         encrypted_password = encrypt(password)
-        data = {"email": email, "password": encrypted_password}
+        data["password"] = encrypted_password
         duration = 10
         registration_token = generate_token(data, duration)
-        registration_link = f"{APP.host}:{APP.port}/user/register?registration_token={registration_token}"
+        registration_link = f"http://{APP.host}:{APP.port}/user/register?registration_token={registration_token}"
         subject = "Livesen Registration"
         content = f"""
         <html>
