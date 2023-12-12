@@ -7,9 +7,9 @@ def __parse_record(record):
     return {
         col: record[i]
         for i, col in enumerate([
-            "id", "field_id", "period_id", "subfield_id",
+            "id", "user_id", "field_id", "period_id", "subfield_id",
             "longitude", "latitude",
-            "nitrate_measurement", "phosphor_measurement", "potassium_measurement"
+            "nitrate_measurement", "phosphor_measurement", "potassium_measurement",
             "ndvi_value"
         ])
     }
@@ -19,7 +19,7 @@ def __extract_nonempty(data):
     cols, vals = [], []
     for col in [
         "longitude", "latitude",
-        "nitrate_measurement", "phosphor_measurement", "potassium_measurement"
+        "nitrate_measurement", "phosphor_measurement", "potassium_measurement",
         "ndvi_value"
     ]:
         if col in data:

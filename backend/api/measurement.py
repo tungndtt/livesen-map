@@ -16,7 +16,7 @@ api = Blueprint("measurement", __name__, url_prefix="/measurement")
 @authentication_required
 def list_all_measurements(user_id, _, field_id, period_id):
     measurements = list_measurements(user_id, field_id, period_id)
-    if measurements is not None:
+    if measurements is not None and len(measurements) > 0:
         return measurements, 200
     else:
         return jsonify({"data": "Failed to retrieve measurements within given period"}), 500
@@ -26,7 +26,7 @@ def list_all_measurements(user_id, _, field_id, period_id):
 @authentication_required
 def list_all_subfields(user_id, _, field_id, period_id):
     subfields = list_subfields(user_id, field_id, period_id)
-    if subfields is None:
+    if subfields is not None and len(subfields) > 0:
         return subfields, 200
     else:
         return jsonify({"data": "Failed to retrieve all subfields"}), 500

@@ -9,7 +9,7 @@ const MeasurementContext = createContext({
   determineMeasurementPositions: () => new Promise(() => {}),
   updateMeasurement: (_measurementId, _options) => new Promise(() => {}),
   selectedMeasurements: undefined,
-  setSelectedMeasurement: (_measurementId, _key, _coordinates) => {},
+  setSelectedMeasurement: (_measurementId) => {},
 });
 
 const parseMeasurement = (measurement) => {
@@ -69,7 +69,7 @@ export default function MeasurementProvider({ children }) {
       measurement["subfield"] = parseSubfield(fetchedSubfield);
     });
     setMeasurements(measurements);
-    setSelectedMeasurements({ positions: {}, subfields: {} });
+    setSelectedMeasurements({});
   };
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function MeasurementProvider({ children }) {
   const determineMeasurementPositions = () => {
     return new Promise((resolve, reject) => {
       fetch(
-        `${serverUrl}/determine_positions/${selectedField}/${selectedPeriod}`,
+        `${serverUrl}/determine_positions/${selectedField?.id}/${selectedPeriod}`,
         {
           headers: { "Auth-Token": authenticationToken },
           method: "GET",
@@ -163,19 +163,17 @@ export default function MeasurementProvider({ children }) {
     });
   };
 
-  const setSelectedMeasurement = (measurementId, key, coordinates) => {
+  const setSelectedMeasurement = (measurementId) => {
     setSelectedMeasurements((prevSelectedMeasurements) => {
-      const prevSelectedMeasurement = prevSelectedMeasurements[key];
-      if (coordinates) {
-        prevSelectedMeasurement = {
-          ...prevSelectedMeasurement,
-          [measurementId]: coordinates,
-        };
-      } else delete prevSelectedMeasurement?.[measurementId];
-      return {
-        ...prevSelectedMeasurements,
-        [key]: prevSelectedMeasurement,
-      };
+      if (prevSelectedMeasurements?.[measurementId])
+        delete prevSelectedMeasurements?.[measurementId];
+      else {
+        const selectedMeasurement = measurements?.find(
+          ({ id }) => id === measurementId
+        );
+        prevSelectedMeasurements[measurementId] = selectedMeasurement;
+      }
+      return { ...prevSelectedMeasurements };
     });
   };
 

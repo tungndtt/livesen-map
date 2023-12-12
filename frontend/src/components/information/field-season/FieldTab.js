@@ -107,7 +107,7 @@ export default function FieldTab() {
         <Button
           variant="outlined"
           color="primary"
-          disabled={!selectedField}
+          disabled={!selectedField?.id}
           fullWidth
           endIcon={
             !selectedField || !selectedField?.coordinates ? (
@@ -125,7 +125,7 @@ export default function FieldTab() {
         <Button
           variant="outlined"
           color="success"
-          disabled={!selectedField || !selectedPeriod}
+          disabled={!selectedField?.id || !selectedPeriod}
           fullWidth
           endIcon={ndvi ? <LayersClearIcon /> : <LayersIcon />}
           onClick={toggleNdviDisplay}
@@ -136,7 +136,7 @@ export default function FieldTab() {
       <Button
         variant="outlined"
         color="error"
-        disabled={!selectedField}
+        disabled={!selectedField?.id}
         fullWidth
         endIcon={<DeleteIcon />}
         onClick={onUnregisterField}

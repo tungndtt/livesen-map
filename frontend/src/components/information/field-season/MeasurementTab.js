@@ -38,65 +38,62 @@ export default function MeasurementTab() {
         measurements.map((measurement, i) => {
           const { id, position, ndvi_value, subfield } = measurement;
           return (
-            <Accordion key={id} defaultExpanded>
+            <Accordion
+              key={id}
+              defaultExpanded
+              disableGutters
+              sx={{
+                boxShadow: "none",
+                border: "1px solid #c7c7c7",
+                borderRadius: "2px",
+              }}
+            >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>Measurement {i}</Typography>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
                 <TextField
                   fullWidth
+                  size="small"
                   disabled={true}
                   label="Measurement Position (long, lat)"
                   value={`${position.lng}, ${position.lat}`}
                 />
                 <TextField
                   fullWidth
+                  size="small"
                   disabled={true}
                   label="NDVI"
                   value={ndvi_value}
                 />
                 <TextField
                   fullWidth
+                  size="small"
                   disabled={true}
                   label="Subfield Area"
                   value={subfield?.area}
                 />
                 <TextField
                   fullWidth
+                  size="small"
                   disabled={true}
                   label="Subfield Recommended Fertilizer"
                   value={subfield?.recommendedFertilizerAmount}
                 />
                 <Button
-                  onClick={() =>
-                    setSelectedMeasurement(
-                      id,
-                      "positions",
-                      selectedMeasurements?.positions?.[id]
-                        ? undefined
-                        : position
-                    )
-                  }
-                >
-                  {selectedMeasurements?.positions?.[id]
-                    ? "Hide measurement position"
-                    : "Show measurement position"}
-                </Button>
-                <Button
                   fullWidth
                   size="small"
                   variant="outlined"
-                  onClick={() =>
-                    setSelectedMeasurement(
-                      id,
-                      "subfields",
-                      selectedMeasurements?.subfields?.[id]
-                        ? undefined
-                        : subfield.coordinates
-                    )
-                  }
+                  onClick={() => setSelectedMeasurement(id)}
                 >
-                  {selectedMeasurements?.subfields?.[id]
+                  {selectedMeasurements?.[id]
                     ? "Hide measurement subfield"
                     : "Show measurement subfield"}
                 </Button>
@@ -167,15 +164,20 @@ function MeasurementValues({ measurement }) {
     <>
       {fields.map(({ name, label }) => (
         <TextField
+          key={name}
           fullWidth
+          size="small"
           name={name}
           label={label}
           type="number"
-          value={options?.[name]}
+          value={options?.[name] ?? -1}
           onChange={onChangeOptions}
         />
       ))}
       <Button
+        fullWidth
+        size="small"
+        variant="outlined"
         disabled={fields.every(
           ({ name }) => options?.[name] === measurement?.[name]
         )}

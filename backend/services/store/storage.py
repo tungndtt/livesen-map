@@ -112,7 +112,7 @@ def __init_tables():
             region GEOMETRY(POLYGON, 4326) not null,
             recommended_fertilizer_amount double precision default -1.0,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id) ON DELETE CASCADE
+            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
         )
         """
         create_table_measurement_cmd = """
@@ -129,7 +129,6 @@ def __init_tables():
             potassium_measurement double precision,
             ndvi_value double precision,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (field_id, period_id) REFERENCES season(field_id, period_id),
             FOREIGN KEY (subfield_id) REFERENCES subfield(id) ON DELETE CASCADE
         )
         """
