@@ -5,6 +5,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { useRegionInterestContext } from "../../contexts/RegionInterestContext";
 import { useFieldContext } from "../../contexts/FieldContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
+import { Coordinate, parseCoordinates } from "../../types/coordinate";
 
 export default function RegionInterest() {
   const { roi, setRoi } = useRegionInterestContext();
@@ -12,20 +13,14 @@ export default function RegionInterest() {
   const notify = useNotificationContext();
   const [roiName, setRoiName] = useState("");
 
-  const onUploadRegionInterest = (e) => {
+  const onUploadRegionInterest = (e: React.ChangeEvent<HTMLInputElement>) => {
     const reader = new FileReader();
     reader.onload = function (event) {
-      const content = event.target?.result;
+      const content = event.target?.result as string;
       const regionInterest = JSON.parse(content ?? "{}");
       const coordinates = regionInterest?.["coordinates"];
       if (coordinates) {
-        setRoi(
-          coordinates.map(function t(coord) {
-            return typeof coord[0] === "number"
-              ? { lng: coord[0], lat: coord[1] }
-              : coord.map(t);
-          })
-        );
+        setRoi(parseCoordinates(coordinates) as Coordinate[]);
       } else {
         notify({
           message: "Cannot find the coordinates from uploaded file",
@@ -35,8 +30,8 @@ export default function RegionInterest() {
       const name = regionInterest?.["name"];
       if (name) setRoiName(name);
     };
-    reader.readAsText(e.target.files?.[0]);
-    e.target.value = null;
+    reader.readAsText(e.target?.files?.[0] as Blob);
+    e.target.value = "";
   };
 
   return (
@@ -65,7 +60,7 @@ export default function RegionInterest() {
         accept="application/json"
         onChange={onUploadRegionInterest}
       />
-      <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+      <Box className="button-row-container">
         <Button
           size="small"
           fullWidth

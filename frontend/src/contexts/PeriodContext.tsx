@@ -1,18 +1,36 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
 import { useNotificationContext } from "./NotificationContext";
 
-const PeriodContext = createContext({
+type Period = { id: string; data: string };
+
+type PeriodContextType = {
+  periods: Period[] | undefined;
+  selectedPeriod: string | undefined;
+  setSelectedPeriod: Dispatch<SetStateAction<string | undefined>>;
+};
+
+const PeriodContext = createContext<PeriodContextType>({
   periods: undefined,
   selectedPeriod: undefined,
-  setSelectedPeriod: (_selectedPeriod) => {},
+  setSelectedPeriod: () => {},
 });
 
-export default function RegionInterestProvider({ children }) {
+export default function RegionInterestProvider(props: { children: ReactNode }) {
   const { authenticationToken } = useAuthenticationContext();
   const notify = useNotificationContext();
-  const [periods, setPeriods] = useState(undefined);
-  const [selectedPeriod, setSelectedPeriod] = useState(undefined);
+  const [periods, setPeriods] = useState<Period[] | undefined>(undefined);
+  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>(
+    undefined
+  );
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/period";
 
   useEffect(() => {
@@ -25,7 +43,7 @@ export default function RegionInterestProvider({ children }) {
           const responseBody = await response.json();
           if (response.ok) {
             setPeriods(
-              responseBody.map((e) => {
+              (responseBody as string[]).map((e) => {
                 const year = e.substring(0, 4);
                 const month = e.substring(4, 6);
                 const day = e.substring(6);
@@ -49,7 +67,7 @@ export default function RegionInterestProvider({ children }) {
     <PeriodContext.Provider
       value={{ periods, selectedPeriod, setSelectedPeriod }}
     >
-      {children}
+      {props.children}
     </PeriodContext.Provider>
   );
 }

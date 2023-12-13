@@ -10,6 +10,7 @@ import {
   Tabs,
 } from "@mui/material";
 import GetAppIcon from "@mui/icons-material/GetApp";
+import ClearIcon from "@mui/icons-material/Clear";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { usePeriodContext } from "../../../contexts/PeriodContext";
 import FieldTab from "./FieldTab";
@@ -20,7 +21,7 @@ export default function FieldSeason() {
   const { fields, selectedField, setSelectedField } = useFieldContext();
   const { periods, selectedPeriod, setSelectedPeriod } = usePeriodContext();
   const [selections, setSelections] = useState({
-    field: selectedField?.id || "",
+    field: selectedField?.id || -1,
     period: selectedPeriod || "",
   });
   const [tab, setTab] = useState(0);
@@ -43,17 +44,15 @@ export default function FieldSeason() {
               labelId="field-select-label"
               id="field-select"
               value={selections.field}
+              type="number"
               label="Field"
               onChange={(e) =>
                 setSelections((prevSelections) => ({
                   ...prevSelections,
-                  field: e.target.value,
+                  field: e.target.value as number,
                 }))
               }
             >
-              <MenuItem value={""}>
-                <em>None</em>
-              </MenuItem>
               {fields?.map(({ id, name }) => (
                 <MenuItem key={id} value={id}>
                   {name}
@@ -75,9 +74,6 @@ export default function FieldSeason() {
                 }))
               }
             >
-              <MenuItem value={""}>
-                <em>None</em>
-              </MenuItem>
               {periods?.map(({ id, data }) => (
                 <MenuItem key={id} value={id}>
                   {data}
@@ -86,22 +82,39 @@ export default function FieldSeason() {
             </Select>
           </FormControl>
         </Box>
-        <Button
-          fullWidth
-          size="small"
-          variant="outlined"
-          endIcon={<GetAppIcon />}
-          onClick={() => {
-            if (selections.field !== selectedField?.id) {
-              setSelectedField({ id: selections.field });
-            }
-            if (selections.period !== selectedPeriod) {
-              setSelectedPeriod(selections.period);
-            }
-          }}
-        >
-          Retrieve data
-        </Button>
+        <Box className="button-row-container">
+          <Button
+            fullWidth
+            size="small"
+            variant="outlined"
+            endIcon={<GetAppIcon />}
+            disabled={selections.field === -1}
+            onClick={() => {
+              if (selections.field !== selectedField?.id) {
+                setSelectedField({ id: selections.field });
+              }
+              if (selections.period !== selectedPeriod) {
+                setSelectedPeriod(selections.period);
+              }
+            }}
+          >
+            Retrieve data
+          </Button>
+          <Button
+            sx={{ width: "42%" }}
+            size="small"
+            variant="outlined"
+            color="error"
+            endIcon={<ClearIcon />}
+            onClick={() => {
+              setSelectedField(undefined);
+              setSelectedPeriod("");
+              setSelections({ field: -1, period: "" });
+            }}
+          >
+            Reset data
+          </Button>
+        </Box>
       </Box>
       <Tabs
         value={tab}

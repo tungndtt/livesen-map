@@ -1,64 +1,61 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
 import { useFieldContext } from "./FieldContext";
 import { usePeriodContext } from "./PeriodContext";
 import { useNotificationContext } from "./NotificationContext";
+import {
+  Measurement,
+  NutrientMeasurement,
+  parseMeasurement,
+  parseSubfield,
+} from "../types/measurement";
 
-const MeasurementContext = createContext({
+type SelectedMeasurement = { [measurementId: number]: Measurement };
+
+type MeasurementContextType = {
+  measurements: Measurement[] | undefined;
+  determineMeasurementPositions: () => Promise<string>;
+  updateMeasurement: (
+    _measurementId: number,
+    _options: NutrientMeasurement
+  ) => Promise<string>;
+  selectedMeasurements: SelectedMeasurement;
+  setSelectedMeasurement: (measurementId: number) => void;
+};
+
+const MeasurementContext = createContext<MeasurementContextType>({
   measurements: undefined,
   determineMeasurementPositions: () => new Promise(() => {}),
-  updateMeasurement: (_measurementId, _options) => new Promise(() => {}),
-  selectedMeasurements: undefined,
-  setSelectedMeasurement: (_measurementId) => {},
+  updateMeasurement: (_measurementId: number, _options: NutrientMeasurement) =>
+    new Promise(() => {}),
+  selectedMeasurements: {},
+  setSelectedMeasurement: (_measurementId: number) => {},
 });
 
-const parseMeasurement = (measurement) => {
-  const {
-    id,
-    longitude,
-    latitude,
-    nitrate_measurement,
-    phosphor_measurement,
-    potassium_measurement,
-    ndvi_value,
-  } = measurement;
-  return {
-    id,
-    position: { lng: longitude, lat: latitude },
-    nitrate_measurement,
-    phosphor_measurement,
-    potassium_measurement,
-    ndvi_value,
-  };
-};
-
-const parseSubfield = (subfield) => {
-  const {
-    coordinates,
-    area,
-    recommended_fertilizer_amount: recommendedFertilizerAmount,
-  } = subfield;
-  return {
-    coordinates: coordinates.map(function t(e) {
-      return typeof e[0] === "number" ? { lng: e[0], lat: e[1] } : e.map(t);
-    }),
-    area,
-    recommendedFertilizerAmount,
-  };
-};
-
-export default function MeasurementProvider({ children }) {
+export default function MeasurementProvider(props: { children: ReactNode }) {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedField } = useFieldContext();
   const { selectedPeriod } = usePeriodContext();
   const notify = useNotificationContext();
-  const [measurements, setMeasurements] = useState(undefined);
-  const [selectedMeasurements, setSelectedMeasurements] = useState(undefined);
+  const [measurements, setMeasurements] = useState<Measurement[] | undefined>(
+    undefined
+  );
+  const [selectedMeasurements, setSelectedMeasurements] =
+    useState<SelectedMeasurement>({});
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
 
-  const initializeMeasurements = (fetchedMeasurements, fetchedSubfields) => {
-    const measurements = [];
-    const subfieldMeasurementMap = {};
+  const initializeMeasurements = (
+    fetchedMeasurements: any[],
+    fetchedSubfields: any[]
+  ) => {
+    const measurements = [] as Measurement[];
+    const subfieldMeasurementMap = {} as { [subfieldId: number]: Measurement };
     fetchedMeasurements.forEach((fetchedMeasurement) => {
       const measurement = parseMeasurement(fetchedMeasurement);
       measurements.push(measurement);
@@ -66,7 +63,7 @@ export default function MeasurementProvider({ children }) {
     });
     fetchedSubfields.forEach((fetchedSubfield) => {
       const measurement = subfieldMeasurementMap[fetchedSubfield["id"]];
-      measurement["subfield"] = parseSubfield(fetchedSubfield);
+      measurement.subfield = parseSubfield(fetchedSubfield);
     });
     setMeasurements(measurements);
     setSelectedMeasurements({});
@@ -105,12 +102,12 @@ export default function MeasurementProvider({ children }) {
         });
     } else {
       setMeasurements(undefined);
-      setSelectedMeasurements(undefined);
+      setSelectedMeasurements({});
     }
   }, [authenticationToken, selectedField?.id, selectedPeriod]);
 
   const determineMeasurementPositions = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       fetch(
         `${serverUrl}/determine_positions/${selectedField?.id}/${selectedPeriod}`,
         {
@@ -130,8 +127,11 @@ export default function MeasurementProvider({ children }) {
     });
   };
 
-  const updateMeasurement = (measurementId, options) => {
-    return new Promise((resolve, reject) => {
+  const updateMeasurement = (
+    measurementId: number,
+    options: NutrientMeasurement
+  ) => {
+    return new Promise<string>((resolve, reject) => {
       fetch(`${serverUrl}/upgister/${measurementId}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "PUT",
@@ -142,19 +142,20 @@ export default function MeasurementProvider({ children }) {
           if (response.ok) {
             const updatedMeasurement = parseMeasurement(responseBody);
             setMeasurements((prevMeasurements) => {
-              const index = prevMeasurements.find(
-                (prevMeasurement) =>
-                  prevMeasurement.id === updatedMeasurement.id
-              );
-              if (index !== -1) {
-                prevMeasurements[index] = {
-                  ...prevMeasurements[index],
-                  updatedMeasurement,
-                };
-                return [...prevMeasurements];
-              } else {
-                return prevMeasurements;
+              if (prevMeasurements) {
+                const index = prevMeasurements.findIndex(
+                  (prevMeasurement) =>
+                    prevMeasurement.id === updatedMeasurement.id
+                );
+                if (index !== -1) {
+                  prevMeasurements[index] = {
+                    ...prevMeasurements[index],
+                    ...updatedMeasurement,
+                  };
+                  prevMeasurements = [...prevMeasurements];
+                }
               }
+              return prevMeasurements;
             });
             resolve("Successfully updated measurement");
           } else reject(responseBody["data"]);
@@ -163,14 +164,14 @@ export default function MeasurementProvider({ children }) {
     });
   };
 
-  const setSelectedMeasurement = (measurementId) => {
+  const setSelectedMeasurement = (measurementId: number) => {
     setSelectedMeasurements((prevSelectedMeasurements) => {
-      if (prevSelectedMeasurements?.[measurementId])
+      if (prevSelectedMeasurements[measurementId])
         delete prevSelectedMeasurements?.[measurementId];
       else {
         const selectedMeasurement = measurements?.find(
           ({ id }) => id === measurementId
-        );
+        ) as Measurement;
         prevSelectedMeasurements[measurementId] = selectedMeasurement;
       }
       return { ...prevSelectedMeasurements };
@@ -187,7 +188,7 @@ export default function MeasurementProvider({ children }) {
         setSelectedMeasurement,
       }}
     >
-      {children}
+      {props.children}
     </MeasurementContext.Provider>
   );
 }

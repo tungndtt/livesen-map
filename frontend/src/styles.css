@@ -37,6 +37,14 @@ body {
   padding-right: 10px;
 }
 
+.button-row-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
 ::-webkit-scrollbar {
   width: 5px;
 }

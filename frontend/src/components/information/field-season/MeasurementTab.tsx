@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -10,10 +10,19 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ScatterPlotIcon from "@mui/icons-material/ScatterPlot";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import UpgradeIcon from "@mui/icons-material/Upgrade";
+import ClearIcon from "@mui/icons-material/Clear";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { usePeriodContext } from "../../../contexts/PeriodContext";
 import { useMeasurementContext } from "../../../contexts/MeasurementContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
+import {
+  Measurement,
+  NutrientMeasurement,
+  MeasurementNutrientField,
+} from "../../../types/measurement";
 
 export default function MeasurementTab() {
   const { selectedField } = useFieldContext();
@@ -40,16 +49,17 @@ export default function MeasurementTab() {
           return (
             <Accordion
               key={id}
-              defaultExpanded
               disableGutters
               sx={{
                 boxShadow: "none",
-                border: "1px solid #c7c7c7",
+                border: "2px solid #c7c7c7",
                 borderRadius: "2px",
               }}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>Measurement {i}</Typography>
+                <Typography>
+                  <b>Measurement {i}</b>
+                </Typography>
               </AccordionSummary>
               <AccordionDetails
                 sx={{
@@ -91,6 +101,14 @@ export default function MeasurementTab() {
                   fullWidth
                   size="small"
                   variant="outlined"
+                  color="success"
+                  endIcon={
+                    selectedMeasurements?.[id] ? (
+                      <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
+                    )
+                  }
                   onClick={() => setSelectedMeasurement(id)}
                 >
                   {selectedMeasurements?.[id]
@@ -111,6 +129,7 @@ export default function MeasurementTab() {
             fullWidth
             size="small"
             variant="outlined"
+            color="warning"
             endIcon={<ScatterPlotIcon />}
             disabled={!selectedField || !selectedPeriod}
             onClick={determineMeasurement}
@@ -129,24 +148,27 @@ const fields = [
   { name: "potassium_measurement", label: "Potassium" },
 ];
 
-function MeasurementValues({ measurement }) {
+function MeasurementValues(props: { measurement: Measurement }) {
+  const { measurement } = props;
   const { updateMeasurement } = useMeasurementContext();
   const notify = useNotificationContext();
-  const [options, setOptions] = useState(undefined);
+  const [options, setOptions] = useState<NutrientMeasurement>({});
 
-  useEffect(() => {
+  const resetMeasurementValues = () => {
     setOptions(
       fields.reduce(
-        ({ name }, currentValue) => ({
-          ...currentValue,
-          [name]: measurement[name],
+        (current, { name }) => ({
+          ...current,
+          [name]: measurement[name as MeasurementNutrientField],
         }),
-        {}
+        {} as NutrientMeasurement
       )
     );
-  }, [measurement]);
+  };
 
-  const onChangeOptions = (e) => {
+  useEffect(resetMeasurementValues, [measurement]);
+
+  const onChangeOptions = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOptions((prevOptions) => {
       const name = e.target.name;
       const value = +e.target.value;
@@ -170,21 +192,37 @@ function MeasurementValues({ measurement }) {
           name={name}
           label={label}
           type="number"
-          value={options?.[name] ?? -1}
+          value={options?.[name as MeasurementNutrientField] ?? -1}
           onChange={onChangeOptions}
         />
       ))}
-      <Button
-        fullWidth
-        size="small"
-        variant="outlined"
-        disabled={fields.every(
-          ({ name }) => options?.[name] === measurement?.[name]
-        )}
-        onClick={updateMeasurementValues}
-      >
-        Update measurement values
-      </Button>
+      <Box className="button-row-container">
+        <Button
+          fullWidth
+          size="small"
+          variant="outlined"
+          endIcon={<UpgradeIcon />}
+          disabled={fields.every(
+            ({ name }) =>
+              options[name as MeasurementNutrientField] ===
+              measurement[name as MeasurementNutrientField]
+          )}
+          onClick={updateMeasurementValues}
+        >
+          Update measurement values
+        </Button>
+        <Button
+          sx={{ width: "40%" }}
+          fullWidth
+          size="small"
+          variant="outlined"
+          color="error"
+          endIcon={<ClearIcon />}
+          onClick={resetMeasurementValues}
+        >
+          Reset
+        </Button>
+      </Box>
     </>
   );
 }

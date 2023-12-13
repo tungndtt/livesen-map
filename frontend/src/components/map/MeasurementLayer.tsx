@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo } from "react";
-import { useMap, Polygon, Marker, FeatureGroup } from "react-leaflet";
+import L from "leaflet";
+import { useMap, Marker, Polygon, FeatureGroup } from "react-leaflet";
 import proj4 from "proj4";
 import { useMeasurementContext } from "../../contexts/MeasurementContext";
 import { useFieldContext } from "../../contexts/FieldContext";
@@ -12,7 +13,7 @@ export default function MeasurementLayer() {
   const { fields, selectedField } = useFieldContext();
   const field = useMemo(() => {
     const field = fields?.find(({ id }) => id === selectedField?.id);
-    return field?.coordinates ? L.polygon(field.coordinates) : undefined;
+    return field?.coordinates ? new L.Polygon(field.coordinates) : undefined;
   }, [fields, selectedField?.id]);
   const map = useMap();
 

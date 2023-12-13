@@ -35,10 +35,10 @@ export default function FieldTab() {
 
   const toggleFieldDisplay = () => {
     setSelectedField((prevSelectedField) => ({
-      ...prevSelectedField,
+      ...prevSelectedField!!,
       coordinates: prevSelectedField?.coordinates
         ? undefined
-        : field.coordinates,
+        : field?.coordinates,
     }));
   };
 
@@ -95,15 +95,7 @@ export default function FieldTab() {
         label="Coordinates"
         value={JSON.stringify(field?.coordinates) ?? "[]"}
       />
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-between",
-          gap: 1,
-          mb: 1,
-        }}
-      >
+      <Box className="button-row-container">
         <Button
           variant="outlined"
           color="primary"
@@ -134,6 +126,7 @@ export default function FieldTab() {
         </Button>
       </Box>
       <Button
+        sx={{ mt: 1 }}
         variant="outlined"
         color="error"
         disabled={!selectedField?.id}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -12,12 +12,26 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
+import UpgradeIcon from "@mui/icons-material/Upgrade";
+import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { usePeriodContext } from "../../../contexts/PeriodContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
+import { Season, SeasonField } from "../../../types/season";
+
+type Field = {
+  name: string;
+  label: string;
+  isNumber?: boolean;
+  disabled?: boolean;
+};
+
+type FieldGroup = {
+  label: string;
+  fields: Field[];
+};
 
 const fieldGroups = [
   { name: "soil_type", label: "Soil Type" },
@@ -73,15 +87,15 @@ const fieldGroups = [
       { name: "ph", label: "Ph", isNumber: true },
     ],
   },
-];
+] as (Field | FieldGroup)[];
 
 export default function SeasonTab() {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedField } = useFieldContext();
   const { selectedPeriod } = usePeriodContext();
   const notify = useNotificationContext();
-  const [season, setSeason] = useState(undefined);
-  const [options, setOptions] = useState(undefined);
+  const [season, setSeason] = useState<Season | undefined>(undefined);
+  const [options, setOptions] = useState<Season>({});
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/season";
 
   useEffect(() => {
@@ -93,7 +107,6 @@ export default function SeasonTab() {
         .then(async (response) => {
           const responseBody = await response.json();
           if (response.ok) {
-            console.log(responseBody);
             setSeason(responseBody);
             setOptions(responseBody);
           }
@@ -101,7 +114,7 @@ export default function SeasonTab() {
         .catch((error) => notify({ message: error.message, isError: true }));
     } else {
       setSeason(undefined);
-      setOptions(undefined);
+      setOptions({});
     }
   }, [selectedField?.id, selectedPeriod, authenticationToken]);
 
@@ -132,7 +145,7 @@ export default function SeasonTab() {
     }
   };
 
-  const onChangeOptions = (e) => {
+  const onChangeOptions = (e: ChangeEvent<HTMLInputElement>) => {
     setOptions((prevOptions) => {
       const name = e.target.name;
       const value =
@@ -152,85 +165,115 @@ export default function SeasonTab() {
           type="checkbox"
           name="intercrop"
           label="Intercrop"
+          //@ts-ignore
           onChange={onChangeOptions}
         >
+          {/*  @ts-ignore */}
           <MenuItem value={false}>False</MenuItem>
+          {/*  @ts-ignore */}
           <MenuItem value={true}>True</MenuItem>
         </Select>
       </FormControl>
-      {fieldGroups.map((fieldGroup) =>
-        fieldGroup?.fields ? (
-          <Accordion
-            key={fieldGroup?.label}
-            defaultExpanded
-            disableGutters
-            sx={{
-              boxShadow: "none",
-              border: "1px solid #c7c7c7",
-              borderRadius: "2px",
-            }}
-          >
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Typography>{fieldGroup?.label}</Typography>
-            </AccordionSummary>
-            <AccordionDetails
+      {fieldGroups.map((fieldGroup) => {
+        //@ts-ignore
+        if (fieldGroup?.fields) {
+          const group = fieldGroup as FieldGroup;
+          return (
+            <Accordion
+              key={group.label}
+              disableGutters
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 2,
+                boxShadow: "none",
+                border: "2px solid #c7c7c7",
+                borderRadius: "2px",
               }}
             >
-              {fieldGroup.fields.map(({ name, label, isNumber, disabled }) => (
-                <TextField
-                  key={name}
-                  fullWidth
-                  size="small"
-                  disabled={disabled}
-                  name={name}
-                  label={label}
-                  type={isNumber ? "number" : "text"}
-                  value={options?.[name] ?? ""}
-                  onChange={onChangeOptions}
-                />
-              ))}
-            </AccordionDetails>
-          </Accordion>
-        ) : (
-          <TextField
-            key={fieldGroup?.label}
-            fullWidth
-            size="small"
-            disabled={fieldGroup?.disabled}
-            name={fieldGroup?.name}
-            label={fieldGroup?.label}
-            type={fieldGroup?.isNumber ? "number" : "text"}
-            value={options?.[fieldGroup?.name] ?? ""}
-            onChange={onChangeOptions}
-          />
-        )
-      )}
-      <Button
-        fullWidth
-        size="small"
-        variant="outlined"
-        color="warning"
-        endIcon={<SendIcon />}
-        disabled={
-          options?.["intercrop"] === season?.["intercrop"] &&
-          fieldGroups.every(function check(fieldGroup) {
-            if (fieldGroup?.fields) {
-              return fieldGroup.fields.every(check);
-            } else {
-              const name = fieldGroup.name;
-              return options?.[name] === season?.[name];
-            }
-          })
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography>
+                  <b>{group.label}</b>
+                </Typography>
+              </AccordionSummary>
+              <AccordionDetails
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                {group.fields.map(({ name, label, isNumber, disabled }) => (
+                  <TextField
+                    key={name}
+                    fullWidth
+                    size="small"
+                    disabled={disabled}
+                    name={name}
+                    label={label}
+                    type={isNumber ? "number" : "text"}
+                    value={options?.[name as SeasonField] ?? ""}
+                    onChange={onChangeOptions}
+                  />
+                ))}
+              </AccordionDetails>
+            </Accordion>
+          );
+        } else {
+          const field = fieldGroup as Field;
+          return (
+            <TextField
+              key={field.label}
+              fullWidth
+              size="small"
+              disabled={field?.disabled}
+              name={field.name}
+              label={field.label}
+              type={field?.isNumber ? "number" : "text"}
+              value={options?.[field.name as SeasonField] ?? ""}
+              onChange={onChangeOptions}
+            />
+          );
         }
-        onClick={updateSeason}
-      >
-        Update season
-      </Button>
+      })}
+      <Box className="button-row-container">
+        <Button
+          fullWidth
+          size="small"
+          variant="outlined"
+          color="warning"
+          endIcon={<UpgradeIcon />}
+          disabled={
+            options?.["intercrop"] === season?.["intercrop"] &&
+            //@ts-ignore
+            fieldGroups.every(function check(fieldGroup) {
+              //@ts-ignore
+              if (fieldGroup?.fields) {
+                const group = fieldGroup as FieldGroup;
+                return group.fields.every(check);
+              } else {
+                const field = fieldGroup as Field;
+                const name = field.name;
+                return (
+                  options?.[name as SeasonField] ===
+                  season?.[name as SeasonField]
+                );
+              }
+            })
+          }
+          onClick={updateSeason}
+        >
+          Update season
+        </Button>
+        <Button
+          sx={{ width: "40%" }}
+          size="small"
+          variant="outlined"
+          color="error"
+          endIcon={<ClearIcon />}
+          onClick={() => setOptions(season ?? {})}
+        >
+          Reset
+        </Button>
+      </Box>
     </Box>
   );
 }
