@@ -11,7 +11,7 @@ from config import NDVI, DOWNLOADER
 __crs = "epsg:4326"
 
 
-def __extract_bbox(polygon, in_nc_file, out_tiff_file):
+def __extract_bbox(polygon: Polygon, in_nc_file: str, out_tiff_file: str) -> None:
     data_array = xr.open_dataset(in_nc_file, chunks="auto")
     del data_array["NDVI"].attrs["grid_mapping"]
     label_map = {"lat": "y", "lon": "x"}
@@ -25,7 +25,7 @@ def __extract_bbox(polygon, in_nc_file, out_tiff_file):
     clipped_bbox.rio.to_raster(out_tiff_file)
 
 
-def __extract_polygon(polygon, in_tiff_file, out_tiff_file):
+def __extract_polygon(polygon: Polygon, in_tiff_file: str, out_tiff_file: str) -> None:
     with rasterio.open(in_tiff_file) as raster_data:
         out_meta = raster_data.meta
         out_meta.update({
@@ -66,7 +66,11 @@ def __extract_polygon(polygon, in_tiff_file, out_tiff_file):
                            indexes=1, window=window)
 
 
-def get_field_ndvi(coordinates, in_nc_file, out_tiff_file=None):
+def get_field_ndvi(
+    coordinates: Polygon | list[list[list[float]]],
+    in_nc_file: str,
+    out_tiff_file: str | None = None
+) -> str:
     in_nc_file = os.path.join(DOWNLOADER.data_folder, in_nc_file)
     if not os.path.isdir(NDVI.data_folder):
         os.mkdir(NDVI.data_folder)

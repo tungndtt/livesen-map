@@ -2,7 +2,10 @@ from shapely.geometry import Point, Polygon
 import random
 
 
-def find_measurement_position(coordinates, num_points=100):
+def find_measurement_position(
+    coordinates: list[list[list[float]]] | Polygon,
+    num_points: int = 100
+) -> Point:
     if isinstance(coordinates, Polygon):
         polygon = coordinates
     else:

@@ -1,8 +1,10 @@
 from services.store.storage import DbCursor
 from json import loads as json_parse
+from psycopg2._psycopg import cursor as Cursor
+from typing import Any
 
 
-def __parse_record(record):
+def __parse_record(record: tuple) -> dict[str, Any] | None:
     if record is None:
         return None
     id, field_id, period_id, geojson, area, recommended_fertilizer_amount = record
@@ -16,7 +18,7 @@ def __parse_record(record):
     }
 
 
-def update_subfield_recommended_fertilizer_amount(subfield_id, recommended_fertilizer_amount):
+def update_subfield_recommended_fertilizer_amount(subfield_id: int, recommended_fertilizer_amount: float) -> bool:
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
@@ -26,7 +28,11 @@ def update_subfield_recommended_fertilizer_amount(subfield_id, recommended_ferti
     return db_cursor.error is None
 
 
-def insert_subfield(cursor, user_id, field_id, period_id, region):
+def insert_subfield(
+    cursor: Cursor,
+    user_id: int, field_id: int, period_id: str,
+    region: str
+) -> dict[str, Any] | None:
     cursor.execute(
         """
         INSERT INTO subfield(user_id, field_id, period_id, region)
@@ -46,7 +52,7 @@ def insert_subfield(cursor, user_id, field_id, period_id, region):
     return __parse_record(cursor.fetchone())
 
 
-def list_subfields(user_id, field_id, period_id):
+def list_subfields(user_id: int, field_id: int, period_id: str) -> dict[str, Any] | None:
     subfields = None
     db_cursor = DbCursor()
     with db_cursor as cursor:

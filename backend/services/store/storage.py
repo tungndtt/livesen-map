@@ -2,13 +2,14 @@
 # pg_ctl -D <data-folder> -l <log-file> start/stop
 # pg_ctl status -D <data-folder>
 from psycopg2 import pool, sql, connect
+from psycopg2._psycopg import cursor as Cursor
 from config import STORAGE, APP
 
 
 _dbpool = None
 
 
-def __init_database():
+def __init_database() -> None:
     # Database connection parameters
     db_params = {
         "dbname": "postgres",
@@ -20,7 +21,7 @@ def __init_database():
     # Connect to the PostgreSQL server
     conn = connect(**db_params)
     # Create a cursor
-    cursor = conn.cursor()
+    cursor: Cursor = conn.cursor()
     conn.autocommit = True
     database_name = STORAGE.dbname
     try:
@@ -48,7 +49,7 @@ def __init_database():
         conn.close()
 
 
-def __init_tables():
+def __init_tables() -> None:
     with DbCursor() as cursor:
         cursor.execute("CREATE EXTENSION IF NOT EXISTS postgis")
         # SQL CREATE TABLE statement
@@ -150,7 +151,7 @@ def __init_tables():
             )
 
 
-def init():
+def init() -> None:
     global _dbpool
     __init_database()
     db_params = {
@@ -165,16 +166,16 @@ def init():
 
 
 class DbCursor:
-    def __init__(self):
+    def __init__(self) -> None:
         self.error = None
 
-    def __enter__(self):
+    def __enter__(self) -> Cursor:
         global _dbpool
         self.__conn = _dbpool.getconn()
         self.__cursor = self.__conn.cursor()
         return self.__cursor
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         global _dbpool
         try:
             self.__conn.commit()

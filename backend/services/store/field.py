@@ -1,8 +1,9 @@
 from services.store.storage import DbCursor
 from json import loads as json_parse
+from typing import Any
 
 
-def __parse_record(record):
+def __parse_record(record: tuple) -> dict[str, Any] | None:
     if record is None:
         return None
     id, user_id, name, geojson, straubing_distance, area, ndvi_rasters = record
@@ -17,7 +18,7 @@ def __parse_record(record):
     }
 
 
-def get_field(user_id, field_id):
+def get_field(user_id: int, field_id: int) -> dict[str, Any] | None:
     field = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -31,7 +32,7 @@ def get_field(user_id, field_id):
     return field if db_cursor.error is None else None
 
 
-def insert_field(user_id, name, region):
+def insert_field(user_id: int, name: str, region: str) -> dict[str, Any] | None:
     inserted_field = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -62,7 +63,7 @@ def insert_field(user_id, name, region):
     return inserted_field if db_cursor.error is None else None
 
 
-def delete_field(field_id):
+def delete_field(field_id: int) -> list[str] | None:
     deleted_field_ndvi_rasters = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -75,7 +76,7 @@ def delete_field(field_id):
     return deleted_field_ndvi_rasters if db_cursor.error is None else None
 
 
-def list_fields(user_id):
+def list_fields(user_id: int) -> list[dict[str, Any]] | None:
     fields = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -91,7 +92,7 @@ def list_fields(user_id):
     return fields if db_cursor.error is None else None
 
 
-def insert_field_ndvi_raster(field_id, ndvi_raster):
+def insert_field_ndvi_raster(field_id: int, ndvi_raster: str) -> bool:
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(

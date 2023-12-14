@@ -6,7 +6,7 @@ from config import MAILER
 __server = None
 
 
-def init():
+def init() -> None:
     global __server
     if __server is None:
         server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -16,7 +16,7 @@ def init():
         __server = server
 
 
-def send_email(recipient, subject, content):
+def send_email(recipient: str, subject: str, content: str) -> bool:
     message = multipart.MIMEMultipart("alternative")
     message["Subject"] = subject
     message["From"] = MAILER.email

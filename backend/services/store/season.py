@@ -1,7 +1,8 @@
 from services.store.storage import DbCursor
+from typing import Any
 
 
-def __parse_record(record):
+def __parse_record(record: tuple) -> dict[str, Any] | None:
     if record is None:
         return None
     return {
@@ -19,7 +20,10 @@ def __parse_record(record):
     }
 
 
-def upsert_season(user_id, field_id, period_id, data):
+def upsert_season(
+    user_id: int, field_id: int, period_id: str,
+    data: dict[str, Any]
+) -> dict[str, Any] | None:
     cols, vals = [], []
     for col in [
         "max_allowed_fertilizer", "intercrop",
@@ -54,7 +58,7 @@ def upsert_season(user_id, field_id, period_id, data):
     return upserted_season if db_cursor.error is None else None
 
 
-def delete_season(user_id, field_id, period_id):
+def delete_season(user_id: int, field_id: int, period_id: str) -> bool:
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
@@ -64,7 +68,7 @@ def delete_season(user_id, field_id, period_id):
     return db_cursor.error is None
 
 
-def get_season(user_id, field_id, period_id):
+def get_season(user_id: int, field_id: int, period_id: str) -> dict[str, Any] | None:
     season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
