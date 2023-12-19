@@ -3,8 +3,8 @@ export type UserProfile = {
   password?: string;
   name?: string;
   address?: string;
-  company_name?: string;
-  company_size?: number;
+  companyName?: string;
+  companySize?: number;
 };
 
 export type UserProfileField = 
@@ -12,5 +12,36 @@ export type UserProfileField =
  | "password" 
  | "name" 
  | "address" 
- | "company_name" 
- | "company_size";
+ | "companyName" 
+ | "companySize";
+
+export function parseUserProfile(profile: any) {
+  const {
+    email, 
+    password, 
+    name, 
+    address, 
+    company_name: companyName, 
+    company_size: companySize
+  } = profile;
+  return {email, password, name, address, companyName, companySize};
+}
+
+export function deparseUserProfile(profile: UserProfile) {
+  const {
+    email, 
+    password, 
+    name, 
+    address, 
+    companyName, 
+    companySize
+  } = profile;
+  return {
+    email, 
+    password, 
+    name, 
+    address, 
+    company_name: companyName, 
+    company_size: companySize
+  };
+}

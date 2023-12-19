@@ -2,18 +2,21 @@ import { useState } from "react";
 import { Box, Button, TextField } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
+import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useRegionInterestContext } from "../../contexts/RegionInterestContext";
-import { useFieldContext } from "../../contexts/FieldContext";
+import { useSelectionContext } from "../../contexts/SelectionContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import { Coordinate, parseCoordinates } from "../../types/coordinate";
 
 export default function RegionInterest() {
+  const { authenticationToken } = useAuthenticationContext();
   const { roi, setRoi } = useRegionInterestContext();
-  const { registerField } = useFieldContext();
+  const { refreshFieldOptions } = useSelectionContext();
   const notify = useNotificationContext();
   const [roiName, setRoiName] = useState("");
+  const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
 
-  const onUploadRegionInterest = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadRegionInterest = (e: React.ChangeEvent<HTMLInputElement>) => {
     const reader = new FileReader();
     reader.onload = function (event) {
       const content = event.target?.result as string;
@@ -34,8 +37,43 @@ export default function RegionInterest() {
     e.target.value = "";
   };
 
+  const clearRegion = () => {
+    setRoi(undefined);
+    setRoiName("");
+  };
+
+  const registerRegion = () => {
+    if (!roi || roi?.length < 3) {
+      notify({ message: "No valid region is specified", isError: true });
+      return;
+    }
+    fetch(`${serverUrl}/register`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Auth-Token": authenticationToken,
+      },
+      method: "POST",
+      body: JSON.stringify({
+        name: roiName,
+        coordinates: roi.map(({ lat, lng }) => [lng, lat]),
+      }),
+    })
+      .then(async (response) => {
+        const responseBody = await response.json();
+        if (response.ok) {
+          refreshFieldOptions();
+          clearRegion();
+          notify({
+            message: "Successfully register region of interest",
+            isError: false,
+          });
+        } else notify({ message: responseBody["data"], isError: true });
+      })
+      .catch((error) => notify({ message: error.message, isError: true }));
+  };
+
   return (
-    <Box className="general-container">
+    <Box className="information-container">
       <TextField
         size="small"
         fullWidth
@@ -58,7 +96,7 @@ export default function RegionInterest() {
         name="upload-region-interest"
         type="file"
         accept="application/json"
-        onChange={onUploadRegionInterest}
+        onChange={uploadRegionInterest}
       />
       <Box className="button-row-container">
         <Button
@@ -68,11 +106,7 @@ export default function RegionInterest() {
           variant="outlined"
           color="success"
           endIcon={<AddIcon />}
-          onClick={() => {
-            registerField(roiName)
-              .then((message) => notify({ message: message, isError: false }))
-              .catch((error) => notify({ message: error, isError: true }));
-          }}
+          onClick={registerRegion}
         >
           Register region
         </Button>
@@ -83,7 +117,7 @@ export default function RegionInterest() {
           variant="outlined"
           color="error"
           endIcon={<ClearIcon />}
-          onClick={() => setRoi(undefined)}
+          onClick={clearRegion}
         >
           Clear region
         </Button>

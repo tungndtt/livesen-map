@@ -1,38 +1,164 @@
+type FertilizerApplication = {
+  fertilizer?: string;
+  type?: string;
+  amount?: number;
+  nitrogen?: number;
+  date?: Date;
+  stadium?: number;
+};
+
+function parseFertilizerApplication(fertilizerApplication: any) {
+  const { fertilizer, type, amount, nitrogen, date, stadium } = fertilizerApplication;
+  return { fertilizer, type, amount, nitrogen, date, stadium } as FertilizerApplication;
+}
+
+type SoilTillageApplication = {
+  type?: string;
+  date?: Date;
+};
+
+function parseSoilTillageApplication(soilTillageApplication: any) {
+  const { type, date} = soilTillageApplication;
+  return { type, date} as SoilTillageApplication;
+}
+
+type CropProtectionApplication = {
+  amount?: string;
+  type?: string;
+  date?: Date;
+};
+
+function parseCropProtectionApplication(cropProtectionApplication: any) {
+  const {amount, type, date} = cropProtectionApplication;
+  return {amount, type, date} as CropProtectionApplication;
+}
+
 export type Season = {
-  intercrop?: boolean;
-  soil_type?: string;
+  maincrop?: string;
+  intercrop?: string;
+  soilType?: string;
   variety?: string;
-  seed_density?: number;
-  yield?: number;
-  max_allowed_fertilizer?: number;
-  first_fertilizer_amount?: number;
-  second_fertilizer_amount?: number;
-  recommended_fertilizer_amount?: number;
-  first_soil_tillage?: string;
-  second_soil_tillage?: string;
-  first_crop_protection?: string;
-  second_crop_protection?: string;
+  seedDensity?: number;
+  seedDate?: Date;
+  maxAllowedFertilizer?: number;
+  fertilizerApplications?: FertilizerApplication[];
+  soilTillageApplications?: SoilTillageApplication[];
+  cropProtectionApplications?: CropProtectionApplication[];
   nitrate?: number;
   phosphor?: number;
   potassium?: number;
+  rks?: number;
   ph?: number;
+  harvestWeight?: number;
+  harvestDate?: Date;
+  recommendedFertilizerAmount?: number;
 };
 
 export type SeasonField = 
+  | "maincrop"
   | "intercrop"
-  | "soil_type" 
+  | "soilType" 
   | "variety" 
-  | "seed_density" 
-  | "yield" 
-  | "max_allowed_fertilizer" 
-  | "first_fertilizer_amount" 
-  | "second_fertilizer_amount" 
-  | "recommended_fertilizer_amount" 
-  | "first_soil_tillage" 
-  | "second_soil_tillage" 
-  | "first_crop_protection" 
-  | "second_crop_protection" 
+  | "seedDensity" 
+  | "seedDate" 
+  | "fertilizerApplications" 
+  | "soilTillageApplications" 
+  | "cropProtectionApplications"
   | "nitrate" 
   | "phosphor" 
   | "potassium" 
-  | "ph";
+  | "rks"
+  | "ph"
+  | "maxAllowedFertilizer"
+  | "harvestWeight" 
+  | "harvestDate";
+
+export function parseSeason(season: any) {
+  const {
+    maincrop, 
+    intercrop, 
+    soil_type: soilType, 
+    variety, 
+    seed_density: seedDensity, 
+    seed_date: seedDate,
+    max_allowed_fertilizer: maxAllowedFertilizer,
+    fertilizer_applications: fertilizerApplications,
+    soil_tillage_applications: soilTillageApplications,
+    crop_protection_applications: cropProtectionApplications,
+    nitrate,
+    phosphor,
+    potassium,
+    rks,
+    ph,
+    harvest_weight: harvestWeight,
+    harvest_date: harvestDate,
+    recommended_fertilizer_amount: recommendedFertilizerAmount,
+  } = season;
+  return {
+    maincrop, 
+    intercrop, 
+    soilType, 
+    variety, 
+    seedDensity, 
+    seedDate,
+    fertilizerApplications: (fertilizerApplications as any[]).map(
+      (fertilizerApplication) => parseFertilizerApplication(fertilizerApplication)
+    ),
+    soilTillageApplications: (soilTillageApplications as any[]).map(
+      (soilTillageApplication) => parseSoilTillageApplication(soilTillageApplication)
+    ),
+    cropProtectionApplications: (cropProtectionApplications as any[]).map(
+      (cropProtectionApplication) => parseCropProtectionApplication(cropProtectionApplication)
+    ),
+    nitrate,
+    phosphor,
+    potassium,
+    rks,
+    ph,
+    maxAllowedFertilizer,
+    harvestWeight,
+    harvestDate,
+    recommendedFertilizerAmount,
+  } as Season;
+}
+
+export function deparseSeason(season: Season) {
+  const {
+    maincrop, 
+    intercrop, 
+    soilType, 
+    variety, 
+    seedDensity, 
+    seedDate,
+    maxAllowedFertilizer,
+    fertilizerApplications,
+    soilTillageApplications,
+    cropProtectionApplications,
+    nitrate,
+    phosphor,
+    potassium,
+    rks,
+    ph,
+    harvestWeight,
+    harvestDate,
+  } = season;
+  return {
+    maincrop, 
+    intercrop, 
+    soil_type: soilType, 
+    variety, 
+    seed_density: seedDensity, 
+    seed_date: seedDate,
+    max_allowed_fertilizer: maxAllowedFertilizer,
+    fertilizer_applications: fertilizerApplications,
+    soil_tillage_applications: soilTillageApplications,
+    crop_protection_applications: cropProtectionApplications,
+    nitrate,
+    phosphor,
+    potassium,
+    rks,
+    ph,
+    harvest_weight: harvestWeight,
+    harvest_date: harvestDate,
+  };
+}

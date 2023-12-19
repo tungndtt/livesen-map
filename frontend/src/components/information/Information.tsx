@@ -9,13 +9,15 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import InsightsIcon from "@mui/icons-material/Insights";
 import PublicIcon from "@mui/icons-material/Public";
+import AgricultureIcon from "@mui/icons-material/Agriculture";
+import StorageIcon from "@mui/icons-material/Storage";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import RegionInterest from "./RegionInterest";
-import FieldSeason from "./field-season/FieldSeason";
+import SeasonInterest from "./SeasonInterest";
+import RegisteredData from "./registered-data/RegisteredData";
 import Profile from "./Profile";
 
 const tabs = [
@@ -24,8 +26,12 @@ const tabs = [
     icon: <PublicIcon />,
   },
   {
-    name: "Fields & Seasons",
-    icon: <InsightsIcon />,
+    name: "Season Interest",
+    icon: <AgricultureIcon />,
+  },
+  {
+    name: "Registered Data",
+    icon: <StorageIcon />,
   },
   {
     name: "Profile",
@@ -41,18 +47,51 @@ export default function Information() {
     <Box
       sx={{
         position: "absolute",
+        height: "100%",
         right: 0,
         width: "45%",
       }}
     >
-      <Box width="calc(100% - 225px)">
-        <Box display={tab === 0 ? "flex" : "none"}>
+      <Box
+        width="calc(100% - 225px)"
+        height="100%"
+        display="flex"
+        flexDirection="column"
+      >
+        <Box
+          sx={{
+            display: tab === 0 ? "flex" : "none",
+            overflow: "hidden",
+            overflowY: "auto",
+          }}
+        >
           <RegionInterest />
         </Box>
-        <Box display={tab === 1 ? "flex" : "none"}>
-          <FieldSeason />
+        <Box
+          sx={{
+            display: tab === 1 ? "flex" : "none",
+            overflow: "hidden",
+            overflowY: "auto",
+          }}
+        >
+          <SeasonInterest />
         </Box>
-        <Box display={tab === 2 ? "flex" : "none"}>
+        <Box
+          sx={{
+            display: tab === 2 ? "flex" : "none",
+            overflow: "hidden",
+            overflowY: "auto",
+          }}
+        >
+          <RegisteredData />
+        </Box>
+        <Box
+          sx={{
+            display: tab === 3 ? "flex" : "none",
+            overflow: "hidden",
+            overflowY: "auto",
+          }}
+        >
           <Profile />
         </Box>
       </Box>

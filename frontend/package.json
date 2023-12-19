@@ -10,6 +10,8 @@
     "@mui/icons-material": "^5.14.16",
     "@mui/lab": "^5.0.0-alpha.152",
     "@mui/material": "^5.14.16",
+    "@mui/x-date-pickers": "^6.18.5",
+    "dayjs": "^1.11.10",
     "georaster": "^1.6.0",
     "georaster-layer-for-leaflet": "^3.10.0",
     "geotiff": "^2.1.0",

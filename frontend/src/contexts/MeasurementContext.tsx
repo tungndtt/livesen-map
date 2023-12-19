@@ -5,187 +5,80 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { useAuthenticationContext } from "./AuthenticationContext";
-import { useFieldContext } from "./FieldContext";
-import { usePeriodContext } from "./PeriodContext";
-import { useNotificationContext } from "./NotificationContext";
-import {
-  Measurement,
-  NutrientMeasurement,
-  parseMeasurement,
-  parseSubfield,
-} from "../types/measurement";
+import { useSelectionContext } from "./SelectionContext";
+import { Measurement, SubField } from "../types/measurement";
+import { Coordinate } from "../types/coordinate";
 
-type SelectedMeasurement = { [measurementId: number]: Measurement };
+type MeasurementCoordinatesMap = {
+  [measurementId: number]: { position: Coordinate; subfields: SubField[] };
+};
+
+type MeasurementNdviRange = {
+  low: number;
+  high: number;
+  bins: number;
+};
 
 type MeasurementContextType = {
-  measurements: Measurement[] | undefined;
-  determineMeasurementPositions: () => Promise<string>;
-  updateMeasurement: (
-    _measurementId: number,
-    _options: NutrientMeasurement
-  ) => Promise<string>;
-  selectedMeasurements: SelectedMeasurement;
-  setSelectedMeasurement: (measurementId: number) => void;
+  measurementCoordinates: MeasurementCoordinatesMap;
+  measurementNdviRange: MeasurementNdviRange | undefined;
+  setupMeasurementLayer: (measurements: Measurement[]) => void;
+  toggleMeasurementRegion: (measurement: Measurement) => void;
 };
 
 const MeasurementContext = createContext<MeasurementContextType>({
-  measurements: undefined,
-  determineMeasurementPositions: () => new Promise(() => {}),
-  updateMeasurement: (_measurementId: number, _options: NutrientMeasurement) =>
-    new Promise(() => {}),
-  selectedMeasurements: {},
-  setSelectedMeasurement: (_measurementId: number) => {},
+  measurementCoordinates: {},
+  measurementNdviRange: undefined,
+  setupMeasurementLayer: () => {},
+  toggleMeasurementRegion: () => {},
 });
 
 export default function MeasurementProvider(props: { children: ReactNode }) {
-  const { authenticationToken } = useAuthenticationContext();
-  const { selectedField } = useFieldContext();
-  const { selectedPeriod } = usePeriodContext();
-  const notify = useNotificationContext();
-  const [measurements, setMeasurements] = useState<Measurement[] | undefined>(
-    undefined
-  );
-  const [selectedMeasurements, setSelectedMeasurements] =
-    useState<SelectedMeasurement>({});
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
-
-  const initializeMeasurements = (
-    fetchedMeasurements: any[],
-    fetchedSubfields: any[]
-  ) => {
-    const measurements = [] as Measurement[];
-    const subfieldMeasurementMap = {} as { [subfieldId: number]: Measurement };
-    fetchedMeasurements.forEach((fetchedMeasurement) => {
-      const measurement = parseMeasurement(fetchedMeasurement);
-      measurements.push(measurement);
-      subfieldMeasurementMap[fetchedMeasurement["subfield_id"]] = measurement;
-    });
-    fetchedSubfields.forEach((fetchedSubfield) => {
-      const measurement = subfieldMeasurementMap[fetchedSubfield["id"]];
-      measurement.subfield = parseSubfield(fetchedSubfield);
-    });
-    setMeasurements(measurements);
-    setSelectedMeasurements({});
-  };
+  const { selectedFieldId, selectedSeasonId } = useSelectionContext();
+  const [measurementCoordinates, setMeasurementCoordinates] =
+    useState<MeasurementCoordinatesMap>({});
+  const [measurementNdviRange, setMeasurementNdviRange] = useState<
+    MeasurementNdviRange | undefined
+  >(undefined);
 
   useEffect(() => {
-    if (authenticationToken && selectedField?.id && selectedPeriod) {
-      Promise.all([
-        fetch(`${serverUrl}/subfield/${selectedField.id}/${selectedPeriod}`, {
-          headers: { "Auth-Token": authenticationToken },
-          method: "GET",
-        }),
-        fetch(`${serverUrl}/${selectedField.id}/${selectedPeriod}`, {
-          headers: { "Auth-Token": authenticationToken },
-          method: "GET",
-        }),
-      ])
-        .then(async ([subfieldResponse, measurementResponse]) => {
-          const subfieldResponseBody = await subfieldResponse.json();
-          const measurementResponseBody = await measurementResponse.json();
-          if (subfieldResponse.ok && measurementResponse.ok) {
-            initializeMeasurements(
-              measurementResponseBody,
-              subfieldResponseBody
-            );
-          }
-        })
-        .catch((errors) => {
-          for (let i = 0; i < errors.length; i++) {
-            const error = errors[i];
-            if (error) {
-              notify({ message: error.message, isError: true });
-              break;
-            }
-          }
-        });
-    } else {
-      setMeasurements(undefined);
-      setSelectedMeasurements({});
-    }
-  }, [authenticationToken, selectedField?.id, selectedPeriod]);
+    setMeasurementCoordinates({});
+    setMeasurementNdviRange(undefined);
+  }, [selectedFieldId, selectedSeasonId]);
 
-  const determineMeasurementPositions = () => {
-    return new Promise<string>((resolve, reject) => {
-      fetch(
-        `${serverUrl}/determine_positions/${selectedField?.id}/${selectedPeriod}`,
-        {
-          headers: { "Auth-Token": authenticationToken },
-          method: "GET",
-        }
-      )
-        .then(async (response) => {
-          const responseBody = await response.json();
-          if (response.ok) {
-            const { measurements, subfields } = responseBody;
-            initializeMeasurements(measurements, subfields);
-            resolve("Measurement poisitions were determined");
-          } else reject(responseBody["data"]);
-        })
-        .catch((error) => reject(error.message));
+  const setupMeasurementLayer = (measurements: Measurement[]) => {
+    let low = 1,
+      high = -1;
+    measurements.forEach(({ subfields }) => {
+      subfields.forEach(({ ndvi }) => {
+        low = Math.min(low, ndvi);
+        high = Math.max(high, ndvi);
+      });
     });
+    const bins = measurements.length;
+    setMeasurementNdviRange({ low, high, bins });
   };
 
-  const updateMeasurement = (
-    measurementId: number,
-    options: NutrientMeasurement
-  ) => {
-    return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/upgister/${measurementId}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "PUT",
-        body: JSON.stringify(options),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          if (response.ok) {
-            const updatedMeasurement = parseMeasurement(responseBody);
-            setMeasurements((prevMeasurements) => {
-              if (prevMeasurements) {
-                const index = prevMeasurements.findIndex(
-                  (prevMeasurement) =>
-                    prevMeasurement.id === updatedMeasurement.id
-                );
-                if (index !== -1) {
-                  prevMeasurements[index] = {
-                    ...prevMeasurements[index],
-                    ...updatedMeasurement,
-                  };
-                  prevMeasurements = [...prevMeasurements];
-                }
-              }
-              return prevMeasurements;
-            });
-            resolve("Successfully updated measurement");
-          } else reject(responseBody["data"]);
-        })
-        .catch((error) => reject(error));
-    });
-  };
-
-  const setSelectedMeasurement = (measurementId: number) => {
-    setSelectedMeasurements((prevSelectedMeasurements) => {
-      if (prevSelectedMeasurements[measurementId])
-        delete prevSelectedMeasurements?.[measurementId];
-      else {
-        const selectedMeasurement = measurements?.find(
-          ({ id }) => id === measurementId
-        ) as Measurement;
-        prevSelectedMeasurements[measurementId] = selectedMeasurement;
-      }
-      return { ...prevSelectedMeasurements };
+  const toggleMeasurementRegion = (measurement: Measurement) => {
+    setMeasurementCoordinates((prevSelectedMeasurement) => {
+      if (measurement.id in prevSelectedMeasurement)
+        delete prevSelectedMeasurement[measurement.id];
+      else
+        prevSelectedMeasurement[measurement.id] = {
+          position: measurement.position,
+          subfields: measurement.subfields,
+        };
+      return { ...prevSelectedMeasurement };
     });
   };
 
   return (
     <MeasurementContext.Provider
       value={{
-        measurements,
-        determineMeasurementPositions,
-        updateMeasurement,
-        selectedMeasurements,
-        setSelectedMeasurement,
+        measurementCoordinates,
+        measurementNdviRange,
+        setupMeasurementLayer,
+        toggleMeasurementRegion,
       }}
     >
       {props.children}

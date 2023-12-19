@@ -1,58 +1,67 @@
 import { Coordinate, Coordinates, parseCoordinates } from "./coordinate";
 
+export type SubField = {
+  id: number;
+  measurementId: number;
+  coordinates: Coordinates;
+  area: number;
+  ndvi: number;
+  recommendedFertilizerAmount: number;
+}
+
+export const parseSubfield = (subfield: any) => {
+  const {
+    id,
+    measurement_id: measurementId,
+    coordinates,
+    area,
+    ndvi,
+    recommended_fertilizer_amount: recommendedFertilizerAmount,
+  } = subfield;
+  return {
+    id,
+    measurementId,
+    coordinates: parseCoordinates(coordinates),
+    area,
+    ndvi,
+    recommendedFertilizerAmount,
+  } as SubField;
+};
+
 export type NutrientMeasurement = {
-  nitrate_measurement?: number;
-  phosphor_measurement?: number;
-  potassium_measurement?: number;
+  nitrate?: number;
+  phosphor?: number;
+  potassium?: number;
 };
 
 export type MeasurementNutrientField =
-  | "nitrate_measurement"
-  | "phosphor_measurement"
-  | "potassium_measurement";
+  | "nitrate"
+  | "phosphor"
+  | "potassium";
 
 export type Measurement = {
   id: number;
   position: Coordinate;
-  ndvi_value: number;
-  subfield: SubField;
+  ndvi: number;
+  subfields: SubField[];
 } & NutrientMeasurement;
-
-export type SubField = {
-  coordinates: Coordinates;
-  area: number;
-  recommendedFertilizerAmount: number;
-}
 
 export const parseMeasurement = (measurement: any) => {
   const {
     id,
     longitude,
     latitude,
-    nitrate_measurement,
-    phosphor_measurement,
-    potassium_measurement,
-    ndvi_value,
+    nitrate,
+    phosphor,
+    potassium,
+    ndvi,
   } = measurement;
   return {
     id,
     position: { lng: longitude, lat: latitude },
-    nitrate_measurement,
-    phosphor_measurement,
-    potassium_measurement,
-    ndvi_value
+    nitrate,
+    phosphor,
+    potassium,
+    ndvi
   } as Measurement;
-};
-
-export const parseSubfield = (subfield: any) => {
-  const {
-    coordinates,
-    area,
-    recommended_fertilizer_amount: recommendedFertilizerAmount,
-  } = subfield;
-  return {
-    coordinates: parseCoordinates(coordinates),
-    area,
-    recommendedFertilizerAmount,
-  } as SubField;
 };

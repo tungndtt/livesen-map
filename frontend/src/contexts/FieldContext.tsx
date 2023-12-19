@@ -2,188 +2,140 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
-  Dispatch,
-  SetStateAction,
+  useEffect,
 } from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
-import { useRegionInterestContext } from "./RegionInterestContext";
-import { usePeriodContext } from "./PeriodContext";
-import { useNotificationContext } from "./NotificationContext";
-import { Field, parseField } from "../types/field";
+import { useSelectionContext } from "./SelectionContext";
+import { Field, NdviRasterMap } from "../types/field";
 import { Coordinates } from "../types/coordinate";
 
-type SelectedField = {
-  id: number;
-  coordinates?: Coordinates;
+type Visibility = {
+  ndviRaster: boolean;
+  coordinates: boolean;
 };
 
 type FieldContextType = {
-  fields: Field[] | undefined;
-  registerField: (name: string) => Promise<string>;
-  unregisterField: () => Promise<string>;
-  selectedField: SelectedField | undefined;
-  setSelectedField: Dispatch<SetStateAction<SelectedField | undefined>>;
-  ndvi: string | undefined;
-  setNdvi: (ndvi: string | undefined) => void;
-  getFieldNdvi: () => Promise<string>;
+  ndviRasters: NdviRasterMap;
+  coordinates: Coordinates | undefined;
+  setupFieldLayer: (field: Field) => void;
+  visibility: Visibility;
+  toggleFieldRegion: () => void;
+  toggleFieldNdviRaster: () => void;
 };
 
 const FieldContext = createContext<FieldContextType>({
-  fields: undefined,
-  registerField: (_name: string) => new Promise(() => {}),
-  unregisterField: () => new Promise(() => {}),
-  selectedField: undefined,
-  setSelectedField: () => {},
-  ndvi: undefined,
-  setNdvi: (_ndvi: string | undefined) => {},
-  getFieldNdvi: () => new Promise(() => {}),
+  ndviRasters: {},
+  coordinates: undefined,
+  setupFieldLayer: () => {},
+  visibility: { coordinates: false, ndviRaster: false },
+  toggleFieldRegion: () => {},
+  toggleFieldNdviRaster: () => {},
 });
 
 export default function FieldProvider(props: { children: ReactNode }) {
   const { authenticationToken } = useAuthenticationContext();
-  const { roi } = useRegionInterestContext();
-  const { selectedPeriod } = usePeriodContext();
-  const notify = useNotificationContext();
-  const [fields, setFields] = useState<Field[] | undefined>(undefined);
-  const [selectedField, setSelectedField] = useState<SelectedField | undefined>(
+  const { selectedFieldId, selectedSeasonId } = useSelectionContext();
+  const [ndviRasters, setNdviRasters] = useState<NdviRasterMap>({});
+  const [coordinates, setCoordinates] = useState<Coordinates | undefined>(
     undefined
   );
-  const [ndvi, setNdvi] = useState<string | undefined>(undefined);
+  const [visibility, setVisibility] = useState<Visibility>({
+    ndviRaster: false,
+    coordinates: false,
+  });
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
 
   useEffect(() => {
-    if (authenticationToken) {
-      fetch(serverUrl, {
+    setVisibility((prevVisibility) => {
+      const ndviRaster =
+        prevVisibility.ndviRaster && selectedSeasonId !== undefined;
+      if (ndviRaster) getFieldNdviRaster();
+      return {
+        ...prevVisibility,
+        ndviRaster: ndviRaster,
+      };
+    });
+  }, [selectedSeasonId]);
+
+  useEffect(() => {
+    setVisibility((prevVisibility) => ({
+      coordinates: prevVisibility.coordinates && selectedSeasonId !== undefined,
+      ndviRaster: false,
+    }));
+  }, [selectedFieldId]);
+
+  const setupFieldLayer = (field: Field) => {
+    setNdviRasters(field.ndviRasters);
+    setCoordinates(field.coordinates);
+  };
+
+  const toggleFieldRegion = () => {
+    setVisibility((prevVisibility) => ({
+      ...prevVisibility,
+      coordinates: !prevVisibility.coordinates,
+    }));
+  };
+
+  const toggleFieldNdviRaster = () => {
+    if (!visibility.ndviRaster) {
+      getFieldNdviRaster();
+    } else {
+      setVisibility((prevVisibility) => ({
+        ...prevVisibility,
+        ndviRaster: false,
+      }));
+    }
+  };
+
+  const getFieldNdviRaster = () => {
+    if (!selectedSeasonId) return;
+    if (selectedSeasonId in ndviRasters) {
+      setVisibility((prevVisibility) => ({
+        ...prevVisibility,
+        ndviRaster: true,
+      }));
+    } else {
+      fetch(`${serverUrl}/ndvi/${selectedFieldId}/${selectedSeasonId}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
       })
         .then(async (response) => {
-          const responseBody = await response.json();
+          const body = await response.json();
+          const data = body["data"];
           if (response.ok) {
-            setFields(
-              (responseBody as any[]).map((field) => parseField(field))
-            );
-          } else {
-            notify({ message: responseBody["data"], isError: true });
-          }
+            setNdviRasters((prevNdviMap) => ({
+              ...prevNdviMap,
+              [selectedSeasonId]: data,
+            }));
+            setVisibility((prevVisibility) => ({
+              ...prevVisibility,
+              ndviRaster: true,
+            }));
+          } else
+            setVisibility((prevVisibility) => ({
+              ...prevVisibility,
+              ndviRaster: false,
+            }));
         })
-        .catch((error) => notify({ message: error.message, isError: true }));
-    } else {
-      setFields(undefined);
-      setSelectedField(undefined);
-      setNdvi(undefined);
+        .catch(() =>
+          setVisibility((prevVisibility) => ({
+            ...prevVisibility,
+            ndviRaster: false,
+          }))
+        );
     }
-  }, [authenticationToken]);
-
-  useEffect(() => {
-    setNdvi(undefined);
-  }, [selectedField?.id, selectedPeriod]);
-
-  const registerField = (name: string) => {
-    return new Promise<string>((resolve, reject) => {
-      if (!roi || roi?.length < 3) {
-        reject("No valid region is specified");
-        return;
-      }
-      fetch(`${serverUrl}/register`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Auth-Token": authenticationToken,
-        },
-        method: "POST",
-        body: JSON.stringify({
-          name,
-          coordinates: roi.map(({ lat, lng }) => [lng, lat]),
-        }),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          if (response.ok) {
-            setFields((prevFields) => [
-              parseField(responseBody),
-              ...(prevFields ?? []),
-            ]);
-            resolve("Successfully register region of interest");
-          } else reject(responseBody["data"]);
-        })
-        .catch((error) => reject(error.message));
-    });
-  };
-
-  const unregisterField = () => {
-    return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/unregister/${selectedField?.id}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "DELETE",
-      })
-        .then(async (response) => {
-          if (response.ok) {
-            setFields((prevFields) =>
-              prevFields?.filter(
-                (prevField) => prevField.id !== selectedField?.id
-              )
-            );
-            setSelectedField(undefined);
-            resolve("Successfully unregister the field");
-          } else reject("Failed to unregister the field");
-        })
-        .catch((error) => reject(error.message));
-    });
-  };
-
-  const getFieldNdvi = () => {
-    return new Promise<string>((resolve, reject) => {
-      const field = fields?.find((field) => field.id === selectedField?.id);
-      if (field && selectedPeriod && selectedPeriod in field?.periodNdvi) {
-        setNdvi(field?.periodNdvi[selectedPeriod]);
-        resolve("Fetching the field ndvi raster");
-      } else {
-        fetch(
-          `${serverUrl}/process_ndvi/${selectedField?.id}/${selectedPeriod}`,
-          {
-            headers: { "Auth-Token": authenticationToken },
-            method: "GET",
-          }
-        )
-          .then(async (response) => {
-            const body = await response.json();
-            const data = body["data"];
-            if (response.ok) {
-              const [period, ndviRaster] = data.split("_");
-              setFields((prevFields) => {
-                if (prevFields) {
-                  const index = prevFields.findIndex(
-                    (prevField) => prevField.id === selectedField?.id
-                  );
-                  if (index !== -1) {
-                    prevFields[index].periodNdvi[period] = ndviRaster;
-                    return [...prevFields];
-                  }
-                }
-                return prevFields;
-              });
-              setNdvi(ndviRaster);
-              resolve("Successfully processed. Fetching the field ndvi raster");
-            } else reject(data);
-          })
-          .catch((error) => reject(error.message));
-      }
-    });
   };
 
   return (
     <FieldContext.Provider
       value={{
-        fields,
-        registerField,
-        unregisterField,
-        selectedField,
-        setSelectedField,
-        ndvi,
-        setNdvi,
-        getFieldNdvi,
+        ndviRasters,
+        coordinates,
+        setupFieldLayer,
+        visibility,
+        toggleFieldRegion,
+        toggleFieldNdviRaster,
       }}
     >
       {props.children}
