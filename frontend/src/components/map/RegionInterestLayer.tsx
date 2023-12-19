@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { RefAttributes, useEffect, useRef } from "react";
 import { FeatureGroup, Polygon } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import L from "leaflet";
@@ -11,34 +11,35 @@ const icon = {
   }),
 };
 
+//@ts-ignore
 L.Edit.Poly = L.Edit.Poly.extend({
   options: icon,
 });
 
 export default function DrawController() {
   const { roi, setRoi } = useRegionInterestContext();
-  const fgRef = useRef(null);
+  const fgRef = useRef<L.FeatureGroup>(null);
 
   useEffect(() => {
-    const layers = Object.values(fgRef.current._layers);
-    if (layers.length > 0) {
+    const layers = fgRef.current?.getLayers();
+    if (layers && layers.length > 0) {
       layers.forEach((layer, i) => {
         if (i === layers.length - 1) return;
-        fgRef.current.removeLayer(layer);
+        fgRef.current?.removeLayer(layer);
       });
     }
   }, [roi]);
 
   const onReset = () => setRoi(undefined);
 
-  const onCreate = (e) => {
+  const onCreate = (e: any) => {
     const { layerType, layer } = e;
     if (layerType === "polygon") {
       setRoi(layer.getLatLngs()[0]);
     }
   };
 
-  const onEdit = (e) => {
+  const onEdit = (e: any) => {
     const layer = e.layers.getLayers()[0];
     setRoi(layer.getLatLngs()[0]);
   };

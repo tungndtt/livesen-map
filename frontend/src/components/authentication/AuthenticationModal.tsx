@@ -1,7 +1,19 @@
 import { useState } from "react";
-import { Box, Button, Modal, Link, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Modal,
+  Link,
+  TextField,
+  Typography,
+  InputAdornment,
+  IconButton,
+} from "@mui/material";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { UserProfile, UserProfileField } from "../../types/profile";
 
 const fields = [
   { name: "name", label: "Name" },
@@ -16,16 +28,15 @@ export default function AuthenticationModal() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [options, setOptions] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [options, setOptions] = useState<UserProfile>({});
 
-  const onChangeOptions = (e) => {
+  const onChangeOptions = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOptions((prevOptions) => {
       const name = e.target.name;
       const value =
         e.target.type === "number" ? +e.target.value : e.target.value;
-      if (value) prevOptions[name] = value;
-      else delete prevOptions?.[name];
-      return { ...prevOptions };
+      return { ...prevOptions, [name]: value };
     });
   };
 
@@ -63,7 +74,16 @@ export default function AuthenticationModal() {
           fullWidth
           size="small"
           required
-          type="password"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          type={showPassword ? "text" : "password"}
           id="password"
           label="Password"
           value={password}
@@ -79,7 +99,7 @@ export default function AuthenticationModal() {
               type={isNumber ? "number" : "text"}
               name={name}
               label={label}
-              value={options?.[name] ?? ""}
+              value={options?.[name as UserProfileField] ?? ""}
               onChange={onChangeOptions}
             />
           ))}

@@ -2,13 +2,14 @@
 # pg_ctl -D <data-folder> -l <log-file> start/stop
 # pg_ctl status -D <data-folder>
 from psycopg2 import pool, sql, connect
+from psycopg2._psycopg import cursor as Cursor
 from config import STORAGE, APP
 
 
 _dbpool = None
 
 
-def __init_database():
+def __init_database() -> None:
     # Database connection parameters
     db_params = {
         "dbname": "postgres",
@@ -20,7 +21,7 @@ def __init_database():
     # Connect to the PostgreSQL server
     conn = connect(**db_params)
     # Create a cursor
-    cursor = conn.cursor()
+    cursor: Cursor = conn.cursor()
     conn.autocommit = True
     database_name = STORAGE.dbname
     try:
@@ -48,7 +49,7 @@ def __init_database():
         conn.close()
 
 
-def __init_tables():
+def __init_tables() -> None:
     with DbCursor() as cursor:
         cursor.execute("CREATE EXTENSION IF NOT EXISTS postgis")
         # SQL CREATE TABLE statement
@@ -67,11 +68,11 @@ def __init_tables():
         CREATE TABLE IF NOT EXISTS field (
             id serial PRIMARY KEY,
             user_id integer not null,
-            name text,
+            name text not null unique,
             region GEOMETRY(POLYGON, 4326) not null,
             area double precision,
             straubing_distance double precision,
-            ndvi_rasters text[] not null default '{}',
+            ndvi_rasters json not null default '{}',
             FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
         )
         """
@@ -79,38 +80,26 @@ def __init_tables():
         CREATE TABLE IF NOT EXISTS season (
             user_id integer not null,
             field_id integer not null,
-            period_id text not null,
-            max_allowed_fertilizer double precision,
-            intercrop boolean,
+            season_id text not null,
+            maincrop text,
+            intercrop text,
             soil_type text,
             variety text,
             seed_density double precision,
-            first_fertilizer_amount double precision,
-            second_fertilizer_amount double precision,
-            first_soil_tillage text,
-            second_soil_tillage text,
-            first_crop_protection text,
-            second_crop_protection text,
+            seed_date date,
+            max_allowed_fertilizer double precision,
+            fertilizer_applications json not null default '[]',
+            soil_tillage_applications json not null default '[]',
+            crop_protection_applications json not null default '[]',
             nitrate double precision,
             phosphor double precision,
             potassium double precision,
             ph double precision,
+            rks double precision,
+            harvest_weight double precision,
+            harvest_date date,
             recommended_fertilizer_amount double precision default -1.0,
-            yield double precision default -1.0,
-            PRIMARY KEY (field_id, period_id),
-            FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
-        )
-        """
-        create_table_subfield_cmd = """
-        CREATE TABLE IF NOT EXISTS subfield (
-            id serial PRIMARY KEY,
-            user_id integer not null,
-            field_id integer not null,
-            period_id text not null,
-            area double precision,
-            region GEOMETRY(POLYGON, 4326) not null,
-            recommended_fertilizer_amount double precision default -1.0,
+            PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
         )
@@ -120,24 +109,39 @@ def __init_tables():
             id serial PRIMARY KEY,
             user_id integer not null,
             field_id integer not null,
-            period_id text not null,
-            subfield_id integer not null,
+            season_id text not null,
             longitude double precision,
             latitude double precision,
-            nitrate_measurement double precision,
-            phosphor_measurement double precision,
-            potassium_measurement double precision,
-            ndvi_value double precision,
+            nitrate double precision,
+            phosphor double precision,
+            potassium double precision,
+            ndvi double precision,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (subfield_id) REFERENCES subfield(id) ON DELETE CASCADE
+            FOREIGN KEY (field_id, season_id) REFERENCES season(field_id, season_id) ON DELETE CASCADE,
+            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
+        )
+        """
+        create_table_subfield_cmd = """
+        CREATE TABLE IF NOT EXISTS subfield (
+            id serial PRIMARY KEY,
+            user_id integer not null,
+            field_id integer not null,
+            season_id text not null,
+            measurement_id integer not null,
+            area double precision,
+            region GEOMETRY(POLYGON, 4326) not null,
+            ndvi double precision,
+            recommended_fertilizer_amount double precision default -1.0,
+            FOREIGN KEY (user_id) REFERENCES "user"(id),
+            FOREIGN KEY (measurement_id) REFERENCES measurement(id) ON DELETE CASCADE
         )
         """
         for cmd in [
             create_table_user_cmd,
             create_table_field_cmd,
             create_table_season_cmd,
+            create_table_measurement_cmd,
             create_table_subfield_cmd,
-            create_table_measurement_cmd
         ]:
             cursor.execute(cmd)
         if APP.dev_mode:
@@ -150,7 +154,7 @@ def __init_tables():
             )
 
 
-def init():
+def init() -> None:
     global _dbpool
     __init_database()
     db_params = {
@@ -165,16 +169,16 @@ def init():
 
 
 class DbCursor:
-    def __init__(self):
+    def __init__(self) -> None:
         self.error = None
 
-    def __enter__(self):
+    def __enter__(self) -> Cursor:
         global _dbpool
         self.__conn = _dbpool.getconn()
         self.__cursor = self.__conn.cursor()
         return self.__cursor
 
-    def __exit__(self, *args):
+    def __exit__(self, *args) -> None:
         global _dbpool
         try:
             self.__conn.commit()

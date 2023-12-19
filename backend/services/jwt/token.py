@@ -1,12 +1,13 @@
 import jwt
 import datetime
 from config import JWTOKEN
+from typing import Any
 
 
 __algorithm = "HS256"
 
 
-def generate_token(data, duration):
+def generate_token(data: Any, duration: float) -> str:
     payload = {
         "data": data,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=duration),
@@ -14,7 +15,7 @@ def generate_token(data, duration):
     return jwt.encode(payload, JWTOKEN.secret, algorithm=__algorithm)
 
 
-def verify_token(token):
+def verify_token(token: str) -> Any | None:
     try:
         payload = jwt.decode(token, JWTOKEN.secret,
                              algorithms=[__algorithm])

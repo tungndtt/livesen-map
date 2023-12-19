@@ -1,55 +1,56 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
 import { useRegionInterestContext } from "./RegionInterestContext";
 import { usePeriodContext } from "./PeriodContext";
 import { useNotificationContext } from "./NotificationContext";
+import { Field, parseField } from "../types/field";
+import { Coordinates } from "../types/coordinate";
 
-const FieldContext = createContext({
+type SelectedField = {
+  id: number;
+  coordinates?: Coordinates;
+};
+
+type FieldContextType = {
+  fields: Field[] | undefined;
+  registerField: (name: string) => Promise<string>;
+  unregisterField: () => Promise<string>;
+  selectedField: SelectedField | undefined;
+  setSelectedField: Dispatch<SetStateAction<SelectedField | undefined>>;
+  ndvi: string | undefined;
+  setNdvi: (ndvi: string | undefined) => void;
+  getFieldNdvi: () => Promise<string>;
+};
+
+const FieldContext = createContext<FieldContextType>({
   fields: undefined,
-  registerField: (_name) => new Promise(() => {}),
+  registerField: (_name: string) => new Promise(() => {}),
   unregisterField: () => new Promise(() => {}),
   selectedField: undefined,
-  setSelectedField: (_selectedField) => {},
+  setSelectedField: () => {},
   ndvi: undefined,
-  setNdvi: (_ndvi) => {},
+  setNdvi: (_ndvi: string | undefined) => {},
   getFieldNdvi: () => new Promise(() => {}),
 });
 
-const parseField = (field) => {
-  const {
-    id,
-    name,
-    coordinates,
-    straubing_distance: straubingDistance,
-    area,
-    ndvi_rasters: ndviRasters,
-  } = field;
-  const periodNdvi = {};
-  ndviRasters?.forEach((ndviRaster) => {
-    const [period, raster] = ndviRaster.split("_");
-    periodNdvi[period] = raster;
-  });
-
-  return {
-    id,
-    name,
-    coordinates: coordinates.map(function t(e) {
-      return typeof e[0] === "number" ? { lng: e[0], lat: e[1] } : e.map(t);
-    }),
-    straubingDistance,
-    area,
-    periodNdvi,
-  };
-};
-
-export default function FieldProvider({ children }) {
+export default function FieldProvider(props: { children: ReactNode }) {
   const { authenticationToken } = useAuthenticationContext();
   const { roi } = useRegionInterestContext();
   const { selectedPeriod } = usePeriodContext();
   const notify = useNotificationContext();
-  const [fields, setFields] = useState(undefined);
-  const [selectedField, setSelectedField] = useState(undefined);
-  const [ndvi, setNdvi] = useState(undefined);
+  const [fields, setFields] = useState<Field[] | undefined>(undefined);
+  const [selectedField, setSelectedField] = useState<SelectedField | undefined>(
+    undefined
+  );
+  const [ndvi, setNdvi] = useState<string | undefined>(undefined);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
 
   useEffect(() => {
@@ -59,8 +60,14 @@ export default function FieldProvider({ children }) {
         method: "GET",
       })
         .then(async (response) => {
-          const fetchedFields = await response.json();
-          setFields(fetchedFields.map((field) => parseField(field)));
+          const responseBody = await response.json();
+          if (response.ok) {
+            setFields(
+              (responseBody as any[]).map((field) => parseField(field))
+            );
+          } else {
+            notify({ message: responseBody["data"], isError: true });
+          }
         })
         .catch((error) => notify({ message: error.message, isError: true }));
     } else {
@@ -74,10 +81,11 @@ export default function FieldProvider({ children }) {
     setNdvi(undefined);
   }, [selectedField?.id, selectedPeriod]);
 
-  const registerField = (name) => {
-    return new Promise((resolve, reject) => {
+  const registerField = (name: string) => {
+    return new Promise<string>((resolve, reject) => {
       if (!roi || roi?.length < 3) {
         reject("No valid region is specified");
+        return;
       }
       fetch(`${serverUrl}/register`, {
         headers: {
@@ -95,7 +103,7 @@ export default function FieldProvider({ children }) {
           if (response.ok) {
             setFields((prevFields) => [
               parseField(responseBody),
-              ...prevFields,
+              ...(prevFields ?? []),
             ]);
             resolve("Successfully register region of interest");
           } else reject(responseBody["data"]);
@@ -105,16 +113,16 @@ export default function FieldProvider({ children }) {
   };
 
   const unregisterField = () => {
-    return new Promise((resolve, reject) => {
-      fetch(`${serverUrl}/unregister/${selectedField.id}`, {
+    return new Promise<string>((resolve, reject) => {
+      fetch(`${serverUrl}/unregister/${selectedField?.id}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "DELETE",
       })
         .then(async (response) => {
           if (response.ok) {
             setFields((prevFields) =>
-              prevFields.filter(
-                (prevField) => prevField.id !== selectedField.id
+              prevFields?.filter(
+                (prevField) => prevField.id !== selectedField?.id
               )
             );
             setSelectedField(undefined);
@@ -126,14 +134,14 @@ export default function FieldProvider({ children }) {
   };
 
   const getFieldNdvi = () => {
-    return new Promise((resolve, reject) => {
-      const field = fields.find((field) => field.id === selectedField.id);
-      if (field && selectedPeriod in field?.periodNdvi) {
+    return new Promise<string>((resolve, reject) => {
+      const field = fields?.find((field) => field.id === selectedField?.id);
+      if (field && selectedPeriod && selectedPeriod in field?.periodNdvi) {
         setNdvi(field?.periodNdvi[selectedPeriod]);
         resolve("Fetching the field ndvi raster");
       } else {
         fetch(
-          `${serverUrl}/process_ndvi/${selectedField.id}/${selectedPeriod}`,
+          `${serverUrl}/process_ndvi/${selectedField?.id}/${selectedPeriod}`,
           {
             headers: { "Auth-Token": authenticationToken },
             method: "GET",
@@ -145,13 +153,16 @@ export default function FieldProvider({ children }) {
             if (response.ok) {
               const [period, ndviRaster] = data.split("_");
               setFields((prevFields) => {
-                const index = prevFields.findIndex(
-                  (prevField) => prevField.id === selectedField.id
-                );
-                if (index !== -1) {
-                  prevFields[index].periodNdvi[period] = ndviRaster;
-                  return [...prevFields];
-                } else return prevFields;
+                if (prevFields) {
+                  const index = prevFields.findIndex(
+                    (prevField) => prevField.id === selectedField?.id
+                  );
+                  if (index !== -1) {
+                    prevFields[index].periodNdvi[period] = ndviRaster;
+                    return [...prevFields];
+                  }
+                }
+                return prevFields;
               });
               setNdvi(ndviRaster);
               resolve("Successfully processed. Fetching the field ndvi raster");
@@ -175,7 +186,7 @@ export default function FieldProvider({ children }) {
         getFieldNdvi,
       }}
     >
-      {children}
+      {props.children}
     </FieldContext.Provider>
   );
 }

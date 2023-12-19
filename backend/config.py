@@ -1,48 +1,48 @@
-import os
+from typing import Any
 
 
 class Jwtoken:
-    secret = None
+    secret: str | None = None
 
-    def parse(self, config):
+    def parse(self, config: dict[str, Any]) -> None:
         self.secret = config["secret"]
 
 
 class Mailer:
-    email = None
-    password = None
+    email: str | None = None
+    password: str | None = None
 
-    def parse(self, config):
+    def parse(self, config: dict[str, Any]) -> None:
         self.email = config["email"]
         self.password = config["password"]
 
 
 class Ndvi:
-    data_folder = None
+    data_folder: str | None = None
 
-    def parse(self, config):
+    def parse(self, config: dict[str, Any]) -> None:
         self.data_folder = config["data_folder"]
 
 
 class Downloader:
-    user = None
-    password = None
-    data_folder = None
+    user: str | None = None
+    password: str | None = None
+    data_folder: str | None = None
 
-    def parse(self, config):
+    def parse(self, config: dict[str, Any]) -> None:
         self.user = config["user"]
         self.password = config["password"]
         self.data_folder = config["data_folder"]
 
 
 class Storage:
-    user = None
-    password = None
-    host = None
-    port = None
-    dbname = None
+    user: str | None = None
+    password: str | None = None
+    host: str | None = None
+    port: int | None = None
+    dbname: str | None = None
 
-    def parse(self, config):
+    def parse(self, config: dict[str, Any]) -> None:
         self.user = config["user"]
         self.password = config["password"]
         self.host = config["host"]
@@ -51,11 +51,11 @@ class Storage:
 
 
 class App:
-    host = None
-    port = None
-    dev_mode = None
+    host: str | None = None
+    port: int | None = None
+    dev_mode: bool | None = None
 
-    def parse(self, config):
+    def parse(self, config: dict[str, Any]) -> None:
         self.host = config["host"]
         self.port = config["port"]
         self.dev_mode = config["dev_mode"]

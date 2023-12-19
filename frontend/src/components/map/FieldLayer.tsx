@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Modal, CircularProgress } from "@mui/material";
 import { useLeafletContext } from "@react-leaflet/core";
+import L from "leaflet";
 import { useMap } from "react-leaflet";
+//@ts-ignore
 import parseGeoraster from "georaster";
-import GeoRasterLayer from "georaster-layer-for-leaflet";
+import GeoRasterLayer, { GeoRaster } from "georaster-layer-for-leaflet";
 import proj4 from "proj4";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useFieldContext } from "../../contexts/FieldContext";
@@ -16,8 +18,9 @@ export default function FieldLayer() {
   const { authenticationToken, signOut } = useAuthenticationContext();
   const { ndvi, selectedField } = useFieldContext();
   const notify = useNotificationContext();
-  const ndviLayerRef = useRef();
-  const fieldLayerRef = useRef();
+  //@ts-ignore
+  const ndviLayerRef = useRef<GeoRasterLayer | undefined>(undefined);
+  const fieldLayerRef = useRef<L.Polygon | undefined>(undefined);
   const context = useLeafletContext();
   const map = useMap();
   const container = context.layerContainer || context.map;
@@ -36,7 +39,7 @@ export default function FieldLayer() {
           if (response.ok) {
             const arrayBuffer = await response.arrayBuffer();
             parseGeoraster(arrayBuffer)
-              .then((georaster) => {
+              .then((georaster: GeoRaster) => {
                 ndviLayerRef.current = new GeoRasterLayer({
                   georaster: georaster,
                   opacity: 1,
@@ -69,7 +72,7 @@ export default function FieldLayer() {
   useEffect(() => {
     if (fieldLayerRef.current) container.removeLayer(fieldLayerRef.current);
     if (selectedField?.coordinates) {
-      fieldLayerRef.current = L.polygon(selectedField.coordinates);
+      fieldLayerRef.current = new L.Polygon(selectedField.coordinates);
       container.addLayer(fieldLayerRef.current);
       map.fitBounds(fieldLayerRef.current.getBounds());
     }

@@ -1,4 +1,5 @@
 import rasterio
+from rasterio.io import DatasetReader
 from rasterio import features, mask, windows, warp, transform
 from shapely.geometry import Polygon, MultiPolygon, Point, box
 from shapely import unary_union
@@ -8,7 +9,7 @@ import os
 from config import NDVI
 
 
-def __ndvi_range(raster_file, n):
+def __ndvi_range(raster_file: DatasetReader, n: int) -> list[tuple[float, float]]:
     width, height = raster_file.width, raster_file.height
     step = max(min(1024**2 // (width * 32), height), 1)
     ndvi_min, ndvi_max = 1.0, 0.0
@@ -29,7 +30,7 @@ def __ndvi_range(raster_file, n):
     return ndvi_ranges
 
 
-def __pixel_based_chunk_split(raster_file):
+def __pixel_based_chunk_split(raster_file: DatasetReader) -> list[list[Polygon]]:
     width, height = raster_file.width, raster_file.height
     n = 3
     result = [[] for _ in range(n)]
@@ -63,13 +64,16 @@ def __pixel_based_chunk_split(raster_file):
     return result
 
 
-def __pixel_based_nochunk_split(raster_file, max_subfields=100):
+def __pixel_based_nochunk_split(
+    raster_file: DatasetReader, max_subfields: int = 100
+) -> list[list[Polygon]]:
     n = 3
     result = [[] for _ in range(n)]
     ndvi_ranges = __ndvi_range(raster_file, n)
     raster_data = raster_file.read(1)
     height, width = raster_file.height, raster_file.width
-    smooth_raster_data = np.zeros_like(raster_data)
+    # smooth_raster_data = raster_data
+    smooth_raster_data = np.full_like(raster_data, -1)
     for row in range(height):
         for col in range(width):
             if raster_data[row, col] >= 0:
@@ -89,8 +93,8 @@ def __pixel_based_nochunk_split(raster_file, max_subfields=100):
     for row, ndvi_range in enumerate(ndvi_ranges):
         raster_mask = np.logical_and(
             ~np.isnan(smooth_raster_data),
-            (ndvi_range[0] < smooth_raster_data) & (
-                smooth_raster_data <= ndvi_range[1])
+            (ndvi_range[0] < smooth_raster_data)
+            & (smooth_raster_data <= ndvi_range[1])
         )
         shapes = features.shapes(smooth_raster_data, raster_mask,
                                  connectivity=4, transform=raster_transform)
@@ -137,7 +141,9 @@ def __pixel_based_nochunk_split(raster_file, max_subfields=100):
     return result
 
 
-def __region_based_split(coordinates, max_regions=100):
+def __region_based_split(
+    coordinates: list[list[list[float]]] | Polygon, max_regions: int = 100
+) -> tuple[list[Polygon], float]:
     if isinstance(coordinates, Polygon):
         field = coordinates
     else:
@@ -186,7 +192,9 @@ def __region_based_split(coordinates, max_regions=100):
     return regions, sum_region_area/(nrows * ncols)
 
 
-def __compute_average_ndvi(raster_file, subfields):
+def __compute_average_ndvi(
+    raster_file: DatasetReader, subfields: list[Polygon]
+) -> list[tuple[Polygon, float]]:
     result = []
     transformed_bounds = warp.transform_bounds(raster_file.crs, "epsg:4326",
                                                *raster_file.bounds)
@@ -240,7 +248,7 @@ def __compute_average_ndvi(raster_file, subfields):
     return result
 
 
-def get_subfields_pixel_based_split(tiff_file):
+def get_subfields_pixel_based_split(tiff_file: str) -> list[list[tuple[Polygon, float]]]:
     with rasterio.open(os.path.join(NDVI.data_folder, tiff_file)) as raster_file:
         subfield_groups = __pixel_based_nochunk_split(raster_file, 256)
         result = []
@@ -249,7 +257,9 @@ def get_subfields_pixel_based_split(tiff_file):
         return result
 
 
-def get_subfields_region_based_split(coordinates, tiff_file):
+def get_subfields_region_based_split(
+    coordinates: list[list[list[float]]] | Polygon, tiff_file: str
+) -> list[list[tuple[Polygon, float]]]:
     with rasterio.open(os.path.join(NDVI.data_folder, tiff_file)) as raster_file:
         regions, avg_region_area = __region_based_split(coordinates, 256)
         region_ndvis = __compute_average_ndvi(raster_file, regions)

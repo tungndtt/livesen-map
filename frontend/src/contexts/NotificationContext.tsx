@@ -1,19 +1,28 @@
-import { createContext, useContext, useState } from "react";
+import { ReactNode, createContext, useContext, useState } from "react";
 import { Alert, Snackbar } from "@mui/material";
 
-const NotificationContext = createContext((_notification) => {});
+type Notification = {
+  message: string;
+  isError: boolean;
+};
 
-export default function NotificationProvider({ children }) {
-  const [notification, setNotification] = useState(null);
+const NotificationContext = createContext<
+  (_notification: Notification) => void
+>(() => {});
 
-  const onClose = (_, reason) => {
+export default function NotificationProvider(props: { children: ReactNode }) {
+  const [notification, setNotification] = useState<Notification | undefined>(
+    undefined
+  );
+
+  const onClose = (_: any, reason?: string) => {
     if (reason === "clickaway") return;
-    setNotification(null);
+    setNotification(undefined);
   };
 
   return (
     <NotificationContext.Provider value={setNotification}>
-      {children}
+      {props.children}
       <Snackbar
         open={Boolean(notification)}
         autoHideDuration={1500}

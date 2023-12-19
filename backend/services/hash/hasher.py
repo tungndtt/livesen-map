@@ -3,14 +3,14 @@ import bcrypt
 __encoding = "utf-8"
 
 
-def encrypt(password):
+def encrypt(password: str) -> str:
     password = password.encode(__encoding)
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password, salt)
     return hashed_password.decode(__encoding)
 
 
-def check(password, encrypted_password):
+def check(password: str, encrypted_password: str) -> bool:
     password = password.encode(__encoding)
     encrypted_password = encrypted_password.encode(__encoding)
     return bcrypt.checkpw(password, encrypted_password)

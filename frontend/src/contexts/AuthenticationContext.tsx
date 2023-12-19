@@ -1,20 +1,33 @@
-import { createContext, useState, useContext } from "react";
+import { ReactNode, createContext, useState, useContext } from "react";
+import { UserProfile } from "../types/profile";
 
-const AuthenticationContext = createContext({
+type AuthenticationContextType = {
+  authenticationToken: string;
+  signIn: (email: string, password: string) => Promise<string>;
+  signUp: (
+    email: string,
+    password: string,
+    options: UserProfile
+  ) => Promise<string>;
+  signOut: () => void;
+};
+
+const AuthenticationContext = createContext<AuthenticationContextType>({
   authenticationToken: "",
-  signIn: (_email, _password) => new Promise(() => {}),
-  signUp: (_email, _password, _options) => new Promise(() => {}),
+  signIn: (_email: string, _password: string) => new Promise<string>(() => {}),
+  signUp: (_email: string, _password: string, _options: UserProfile) =>
+    new Promise<string>(() => {}),
   signOut: () => {},
 });
 
-export default function AuthenticationProvider({ children }) {
+export default function AuthenticationProvider(props: { children: ReactNode }) {
   const [authenticationToken, setAuthenticationToken] = useState(
     localStorage.getItem("authentication_token") ?? "test"
   );
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/authentication";
 
-  const signIn = (email, password) => {
-    return new Promise((resolve, reject) => {
+  const signIn = (email: string, password: string) => {
+    return new Promise<string>((resolve, reject) => {
       fetch(`${serverUrl}/sign_in`, {
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -25,6 +38,7 @@ export default function AuthenticationProvider({ children }) {
           const data = responseBody["data"];
           if (response.ok) {
             setAuthenticationToken(data);
+            localStorage.setItem("authentication_token", data);
             resolve("Successfully login");
           } else {
             reject(data);
@@ -34,8 +48,8 @@ export default function AuthenticationProvider({ children }) {
     });
   };
 
-  const signUp = (email, password, options) => {
-    return new Promise((resolve, reject) => {
+  const signUp = (email: string, password: string, options: UserProfile) => {
+    return new Promise<string>((resolve, reject) => {
       fetch(`${serverUrl}/sign_up`, {
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -62,7 +76,7 @@ export default function AuthenticationProvider({ children }) {
         signOut,
       }}
     >
-      {children}
+      {props.children}
     </AuthenticationContext.Provider>
   );
 }

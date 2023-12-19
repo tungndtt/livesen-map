@@ -6,11 +6,13 @@ import {
   InputAdornment,
   TextField,
 } from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
+import UpgradeIcon from "@mui/icons-material/Upgrade";
+import ClearIcon from "@mui/icons-material/Clear";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
+import { UserProfile, UserProfileField } from "../../types/profile";
 
 const fields = [
   { name: "name", label: "Name" },
@@ -22,8 +24,8 @@ const fields = [
 export default function Profile() {
   const { authenticationToken } = useAuthenticationContext();
   const notify = useNotificationContext();
-  const [user, setUser] = useState(undefined);
-  const [options, setOptions] = useState(user);
+  const [user, setUser] = useState<UserProfile | undefined>(undefined);
+  const [options, setOptions] = useState<UserProfile>({});
   const [showPassword, setShowPassword] = useState(false);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/user";
 
@@ -47,15 +49,12 @@ export default function Profile() {
           }
         })
         .catch((error) => notify({ message: error.message, isError: true }));
-    } else setUser(undefined);
+    } else {
+      setUser(undefined);
+    }
   }, [authenticationToken]);
 
   const updateUser = () => {
-    fields.forEach(({ name, isNumber }) => {
-      if (options?.[name] !== undefined && isNumber) {
-        options[name] = +options[name];
-      }
-    });
     fetch(`${serverUrl}/upgister`, {
       headers: {
         "Content-Type": "application/json",
@@ -79,7 +78,7 @@ export default function Profile() {
       .catch((error) => notify({ message: error.message, isError: true }));
   };
 
-  const onChangeOptions = (e) => {
+  const onChangeOptions = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOptions((prevOptions) => {
       const name = e.target.name;
       const value =
@@ -105,7 +104,7 @@ export default function Profile() {
           key={name}
           name={name}
           label={label}
-          value={options?.[name] ?? ""}
+          value={options?.[name as UserProfileField] ?? ""}
           onChange={onChangeOptions}
         />
       ))}
@@ -127,17 +126,34 @@ export default function Profile() {
         value={options?.["password"] ?? ""}
         onChange={onChangeOptions}
       />
-      <Button
-        fullWidth
-        size="small"
-        variant="outlined"
-        color="warning"
-        endIcon={<SendIcon />}
-        disabled={fields.every(({ name }) => options?.[name] === user?.[name])}
-        onClick={updateUser}
-      >
-        Update profile
-      </Button>
+      <Box className="button-row-container">
+        <Button
+          fullWidth
+          size="small"
+          variant="outlined"
+          color="warning"
+          endIcon={<UpgradeIcon />}
+          disabled={fields.every(
+            ({ name }) =>
+              options?.[name as UserProfileField] ===
+              user?.[name as UserProfileField]
+          )}
+          onClick={updateUser}
+        >
+          Update profile
+        </Button>
+        <Button
+          sx={{ width: "40%" }}
+          fullWidth
+          size="small"
+          variant="outlined"
+          color="error"
+          endIcon={<ClearIcon />}
+          onClick={() => setOptions(user ?? {})}
+        >
+          Reset
+        </Button>
+      </Box>
     </Box>
   );
 }
