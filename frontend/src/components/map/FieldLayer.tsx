@@ -8,6 +8,7 @@ import parseGeoraster from "georaster";
 import GeoRasterLayer, { GeoRaster } from "georaster-layer-for-leaflet";
 import proj4 from "proj4";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
+import { useSelectionContext } from "../../contexts/SelectionContext";
 import { useFieldContext } from "../../contexts/FieldContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import ndvi2RBGA from "../../utils/ndvi2RBGA";
@@ -16,7 +17,8 @@ window.proj4 = proj4;
 
 export default function FieldLayer() {
   const { authenticationToken, signOut } = useAuthenticationContext();
-  const { ndvi, selectedField } = useFieldContext();
+  const { selectedSeasonId } = useSelectionContext();
+  const { visibility, ndviRasters, coordinates } = useFieldContext();
   const notify = useNotificationContext();
   //@ts-ignore
   const ndviLayerRef = useRef<GeoRasterLayer | undefined>(undefined);
@@ -25,13 +27,17 @@ export default function FieldLayer() {
   const map = useMap();
   const container = context.layerContainer || context.map;
   const [loadingNdvi, setLoadingNdvi] = useState(false);
+  const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
 
   useEffect(() => {
     if (ndviLayerRef.current) container.removeLayer(ndviLayerRef.current);
-    if (ndvi) {
+    if (
+      visibility.ndviRaster &&
+      selectedSeasonId &&
+      ndviRasters?.[selectedSeasonId]
+    ) {
       setLoadingNdvi(true);
-      const serverUrl = process.env.REACT_APP_SERVER_URL;
-      fetch(serverUrl + "/field/ndvi/" + ndvi, {
+      fetch(`${serverUrl}/ndvi/${ndviRasters[selectedSeasonId]}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
       })
@@ -67,19 +73,19 @@ export default function FieldLayer() {
     return () => {
       if (ndviLayerRef.current) container.removeLayer(ndviLayerRef.current);
     };
-  }, [context, map, ndvi]);
+  }, [context, map, ndviRasters, visibility.ndviRaster, selectedSeasonId]);
 
   useEffect(() => {
     if (fieldLayerRef.current) container.removeLayer(fieldLayerRef.current);
-    if (selectedField?.coordinates) {
-      fieldLayerRef.current = new L.Polygon(selectedField.coordinates);
+    if (visibility.coordinates && coordinates) {
+      fieldLayerRef.current = new L.Polygon(coordinates);
       container.addLayer(fieldLayerRef.current);
       map.fitBounds(fieldLayerRef.current.getBounds());
     }
     return () => {
       if (fieldLayerRef.current) container.removeLayer(fieldLayerRef.current);
     };
-  }, [context, map, selectedField?.coordinates]);
+  }, [context, map, coordinates, visibility.coordinates]);
 
   return (
     <Modal

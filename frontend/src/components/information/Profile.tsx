@@ -12,13 +12,17 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
-import { UserProfile, UserProfileField } from "../../types/profile";
+import {
+  UserProfile,
+  UserProfileField,
+  parseUserProfile,
+} from "../../types/profile";
 
 const fields = [
   { name: "name", label: "Name" },
   { name: "address", label: "Address" },
-  { name: "company_name", label: "Company Name" },
-  { name: "company_size", label: "Company Size", isNumber: true },
+  { name: "companyName", label: "Company Name" },
+  { name: "companySize", label: "Company Size", isNumber: true },
 ];
 
 export default function Profile() {
@@ -38,8 +42,9 @@ export default function Profile() {
         .then(async (response) => {
           const responseBody = await response.json();
           if (response.ok) {
-            setUser(responseBody);
-            setOptions(responseBody);
+            const userProfile = parseUserProfile(responseBody);
+            setUser(userProfile);
+            setOptions(userProfile);
             notify({
               message: "Successfully retrieve the user information",
               isError: false,
@@ -66,7 +71,7 @@ export default function Profile() {
       .then(async (response) => {
         const responseBody = await response.json();
         if (response.ok) {
-          setUser(responseBody);
+          setUser(parseUserProfile(responseBody));
           notify({
             message: "Successfully update the user information",
             isError: false,
@@ -88,7 +93,7 @@ export default function Profile() {
   };
 
   return (
-    <Box className="general-container">
+    <Box className="information-container">
       <TextField
         size="small"
         fullWidth

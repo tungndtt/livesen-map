@@ -22,7 +22,7 @@ body {
   display: inline-block;
 }
 
-.general-container {
+.information-container {
   width: 100%;
   padding: 15px;
   display: flex; 
@@ -30,15 +30,14 @@ body {
   gap: 15px;
 }
 
-.subtab-container {
-  padding: 5px 2px; 
-  overflow: auto;
-  max-height: calc(100vh - 205px); 
-  padding-right: 10px;
+.tab-container {
+  width: calc(100% - 5px);
+  padding: 15px 0px 15px 0px;
 }
 
 .button-row-container {
   display: flex;
+  width: 100%;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
