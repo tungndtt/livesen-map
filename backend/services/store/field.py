@@ -1,4 +1,5 @@
 from services.store.storage import DbCursor
+from psycopg2.extras import Json
 from json import loads as json_parse
 from typing import Any
 
@@ -63,8 +64,8 @@ def insert_field(user_id: int, name: str, region: str) -> dict[str, Any] | None:
     return inserted_field if db_cursor.error is None else None
 
 
-def delete_field(field_id: int) -> list[str] | None:
-    deleted_field_ndvi_rasters = None
+def delete_field(field_id: int) -> dict[str, str] | None:
+    deleted_ndvi_rasters = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
@@ -72,35 +73,51 @@ def delete_field(field_id: int) -> list[str] | None:
             (field_id,)
         )
         record = cursor.fetchone()
-        deleted_field_ndvi_rasters = None if record is None else record[0]
-    return deleted_field_ndvi_rasters if db_cursor.error is None else None
+        deleted_ndvi_rasters = None if record is None else record[0]
+    return deleted_ndvi_rasters if db_cursor.error is None else None
 
 
-def list_fields(user_id: int) -> list[dict[str, Any]] | None:
-    fields = None
+def list_fields_info(user_id: int) -> list[dict[str, Any]] | None:
+    field_ids = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
             """
-            SELECT id, user_id, name, ST_AsGeoJSON(region), straubing_distance, area, ndvi_rasters
-            FROM field
-            WHERE user_id = %s
+            SELECT id, name FROM field WHERE user_id = %s
             """,
             (user_id,)
         )
-        fields = [__parse_record(record) for record in cursor.fetchall()]
-    return fields if db_cursor.error is None else None
+        field_ids = [{"id": id, "name": name}
+                     for id, name in cursor.fetchall()]
+    return field_ids if db_cursor.error is None else None
 
 
-def insert_field_ndvi_raster(field_id: int, ndvi_raster: str) -> bool:
+def insert_field_ndvi_raster(field_id: int, season_id: str, ndvi_raster: str) -> bool:
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
             "SELECT ndvi_rasters FROM field WHERE id = %s", (field_id,))
-        raster_data_list = cursor.fetchone()[0]
-        raster_data_list.append(ndvi_raster)
+        ndvi_rasters = cursor.fetchone()[0]
+        ndvi_rasters[season_id] = ndvi_raster
         cursor.execute(
             "UPDATE field SET ndvi_rasters = %s WHERE id = %s",
-            (raster_data_list, field_id,)
+            (Json(ndvi_rasters), field_id,)
         )
     return db_cursor.error is None
+
+
+def delete_field_ndvi_raster(field_id: int, season_id: str) -> str | None:
+    db_cursor = DbCursor()
+    deleted_ndvi_raster = None
+    with db_cursor as cursor:
+        cursor.execute(
+            "SELECT ndvi_rasters FROM field WHERE id = %s", (field_id,))
+        ndvi_rasters = cursor.fetchone()[0]
+        if season_id in ndvi_rasters:
+            deleted_ndvi_raster = ndvi_rasters[season_id]
+            del ndvi_rasters[season_id]
+            cursor.execute(
+                "UPDATE field SET ndvi_rasters = %s WHERE id = %s",
+                (Json(ndvi_rasters), field_id,)
+            )
+    return deleted_ndvi_raster if db_cursor.error is None else None

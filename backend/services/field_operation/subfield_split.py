@@ -73,7 +73,7 @@ def __pixel_based_nochunk_split(
     raster_data = raster_file.read(1)
     height, width = raster_file.height, raster_file.width
     # smooth_raster_data = raster_data
-    smooth_raster_data = np.zeros_like(raster_data)
+    smooth_raster_data = np.full_like(raster_data, -1)
     for row in range(height):
         for col in range(width):
             if raster_data[row, col] >= 0:
@@ -93,8 +93,8 @@ def __pixel_based_nochunk_split(
     for row, ndvi_range in enumerate(ndvi_ranges):
         raster_mask = np.logical_and(
             ~np.isnan(smooth_raster_data),
-            (ndvi_range[0] < smooth_raster_data) & (
-                smooth_raster_data <= ndvi_range[1])
+            (ndvi_range[0] < smooth_raster_data)
+            & (smooth_raster_data <= ndvi_range[1])
         )
         shapes = features.shapes(smooth_raster_data, raster_mask,
                                  connectivity=4, transform=raster_transform)

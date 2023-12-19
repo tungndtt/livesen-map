@@ -68,11 +68,11 @@ def __init_tables() -> None:
         CREATE TABLE IF NOT EXISTS field (
             id serial PRIMARY KEY,
             user_id integer not null,
-            name text,
+            name text not null unique,
             region GEOMETRY(POLYGON, 4326) not null,
             area double precision,
             straubing_distance double precision,
-            ndvi_rasters text[] not null default '{}',
+            ndvi_rasters json not null default '{}',
             FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
         )
         """
@@ -80,38 +80,26 @@ def __init_tables() -> None:
         CREATE TABLE IF NOT EXISTS season (
             user_id integer not null,
             field_id integer not null,
-            period_id text not null,
-            max_allowed_fertilizer double precision,
-            intercrop boolean,
+            season_id text not null,
+            maincrop text,
+            intercrop text,
             soil_type text,
             variety text,
             seed_density double precision,
-            first_fertilizer_amount double precision,
-            second_fertilizer_amount double precision,
-            first_soil_tillage text,
-            second_soil_tillage text,
-            first_crop_protection text,
-            second_crop_protection text,
+            seed_date date,
+            max_allowed_fertilizer double precision,
+            fertilizer_applications json not null default '[]',
+            soil_tillage_applications json not null default '[]',
+            crop_protection_applications json not null default '[]',
             nitrate double precision,
             phosphor double precision,
             potassium double precision,
             ph double precision,
+            rks double precision,
+            harvest_weight double precision,
+            harvest_date date,
             recommended_fertilizer_amount double precision default -1.0,
-            yield double precision default -1.0,
-            PRIMARY KEY (field_id, period_id),
-            FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
-        )
-        """
-        create_table_subfield_cmd = """
-        CREATE TABLE IF NOT EXISTS subfield (
-            id serial PRIMARY KEY,
-            user_id integer not null,
-            field_id integer not null,
-            period_id text not null,
-            area double precision,
-            region GEOMETRY(POLYGON, 4326) not null,
-            recommended_fertilizer_amount double precision default -1.0,
+            PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
         )
@@ -121,24 +109,39 @@ def __init_tables() -> None:
             id serial PRIMARY KEY,
             user_id integer not null,
             field_id integer not null,
-            period_id text not null,
-            subfield_id integer not null,
+            season_id text not null,
             longitude double precision,
             latitude double precision,
-            nitrate_measurement double precision,
-            phosphor_measurement double precision,
-            potassium_measurement double precision,
-            ndvi_value double precision,
+            nitrate double precision,
+            phosphor double precision,
+            potassium double precision,
+            ndvi double precision,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (subfield_id) REFERENCES subfield(id) ON DELETE CASCADE
+            FOREIGN KEY (field_id, season_id) REFERENCES season(field_id, season_id) ON DELETE CASCADE,
+            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
+        )
+        """
+        create_table_subfield_cmd = """
+        CREATE TABLE IF NOT EXISTS subfield (
+            id serial PRIMARY KEY,
+            user_id integer not null,
+            field_id integer not null,
+            season_id text not null,
+            measurement_id integer not null,
+            area double precision,
+            region GEOMETRY(POLYGON, 4326) not null,
+            ndvi double precision,
+            recommended_fertilizer_amount double precision default -1.0,
+            FOREIGN KEY (user_id) REFERENCES "user"(id),
+            FOREIGN KEY (measurement_id) REFERENCES measurement(id) ON DELETE CASCADE
         )
         """
         for cmd in [
             create_table_user_cmd,
             create_table_field_cmd,
             create_table_season_cmd,
+            create_table_measurement_cmd,
             create_table_subfield_cmd,
-            create_table_measurement_cmd
         ]:
             cursor.execute(cmd)
         if APP.dev_mode:
