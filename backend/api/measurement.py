@@ -2,11 +2,13 @@ from flask import Blueprint, jsonify
 from api.authentication import authentication_required
 from services.store.storage import DbCursor
 from services.store.field import get_field, insert_field_ndvi_raster
-from services.store.measurement import list_measurements, insert_measurement, update_measurement
-from services.store.subfield import list_subfields, insert_subfield
+from services.store.season import get_season, update_season
+from services.store.measurement import list_measurements, get_measurement, insert_measurement, update_measurement
+from services.store.subfield import list_subfields, insert_subfield, update_subfield_recommended_fertilizer_amount
 from services.field_operation.field_ndvi import get_field_ndvi
 from services.field_operation.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from services.field_operation.measurement_position import find_measurement_position
+from services.field_operation.fertilizer_recommendation import compute_fertilizer_recommendation
 
 
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
@@ -70,16 +72,18 @@ def determine_measurement_positions(user_id, _, field_id, season_id):
             data = {
                 "longitude": measurement_position.x,
                 "latitude": measurement_position.y,
-                "ndvi": closest_ndvi
+                "ndvi": avg_ndvi
             }
-            inserted_measurement = insert_measurement(
-                cursor, user_id, field_id, season_id, data)
+            inserted_measurement = insert_measurement(user_id, field_id, season_id,
+                                                      data,
+                                                      cursor=cursor)
             if inserted_measurement is not None:
                 inserted_measurements.append(inserted_measurement)
                 for subfield, ndvi in subfield_ndvis:
                     inserted_subfields.append(
-                        insert_subfield(cursor, user_id, field_id, season_id,
-                                        inserted_measurement["id"], subfield.__str__(), ndvi)
+                        insert_subfield(user_id, field_id, season_id, inserted_measurement["id"],
+                                        subfield.__str__(), ndvi,
+                                        cursor=cursor)
                     )
     if db_cursor.error is None:
         return jsonify({"measurements": inserted_measurements, "subfields": inserted_subfields}), 201
@@ -90,8 +94,63 @@ def determine_measurement_positions(user_id, _, field_id, season_id):
 @api.route("/upgister/<int:measurement_id>", methods=["PUT"])
 @authentication_required
 def upgister_measurement(user_id, data, measurement_id):
+    updated_measurement, updated_recommended_fertilizer = None, {}
+    db_cursor = DbCursor()
+    with db_cursor as cursor:
+        measurement = get_measurement(user_id, measurement_id)
+        if measurement is None:
+            return jsonify({"data": "Cannot find measurement with the given id"}), 404
+        field_id, season_id = measurement["field_id"], measurement["season_id"]
+        season = get_season(user_id, field_id, season_id)
+        if season is None:
+            return jsonify({"data": "Cannot find season associated with the measurement"}), 404
+        subfields = list_subfields(user_id, field_id, season_id)
+        if subfields is None:
+            return jsonify({"data": "Cannot find subfields associated with the measurement"}), 404
+        updated_measurement = update_measurement(user_id, measurement_id,
+                                                 data,
+                                                 cursor=cursor)
+        if updated_measurement is None:
+            return jsonify({"data": "Failed to update the measurement"}), 500
+        total_recommended_fertilizer_change = 0
+        subfield_recommended_fertilizer = {}
+        for subfield in subfields:
+            if subfield["measurement_id"] != measurement_id:
+                continue
+            subfield_id = subfield["id"]
+            recommended_fertilizer = compute_fertilizer_recommendation(subfield["ndvi"],
+                                                                       updated_measurement)
+            update_subfield_recommended_fertilizer_amount(subfield_id,
+                                                          recommended_fertilizer,
+                                                          cursor=cursor)
+            subfield_recommended_fertilizer[subfield_id] = recommended_fertilizer
+            subfield_recommended_fertilier = subfield["recommended_fertilizer_amount"]
+            total_recommended_fertilizer_change += (
+                (0 if recommended_fertilizer is None else recommended_fertilizer)
+                - (0 if subfield_recommended_fertilier is None else subfield_recommended_fertilier)
+            )
+        updated_recommended_fertilizer["subfield_recommended_fertilizer"] = subfield_recommended_fertilizer
+        season_recommended_fertilizer = season["recommended_fertilizer_amount"]
+        total_recommended_fertilizer = (
+            (0 if season_recommended_fertilizer is None else season_recommended_fertilizer)
+            + total_recommended_fertilizer_change
+        )
+        data = {
+            "recommended_fertilizer_amount": total_recommended_fertilizer
+        }
+        update_season(user_id, field_id, season_id, data, cursor=cursor)
+        updated_recommended_fertilizer["total_recommended_fertilizer"] = total_recommended_fertilizer
+    if db_cursor.error is None:
+        return {"measurement": updated_measurement, "recommended_fertilizer": updated_recommended_fertilizer}, 200
+    else:
+        return jsonify({"data": "Failed to update the measurement"}), 500
+
+
+@api.route("/upgister_position/<int:measurement_id>", methods=["PUT"])
+@authentication_required
+def upgister_measurement_position(user_id, data, measurement_id):
     updated_measurement = update_measurement(user_id, measurement_id, data)
     if updated_measurement is not None:
         return updated_measurement, 200
     else:
-        return jsonify({"data": "Failed to update the measurement"}), 500
+        return jsonify({"data": "Failed to update the measurement position"}), 500

@@ -1,4 +1,5 @@
 from services.store.storage import DbCursor
+from psycopg2._psycopg import cursor as Cursor
 from psycopg2.extras import Json
 from json import loads as json_parse
 from typing import Any
@@ -106,18 +107,15 @@ def insert_field_ndvi_raster(field_id: int, season_id: str, ndvi_raster: str) ->
     return db_cursor.error is None
 
 
-def delete_field_ndvi_raster(field_id: int, season_id: str) -> str | None:
-    db_cursor = DbCursor()
+def delete_field_ndvi_raster(field_id: int, season_id: str, cursor: Cursor | None) -> str | None:
     deleted_ndvi_raster = None
-    with db_cursor as cursor:
+    cursor.execute("SELECT ndvi_rasters FROM field WHERE id = %s", (field_id,))
+    ndvi_rasters = cursor.fetchone()[0]
+    if season_id in ndvi_rasters:
+        deleted_ndvi_raster = ndvi_rasters[season_id]
+        del ndvi_rasters[season_id]
         cursor.execute(
-            "SELECT ndvi_rasters FROM field WHERE id = %s", (field_id,))
-        ndvi_rasters = cursor.fetchone()[0]
-        if season_id in ndvi_rasters:
-            deleted_ndvi_raster = ndvi_rasters[season_id]
-            del ndvi_rasters[season_id]
-            cursor.execute(
-                "UPDATE field SET ndvi_rasters = %s WHERE id = %s",
-                (Json(ndvi_rasters), field_id,)
-            )
-    return deleted_ndvi_raster if db_cursor.error is None else None
+            "UPDATE field SET ndvi_rasters = %s WHERE id = %s",
+            (Json(ndvi_rasters), field_id,)
+        )
+    return deleted_ndvi_raster

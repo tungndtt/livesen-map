@@ -1,32 +1,4 @@
-import { Coordinate, Coordinates, parseCoordinates } from "./coordinate";
-
-export type SubField = {
-  id: number;
-  measurementId: number;
-  coordinates: Coordinates;
-  area: number;
-  ndvi: number;
-  recommendedFertilizerAmount: number;
-}
-
-export const parseSubfield = (subfield: any) => {
-  const {
-    id,
-    measurement_id: measurementId,
-    coordinates,
-    area,
-    ndvi,
-    recommended_fertilizer_amount: recommendedFertilizerAmount,
-  } = subfield;
-  return {
-    id,
-    measurementId,
-    coordinates: parseCoordinates(coordinates),
-    area,
-    ndvi,
-    recommendedFertilizerAmount,
-  } as SubField;
-};
+import { Coordinate } from "./coordinate";
 
 export type NutrientMeasurement = {
   nitrate?: number;
@@ -41,16 +13,12 @@ export type MeasurementNutrientField =
 
 export type Measurement = {
   id: number;
-  position: Coordinate;
   ndvi: number;
-  subfields: SubField[];
 } & NutrientMeasurement;
 
 export const parseMeasurement = (measurement: any) => {
   const {
     id,
-    longitude,
-    latitude,
     nitrate,
     phosphor,
     potassium,
@@ -58,10 +26,24 @@ export const parseMeasurement = (measurement: any) => {
   } = measurement;
   return {
     id,
-    position: { lng: longitude, lat: latitude },
     nitrate,
     phosphor,
     potassium,
     ndvi
   } as Measurement;
 };
+
+export type MeasurementPosition = {
+  id: number;
+  position: Coordinate;
+}
+
+export const parseMeasurementPosition = (measurement: any) => {
+  const {id, longitude, latitude} = measurement;
+  return {id, position: {lng: longitude, lat: latitude}} as MeasurementPosition;
+}
+
+export const deparseMeasurementPosition = (measurementPosition: MeasurementPosition) => {
+  const {lng: longitude, lat: latitude} = measurementPosition.position;
+  return {longitude, latitude};
+}
