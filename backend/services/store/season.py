@@ -1,4 +1,5 @@
-from services.store.storage import DbCursor
+from services.store.storage import DbCursor, transaction_decorator
+from psycopg2._psycopg import cursor as Cursor
 from psycopg2.extras import Json
 from typing import Any
 
@@ -48,27 +49,27 @@ def __extract_nonempty(data: dict[str, Any]) -> tuple[list[str], list[Any]]:
     return cols, vals
 
 
+@transaction_decorator
 def update_season(
     user_id: int, field_id: int, season_id: str,
-    data: dict[str, Any]
+    data: dict[str, Any],
+    cursor: Cursor | None
 ) -> dict[str, Any] | None:
     cols, vals = __extract_nonempty(data)
     updated_season = None
     if len(cols) > 0:
         update_cols = " = %s, ".join(cols) + " = %s"
-        db_cursor = DbCursor()
-        with db_cursor as cursor:
-            cursor.execute(
-                f"""
-                UPDATE season
-                SET {update_cols}
-                WHERE user_id = %s AND field_id = %s AND season_id = %s
-                RETURNING *
-                """,
-                (*vals, user_id, field_id, season_id,)
-            )
-            updated_season = __parse_record(cursor.fetchone())
-    return updated_season if db_cursor.error is None else None
+        cursor.execute(
+            f"""
+            UPDATE season
+            SET {update_cols}
+            WHERE user_id = %s AND field_id = %s AND season_id = %s
+            RETURNING *
+            """,
+            (*vals, user_id, field_id, season_id,)
+        )
+        updated_season = __parse_record(cursor.fetchone())
+    return updated_season
 
 
 def insert_season(
@@ -99,14 +100,12 @@ def insert_season(
     return inserted_season if db_cursor.error is None else None
 
 
-def delete_season(user_id: int, field_id: int, season_id: str) -> bool:
-    db_cursor = DbCursor()
-    with db_cursor as cursor:
-        cursor.execute(
-            "DELETE FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
-            (user_id, field_id, season_id,)
-        )
-    return db_cursor.error is None
+@transaction_decorator
+def delete_season(user_id: int, field_id: int, season_id: str, cursor: Cursor | None) -> None:
+    cursor.execute(
+        "DELETE FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
+        (user_id, field_id, season_id,)
+    )
 
 
 def get_season(user_id: int, field_id: int, season_id: str) -> dict[str, Any] | None:

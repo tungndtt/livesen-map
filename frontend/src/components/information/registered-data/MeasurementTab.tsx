@@ -12,29 +12,34 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ViewQuiltIcon from "@mui/icons-material/ViewQuilt";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import GridOnIcon from "@mui/icons-material/GridOn";
+import GridOffIcon from "@mui/icons-material/GridOff";
 import UpgradeIcon from "@mui/icons-material/Upgrade";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useMeasurementContext } from "../../../contexts/MeasurementContext";
+import { useSeasonContext } from "../../../contexts/SeasonContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
 import {
   Measurement,
-  SubField,
   NutrientMeasurement,
   MeasurementNutrientField,
   parseMeasurement,
-  parseSubfield,
 } from "../../../types/measurement";
 
 export default function MeasurementTab() {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const {
-    measurementCoordinates,
+    visibility,
     setupMeasurementLayer,
     toggleMeasurementRegion,
+    recommendationVisible,
+    toggleRecommendationVisible,
+    updateSubFieldRecommendedFertilizer,
   } = useMeasurementContext();
+  const { setRecommendedFertilizer } = useSeasonContext();
   const notify = useNotificationContext();
   const [measurements, setMeasurements] = useState<Measurement[] | undefined>(
     undefined
@@ -43,25 +48,13 @@ export default function MeasurementTab() {
 
   const initializeMeasurements = (
     fetchedMeasurements: any[],
-    fetchedSubfields: any[]
+    fetchedSubFields: any[]
   ) => {
-    const subfieldsMap = {} as { [measurementId: number]: SubField[] };
-    fetchedSubfields.forEach((fetchedSubfield) => {
-      const subfield = parseSubfield(fetchedSubfield);
-      if (!subfieldsMap?.[subfield.measurementId]) {
-        subfieldsMap[subfield.measurementId] = [];
-      }
-      subfieldsMap[subfield.measurementId].push(subfield);
-    });
     const measurements = fetchedMeasurements
-      .map((fetchedMeasurement) => {
-        const measurement = parseMeasurement(fetchedMeasurement);
-        measurement.subfields = subfieldsMap[measurement.id];
-        return measurement;
-      })
+      .map((fetchedMeasurement) => parseMeasurement(fetchedMeasurement))
       .sort((m1, m2) => m1.ndvi - m2.ndvi);
     setMeasurements(measurements);
-    setupMeasurementLayer(measurements);
+    setupMeasurementLayer(fetchedMeasurements, fetchedSubFields);
   };
 
   useEffect(() => {
@@ -137,7 +130,8 @@ export default function MeasurementTab() {
       .then(async (response) => {
         const responseBody = await response.json();
         if (response.ok) {
-          const updatedMeasurement = parseMeasurement(responseBody);
+          const measurement = responseBody["measurement"];
+          const updatedMeasurement = parseMeasurement(measurement);
           setMeasurements((prevMeasurements) => {
             if (prevMeasurements) {
               const index = prevMeasurements.findIndex(
@@ -154,6 +148,14 @@ export default function MeasurementTab() {
             }
             return prevMeasurements;
           });
+          const recommendedFertilizer = responseBody["recommended_fertilizer"];
+          setRecommendedFertilizer(
+            recommendedFertilizer["total_recommended_fertilizer"]
+          );
+          updateSubFieldRecommendedFertilizer(
+            updatedMeasurement.id,
+            recommendedFertilizer["subfield_recommended_fertilizer"]
+          );
           notify({
             message: "Successfully updated measurement",
             isError: false,
@@ -166,11 +168,10 @@ export default function MeasurementTab() {
   return (
     <Box className="tab-container">
       {measurements ? (
-        measurements.map((measurement, i) => {
-          const { id, position, ndvi, subfields } = measurement;
-          return (
+        <>
+          {measurements.map((measurement) => (
             <Accordion
-              key={id}
+              key={measurement.id}
               disableGutters
               sx={{
                 boxShadow: "none",
@@ -181,7 +182,7 @@ export default function MeasurementTab() {
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>
-                  <b>Measurement {i}</b>
+                  <b>Measurement {measurement.id}</b>
                 </Typography>
               </AccordionSummary>
               <AccordionDetails
@@ -195,58 +196,10 @@ export default function MeasurementTab() {
                 <TextField
                   fullWidth
                   size="small"
-                  disabled={true}
-                  label="Measurement Position (long, lat)"
-                  value={`${position.lng}, ${position.lat}`}
-                />
-                <TextField
-                  fullWidth
-                  size="small"
-                  disabled={true}
+                  disabled
                   label="NDVI"
-                  value={ndvi}
+                  value={measurement.ndvi}
                 />
-                {subfields.map(
-                  ({ id, area, recommendedFertilizerAmount }, i) => (
-                    <Accordion
-                      key={id}
-                      disableGutters
-                      sx={{
-                        width: "100%",
-                        boxShadow: "none",
-                        border: "2px solid #c7c7c7",
-                        borderRadius: "2px",
-                      }}
-                    >
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography>Subfield {i}</Typography>
-                      </AccordionSummary>
-                      <AccordionDetails
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: 2,
-                        }}
-                      >
-                        <TextField
-                          fullWidth
-                          size="small"
-                          disabled={true}
-                          label="Subfield Area"
-                          value={area}
-                        />
-                        <TextField
-                          fullWidth
-                          size="small"
-                          disabled={true}
-                          label="Subfield Recommended Fertilizer"
-                          value={recommendedFertilizerAmount}
-                        />
-                      </AccordionDetails>
-                    </Accordion>
-                  )
-                )}
                 <MeasurementValues
                   measurement={measurement}
                   updateMeasurement={updateMeasurement}
@@ -257,22 +210,34 @@ export default function MeasurementTab() {
                   variant="outlined"
                   color="success"
                   endIcon={
-                    measurementCoordinates?.[id] ? (
+                    visibility?.[measurement.id] ? (
                       <VisibilityOffIcon />
                     ) : (
                       <VisibilityIcon />
                     )
                   }
-                  onClick={() => toggleMeasurementRegion(measurement)}
+                  onClick={() => toggleMeasurementRegion(measurement.id)}
                 >
-                  {measurementCoordinates?.[id]
+                  {visibility?.[measurement.id]
                     ? "Hide measurement subfield"
                     : "Show measurement subfield"}
                 </Button>
               </AccordionDetails>
             </Accordion>
-          );
-        })
+          ))}
+          <Button
+            fullWidth
+            size="small"
+            variant="outlined"
+            sx={{ my: 2 }}
+            endIcon={recommendationVisible ? <GridOffIcon /> : <GridOnIcon />}
+            onClick={toggleRecommendationVisible}
+          >
+            {recommendationVisible
+              ? "Hide Fertilizer Recommendation"
+              : "Show Fertilizer Recommendation"}
+          </Button>
+        </>
       ) : (
         <>
           <Typography mt={10} mb={2}>

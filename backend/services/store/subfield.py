@@ -1,4 +1,4 @@
-from services.store.storage import DbCursor
+from services.store.storage import DbCursor, transaction_decorator
 from json import loads as json_parse
 from psycopg2._psycopg import cursor as Cursor
 from typing import Any
@@ -20,20 +20,23 @@ def __parse_record(record: tuple) -> dict[str, Any] | None:
     }
 
 
-def update_subfield_recommended_fertilizer_amount(subfield_id: int, recommended_fertilizer_amount: float) -> bool:
-    db_cursor = DbCursor()
-    with db_cursor as cursor:
-        cursor.execute(
-            "UPDATE subfield SET recommended_fertilizer_amount = %s WHERE id = %s",
-            (subfield_id, recommended_fertilizer_amount,)
-        )
-    return db_cursor.error is None
+@transaction_decorator
+def update_subfield_recommended_fertilizer_amount(
+    subfield_id: int,
+    recommended_fertilizer_amount: float,
+    cursor: Cursor | None
+) -> None:
+    cursor.execute(
+        "UPDATE subfield SET recommended_fertilizer_amount = %s WHERE id = %s",
+        (recommended_fertilizer_amount, subfield_id,)
+    )
 
 
+@transaction_decorator
 def insert_subfield(
-    cursor: Cursor,
     user_id: int, field_id: int, season_id: str, measurement_id: int,
-    region: str, ndvi: float
+    region: str, ndvi: float,
+    cursor: Cursor | None,
 ) -> dict[str, Any] | None:
     cursor.execute(
         """
@@ -54,7 +57,7 @@ def insert_subfield(
     return __parse_record(cursor.fetchone())
 
 
-def list_subfields(user_id: int, field_id: int, season_id: str) -> dict[str, Any] | None:
+def list_subfields(user_id: int, field_id: int, season_id: str) -> list[dict[str, Any]] | None:
     subfields = None
     db_cursor = DbCursor()
     with db_cursor as cursor:

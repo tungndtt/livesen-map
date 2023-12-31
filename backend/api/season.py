@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify
+from services.store.storage import DbCursor
 from services.store.season import get_season, list_season_ids, insert_season, update_season, delete_season
 from services.store.field import delete_field_ndvi_raster
 from api.authentication import authentication_required
@@ -52,8 +53,12 @@ def upgister_season(user_id, data, field_id, season_id):
 @api.route("/unregister/<int:field_id>/<season_id>", methods=["DELETE"])
 @authentication_required
 def unregister_season(user_id, _, field_id, season_id):
-    if delete_season(user_id, field_id, season_id):
+    db_cursor = DbCursor()
+    deleted_ndvi_raster = None
+    with db_cursor as cursor:
+        delete_season(user_id, field_id, season_id, cursor=cursor)
         deleted_ndvi_raster = delete_field_ndvi_raster(field_id, season_id)
+    if db_cursor.error is None:
         if deleted_ndvi_raster is not None:
             try:
                 os.remove(os.path.join(NDVI.data_folder, deleted_ndvi_raster))

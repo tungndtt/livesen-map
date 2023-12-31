@@ -152,7 +152,7 @@ export default function Profile() {
           fullWidth
           size="small"
           variant="outlined"
-          color="error"
+          color="secondary"
           endIcon={<ClearIcon />}
           onClick={() => setOptions(user ?? {})}
         >

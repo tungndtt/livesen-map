@@ -244,7 +244,7 @@ export default function FieldGroups({
           sx={{ width: "40%" }}
           size="small"
           variant="outlined"
-          color="error"
+          color="secondary"
           endIcon={<ClearIcon />}
           onClick={() => setOptions(structuredClone(data) ?? {})}
         >

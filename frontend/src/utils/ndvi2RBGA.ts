@@ -10,6 +10,7 @@ for (let value = 0; value <= 255; value++) {
 
 export default function ndvi2RBGA(ndvi: number) {
   if (ndvi < 0) return "#FFFFFF00";
+  ndvi = Math.min(ndvi, 1);
   let rbg = "#";
   for (let i = 0; i < 3; i++) {
     const value = Math.floor(

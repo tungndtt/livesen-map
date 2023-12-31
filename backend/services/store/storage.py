@@ -4,6 +4,7 @@
 from psycopg2 import pool, sql, connect
 from psycopg2._psycopg import cursor as Cursor
 from config import STORAGE, APP
+from typing import Any
 
 
 _dbpool = None
@@ -98,7 +99,7 @@ def __init_tables() -> None:
             rks double precision,
             harvest_weight double precision,
             harvest_date date,
-            recommended_fertilizer_amount double precision default -1.0,
+            recommended_fertilizer_amount double precision default 0.0,
             PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
@@ -131,7 +132,7 @@ def __init_tables() -> None:
             area double precision,
             region GEOMETRY(POLYGON, 4326) not null,
             ndvi double precision,
-            recommended_fertilizer_amount double precision default -1.0,
+            recommended_fertilizer_amount double precision,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (measurement_id) REFERENCES measurement(id) ON DELETE CASCADE
         )
@@ -189,3 +190,15 @@ class DbCursor:
         finally:
             self.__cursor.close()
             _dbpool.putconn(self.__conn)
+
+
+def transaction_decorator(f):
+    def decorator(*args, **kwargs) -> Any | None:
+        if "cursor" in kwargs and kwargs["cursor"] is not None:
+            db_cursor = DbCursor()
+            with db_cursor as cursor:
+                kwargs["cursor"] = cursor
+                return f(*args, **kwargs)
+        else:
+            return f(*args, **kwargs)
+    return decorator

@@ -5,80 +5,170 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { useAuthenticationContext } from "./AuthenticationContext";
 import { useSelectionContext } from "./SelectionContext";
-import { Measurement, SubField } from "../types/measurement";
+import { useNotificationContext } from "./NotificationContext";
+import { SubField, parseSubField } from "../types/subfield";
+import {
+  MeasurementPosition,
+  parseMeasurementPosition,
+  deparseMeasurementPosition,
+} from "../types/measurement";
 import { Coordinate } from "../types/coordinate";
 
-type MeasurementCoordinatesMap = {
-  [measurementId: number]: { position: Coordinate; subfields: SubField[] };
+type MeasurementPositionMap = {
+  [measurementId: number]: MeasurementPosition;
 };
 
-type MeasurementNdviRange = {
-  low: number;
-  high: number;
-  bins: number;
+type MeasurementSubFieldMap = {
+  [measurementId: number]: SubField[];
+};
+
+type Visibility = {
+  [measurementId: number]: boolean;
 };
 
 type MeasurementContextType = {
-  measurementCoordinates: MeasurementCoordinatesMap;
-  measurementNdviRange: MeasurementNdviRange | undefined;
-  setupMeasurementLayer: (measurements: Measurement[]) => void;
-  toggleMeasurementRegion: (measurement: Measurement) => void;
+  positions: MeasurementPositionMap | undefined;
+  subfields: MeasurementSubFieldMap | undefined;
+  visibility: Visibility;
+  recommendationVisible: boolean;
+  setupMeasurementLayer: (measurements: any[], subfields: any[]) => void;
+  toggleMeasurementRegion: (measurementId: number) => void;
+  toggleRecommendationVisible: () => void;
+  updateMeasurementPosition: (measurementPosition: MeasurementPosition) => void;
+  updateSubFieldRecommendedFertilizer: (
+    measurementId: number,
+    updatedRecommendedFertilizer: any
+  ) => void;
 };
 
 const MeasurementContext = createContext<MeasurementContextType>({
-  measurementCoordinates: {},
-  measurementNdviRange: undefined,
+  positions: undefined,
+  subfields: undefined,
+  visibility: {},
+  recommendationVisible: false,
   setupMeasurementLayer: () => {},
   toggleMeasurementRegion: () => {},
+  toggleRecommendationVisible: () => {},
+  updateMeasurementPosition: () => {},
+  updateSubFieldRecommendedFertilizer: () => {},
 });
 
 export default function MeasurementProvider(props: { children: ReactNode }) {
+  const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
-  const [measurementCoordinates, setMeasurementCoordinates] =
-    useState<MeasurementCoordinatesMap>({});
-  const [measurementNdviRange, setMeasurementNdviRange] = useState<
-    MeasurementNdviRange | undefined
+  const notify = useNotificationContext();
+  const [positions, setPositions] = useState<
+    MeasurementPositionMap | undefined
   >(undefined);
+  const [subfields, setSubfields] = useState<
+    MeasurementSubFieldMap | undefined
+  >(undefined);
+  const [visibility, setVisibility] = useState<Visibility>({});
+  const [recommendationVisible, setRecommendationVisible] = useState(false);
+  const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
 
   useEffect(() => {
-    setMeasurementCoordinates({});
-    setMeasurementNdviRange(undefined);
+    setVisibility({});
+    setRecommendationVisible(false);
   }, [selectedFieldId, selectedSeasonId]);
 
-  const setupMeasurementLayer = (measurements: Measurement[]) => {
-    let low = 1,
-      high = -1;
-    measurements.forEach(({ subfields }) => {
-      subfields.forEach(({ ndvi }) => {
-        low = Math.min(low, ndvi);
-        high = Math.max(high, ndvi);
-      });
+  const setupMeasurementLayer = (measurements: any[], subfields: any[]) => {
+    const positionMap = {} as MeasurementPositionMap;
+    measurements.forEach((measurement) => {
+      const parsedMeasurementPosition = parseMeasurementPosition(measurement);
+      positionMap[parsedMeasurementPosition.id] = parsedMeasurementPosition;
     });
-    const bins = measurements.length;
-    setMeasurementNdviRange({ low, high, bins });
+    setPositions(positionMap);
+    const subfieldMap = {} as MeasurementSubFieldMap;
+    subfields.forEach((subfield) => {
+      const parsedSubField = parseSubField(subfield);
+      const measurementId = parsedSubField.measurementId;
+      if (!subfieldMap?.[measurementId]) {
+        subfieldMap[measurementId] = [];
+      }
+      subfieldMap[measurementId].push(parsedSubField);
+    });
+    setSubfields(subfieldMap);
   };
 
-  const toggleMeasurementRegion = (measurement: Measurement) => {
-    setMeasurementCoordinates((prevSelectedMeasurement) => {
-      if (measurement.id in prevSelectedMeasurement)
-        delete prevSelectedMeasurement[measurement.id];
-      else
-        prevSelectedMeasurement[measurement.id] = {
-          position: measurement.position,
-          subfields: measurement.subfields,
-        };
-      return { ...prevSelectedMeasurement };
+  const toggleMeasurementRegion = (measurementId: number) => {
+    setVisibility((prevVisibility) => {
+      if (!prevVisibility) return prevVisibility;
+      if (measurementId in prevVisibility) delete prevVisibility[measurementId];
+      else prevVisibility[measurementId] = true;
+      return { ...prevVisibility };
     });
+  };
+
+  const toggleRecommendationVisible = () => {
+    setRecommendationVisible(
+      (prevRecommendationVisible) => !prevRecommendationVisible
+    );
+  };
+
+  const updateMeasurementPosition = (
+    measurementPosition: MeasurementPosition
+  ) => {
+    fetch(`${serverUrl}/upgister_position/${measurementPosition.id}`, {
+      headers: { "Auth-Token": authenticationToken },
+      method: "PUT",
+      body: JSON.stringify(deparseMeasurementPosition(measurementPosition)),
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          setPositions((prevPositions) =>
+            prevPositions
+              ? {
+                  ...prevPositions,
+                  [measurementPosition.id]: measurementPosition,
+                }
+              : prevPositions
+          );
+          notify({
+            message: "Successfully updated the measurement position",
+            isError: false,
+          });
+        } else
+          notify({
+            message: "Failed to update the measurement position",
+            isError: true,
+          });
+      })
+      .catch((error) => notify({ message: error.message, isError: true }));
+  };
+
+  const updateSubFieldRecommendedFertilizer = (
+    measurementId: number,
+    updatedRecommendedFertilizer: any
+  ) => {
+    setSubfields((prevSubfields) =>
+      prevSubfields
+        ? {
+            ...prevSubfields,
+            [measurementId]: prevSubfields[measurementId].map((subfield) => ({
+              ...subfield,
+              recommendedFertilizerAmount:
+                updatedRecommendedFertilizer[subfield.id],
+            })),
+          }
+        : prevSubfields
+    );
   };
 
   return (
     <MeasurementContext.Provider
       value={{
-        measurementCoordinates,
-        measurementNdviRange,
+        positions,
+        subfields,
+        visibility,
+        recommendationVisible,
         setupMeasurementLayer,
         toggleMeasurementRegion,
+        toggleRecommendationVisible,
+        updateMeasurementPosition,
+        updateSubFieldRecommendedFertilizer,
       }}
     >
       {props.children}
