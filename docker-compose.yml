@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  livesen_storage:
+    image: postgis/postgis:latest
+    container_name: livesen_storage
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: livesen
+      POSTGRES_USER: livesen
+      POSTGRES_PASSWORD: livesen
+    volumes:
+      - ./backend/data/store:./LivesenMapBackend/data/store
+    networks:
+      - livesen_network
+
+  livesen_backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: livesen_backend
+    ports:
+      - "2204:2204"
+    volumes:
+      - ./backend/config.json:./LivesenMapBackend/config.json
+    networks:
+      - livesen_network
+    depends_on:
+      - livesen_storage
+
+  livesen_frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: livesen_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/.env:./LivesenMapFrontend/.env
+    networks:
+      - livesen_network
+    depends_on:
+      - livesen_backend
+
+networks:
+  livesen_network:
+    external: true
+  

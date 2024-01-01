@@ -54,7 +54,7 @@ def insert_measurement(
 
 
 @transaction_decorator
-def update_measurement(user_id: int, measurement_id: int, data: dict[str, Any], cursor: Cursor | None) -> dict[str, Any] | None:
+def update_measurement(user_id: int, measurement_id: int, data: dict[str, Any], cursor: Cursor | None = None) -> dict[str, Any] | None:
     cols, vals = __extract_nonempty(data)
     updated_measurement = None
     if len(cols) > 0:

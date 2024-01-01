@@ -36,7 +36,7 @@ def update_subfield_recommended_fertilizer_amount(
 def insert_subfield(
     user_id: int, field_id: int, season_id: str, measurement_id: int,
     region: str, ndvi: float,
-    cursor: Cursor | None,
+    cursor: Cursor | None = None
 ) -> dict[str, Any] | None:
     cursor.execute(
         """

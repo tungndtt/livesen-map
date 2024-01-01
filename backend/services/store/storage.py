@@ -195,10 +195,10 @@ class DbCursor:
 def transaction_decorator(f):
     def decorator(*args, **kwargs) -> Any | None:
         if "cursor" in kwargs and kwargs["cursor"] is not None:
+            return f(*args, **kwargs)
+        else:
             db_cursor = DbCursor()
             with db_cursor as cursor:
                 kwargs["cursor"] = cursor
                 return f(*args, **kwargs)
-        else:
-            return f(*args, **kwargs)
     return decorator

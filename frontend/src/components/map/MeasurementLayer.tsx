@@ -35,8 +35,8 @@ export default function MeasurementLayer() {
   );
   const [subfieldRecommendFertilizerLow, subfieldRecommendFertilizerHigh] =
     useMemo(() => {
-      let low = 1;
-      let high = -1;
+      let low = maxFertilizer;
+      let high = 0;
       Object.values(subfields ?? {}).forEach((subfield) =>
         subfield.forEach(({ recommendedFertilizerAmount }) => {
           low = Math.min(low, recommendedFertilizerAmount);
@@ -64,7 +64,6 @@ export default function MeasurementLayer() {
           sx={{
             position: "absolute",
             right: "10px",
-            top: "10px",
             zIndex: 1000,
           }}
         >
@@ -112,7 +111,7 @@ export default function MeasurementLayer() {
                 }
                 stroke={false}
               >
-                <Tooltip>
+                <Tooltip sticky>
                   <b>Measurement {measurementId}</b> <br />
                   Area: <b>{area}</b> <br />
                   NDVI: <b>{ndvi}</b> <br />
@@ -142,6 +141,7 @@ export default function MeasurementLayer() {
                 id: menuContext.measurementId,
                 position: menuContext.position,
               });
+              setMenuContext(undefined);
             }
           }}
         >

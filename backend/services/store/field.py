@@ -107,7 +107,7 @@ def insert_field_ndvi_raster(field_id: int, season_id: str, ndvi_raster: str) ->
     return db_cursor.error is None
 
 
-def delete_field_ndvi_raster(field_id: int, season_id: str, cursor: Cursor | None) -> str | None:
+def delete_field_ndvi_raster(field_id: int, season_id: str, cursor: Cursor | None = None) -> str | None:
     deleted_ndvi_raster = None
     cursor.execute("SELECT ndvi_rasters FROM field WHERE id = %s", (field_id,))
     ndvi_rasters = cursor.fetchone()[0]

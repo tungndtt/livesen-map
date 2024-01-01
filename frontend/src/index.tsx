@@ -5,6 +5,7 @@ import RegionInterestProvider from "./contexts/RegionInterestContext";
 import SelectionProvider from "./contexts/SelectionContext";
 import FieldProvider from "./contexts/FieldContext";
 import MeasurementProvider from "./contexts/MeasurementContext";
+import SeasonProvider from "./contexts/SeasonContext";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import App from "./App";
@@ -19,9 +20,11 @@ ReactDOM.render(
           <FieldProvider>
             <FieldProvider>
               <MeasurementProvider>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <App />
-                </LocalizationProvider>
+                <SeasonProvider>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <App />
+                  </LocalizationProvider>
+                </SeasonProvider>
               </MeasurementProvider>
             </FieldProvider>
           </FieldProvider>

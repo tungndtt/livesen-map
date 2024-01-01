@@ -2,13 +2,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
   Dispatch,
   SetStateAction,
 } from "react";
-import { useAuthenticationContext } from "./AuthenticationContext";
-import { Coordinate } from "../types/coordinate";
 
 type SeasonContextType = {
   recommendedFertilizer: number | undefined;

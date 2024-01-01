@@ -112,7 +112,10 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
     measurementPosition: MeasurementPosition
   ) => {
     fetch(`${serverUrl}/upgister_position/${measurementPosition.id}`, {
-      headers: { "Auth-Token": authenticationToken },
+      headers: {
+        "Content-Type": "application/json",
+        "Auth-Token": authenticationToken,
+      },
       method: "PUT",
       body: JSON.stringify(deparseMeasurementPosition(measurementPosition)),
     })

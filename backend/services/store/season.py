@@ -19,7 +19,7 @@ def __parse_record(record: tuple) -> dict[str, Any] | None:
             "soil_tillage_applications",
             "crop_protection_applications",
             "nitrate", "phosphor", "potassium", "ph", "rks",
-            "recommended_fertilizer_amount", "harvest_weight"
+            "harvest_weight", "harvest_date", "recommended_fertilizer_amount",
         ])
     }
 
@@ -53,7 +53,7 @@ def __extract_nonempty(data: dict[str, Any]) -> tuple[list[str], list[Any]]:
 def update_season(
     user_id: int, field_id: int, season_id: str,
     data: dict[str, Any],
-    cursor: Cursor | None
+    cursor: Cursor | None = None
 ) -> dict[str, Any] | None:
     cols, vals = __extract_nonempty(data)
     updated_season = None
@@ -95,13 +95,13 @@ def insert_season(
             RETURNING *
             """
         cursor.execute(insert_cmd,
-                       (user_id, field_id, season_id, *vals, *vals,))
+                       (user_id, field_id, season_id, *vals,))
         inserted_season = __parse_record(cursor.fetchone())
     return inserted_season if db_cursor.error is None else None
 
 
 @transaction_decorator
-def delete_season(user_id: int, field_id: int, season_id: str, cursor: Cursor | None) -> None:
+def delete_season(user_id: int, field_id: int, season_id: str, cursor: Cursor | None = None) -> None:
     cursor.execute(
         "DELETE FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
         (user_id, field_id, season_id,)

@@ -2,12 +2,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
   Dispatch,
   SetStateAction,
 } from "react";
-import { useAuthenticationContext } from "./AuthenticationContext";
 import { Coordinate } from "../types/coordinate";
 
 type RegionInterestContextType = {
@@ -21,12 +19,7 @@ const RegionInterestContext = createContext<RegionInterestContextType>({
 });
 
 export default function RegionInterestProvider(props: { children: ReactNode }) {
-  const { authenticationToken } = useAuthenticationContext();
   const [roi, setRoi] = useState<Coordinate[] | undefined>(undefined);
-
-  useEffect(() => {
-    if (!authenticationToken) setRoi(undefined);
-  }, [authenticationToken]);
 
   return (
     <RegionInterestContext.Provider value={{ roi, setRoi }}>
