@@ -1,0 +1,30 @@
+{
+  "jwtoken": {
+    "secret": "livesen"
+  },
+  "mailer": {
+    "email": "<replace with your email>",
+    "password": "<replace with your api password>"
+  },
+  "ndvi": {
+    "data_folder": "./data/ndvi"
+  },
+  "downloader": {
+    "user": "tungndtt",
+    "password": "tungndtt",
+    "data_folder": "./data/download",
+    "is_downloading": true
+  },
+  "storage": {
+    "user": "livesen",
+    "password": "livesen",
+    "host": "livesen-storage",
+    "port": 5432,
+    "dbname": "livesen"
+  },
+  "app": {
+    "host": "livesen-backend",
+    "port": 2204,
+    "is_testing": false
+  }
+}

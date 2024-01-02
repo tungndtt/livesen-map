@@ -101,6 +101,8 @@ def __run_job():
 
 
 def init():
+    if not DOWNLOADER.is_downloading:
+        return
     global __process
     if not os.path.isdir(DOWNLOADER.data_folder):
         os.mkdir(DOWNLOADER.data_folder)

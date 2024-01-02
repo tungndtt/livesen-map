@@ -9,7 +9,7 @@ from config import APP
 
 if __name__ == "__main__":
     try:
-        # downloader.init()
+        downloader.init()
         storage.init()
         mailer.init()
         app = Flask(__name__)

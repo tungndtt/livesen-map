@@ -22,7 +22,10 @@ const AuthenticationContext = createContext<AuthenticationContextType>({
 
 export default function AuthenticationProvider(props: { children: ReactNode }) {
   const [authenticationToken, setAuthenticationToken] = useState(
-    localStorage.getItem("authentication_token") ?? "test"
+    localStorage.getItem("authentication_token") ??
+      process.env.REACT_APP_IS_TESTING
+      ? "test"
+      : ""
   );
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/authentication";
 

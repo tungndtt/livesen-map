@@ -156,7 +156,7 @@ def __init_tables() -> None:
             create_table_subfield_cmd,
         ]:
             cursor.execute(cmd)
-        if APP.test_mode:
+        if APP.is_testing:
             cursor.execute(
                 """
                 INSERT INTO "user"(id, name, address, company_name, company_size, email, password)

@@ -28,11 +28,13 @@ class Downloader:
     user: str | None = None
     password: str | None = None
     data_folder: str | None = None
+    is_downloading: bool | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.user = config["user"]
         self.password = config["password"]
         self.data_folder = config["data_folder"]
+        self.is_downloading = config["is_downloading"]
 
 
 class Storage:
@@ -53,12 +55,12 @@ class Storage:
 class App:
     host: str | None = None
     port: int | None = None
-    test_mode: bool | None = None
+    is_testing: bool | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.host = config["host"]
         self.port = config["port"]
-        self.test_mode = config["test_mode"]
+        self.is_testing = config["is_testing"]
 
 
 __initialized = False

@@ -11,7 +11,7 @@ def authentication_required(f):
         data = None
         if request.is_json:
             data = request.get_json()
-        if APP.test_mode:
+        if APP.is_testing:
             return f(1, data, *args, **kwargs)
         auth_token = request.headers.get("Auth-Token", "")
         user_id = verify_token(auth_token)
