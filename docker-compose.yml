@@ -1,50 +1,62 @@
 version: '3.9'
 
 services:
-  livesen_storage:
+  livesen-storage:
     image: postgis/postgis:latest
-    container_name: livesen_storage
+    container_name: livesen-storage
     restart: unless-stopped
+    networks:
+      - livesen-network
     ports:
-      - "5432:5432"
+      - 5432:5432
     environment:
       POSTGRES_DB: livesen
       POSTGRES_USER: livesen
       POSTGRES_PASSWORD: livesen
     volumes:
-      - ./backend/data/store:./LivesenMapBackend/data/store
-    networks:
-      - livesen_network
+      - ./backend/data/persistent-storage:/var/lib/postgresql/data
 
-  livesen_backend:
+  livesen-backend:
     build: 
       context: ./backend
       dockerfile: Dockerfile
-    container_name: livesen_backend
-    ports:
-      - "2204:2204"
-    volumes:
-      - ./backend/config.json:./LivesenMapBackend/config.json
+    container_name: livesen-backend
     networks:
-      - livesen_network
+      - livesen-network
+    ports:
+      - 2204:2204
+    volumes:
+      - ./backend/data/download:/livesen/data/download:ro
+      - ./backend/config.json:/livesen/config.json:ro
     depends_on:
-      - livesen_storage
-
-  livesen_frontend:
+      - livesen-storage
+  
+  livesen-frontend:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: livesen_frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend/.env:./LivesenMapFrontend/.env
+    container_name: livesen-frontend
     networks:
-      - livesen_network
-    depends_on:
-      - livesen_backend
-
-networks:
-  livesen_network:
-    external: true
+      - livesen-network
+    ports:
+      - 3000:3000
+    environment:
+      REACT_APP_SERVER_URL: http://127.0.0.1:8080
   
+  livesen-proxy:
+    build: 
+      context: ./proxy
+      dockerfile: Dockerfile
+    container_name: livesen-proxy
+    restart: unless-stopped
+    networks: 
+      - livesen-network
+    ports: 
+      - 8080:80
+    depends_on:
+      - livesen-backend
+      - livesen-frontend
+  
+networks:
+  livesen-network:
+    driver: bridge

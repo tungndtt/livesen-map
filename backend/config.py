@@ -53,12 +53,12 @@ class Storage:
 class App:
     host: str | None = None
     port: int | None = None
-    dev_mode: bool | None = None
+    test_mode: bool | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.host = config["host"]
         self.port = config["port"]
-        self.dev_mode = config["dev_mode"]
+        self.test_mode = config["test_mode"]
 
 
 __initialized = False

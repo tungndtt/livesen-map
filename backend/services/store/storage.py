@@ -20,7 +20,18 @@ def __init_database() -> None:
         "port": STORAGE.port,
     }
     # Connect to the PostgreSQL server
-    conn = connect(**db_params)
+    retry = 0
+    conn = None
+    while retry < 10:
+        from time import sleep
+        try:
+            conn = connect(**db_params)
+            break
+        except:
+            retry += 1
+            sleep(1)
+    if conn is None:
+        raise Exception("Cannot connect to database")
     # Create a cursor
     cursor: Cursor = conn.cursor()
     conn.autocommit = True
@@ -145,7 +156,7 @@ def __init_tables() -> None:
             create_table_subfield_cmd,
         ]:
             cursor.execute(cmd)
-        if APP.dev_mode:
+        if APP.test_mode:
             cursor.execute(
                 """
                 INSERT INTO "user"(id, name, address, company_name, company_size, email, password)

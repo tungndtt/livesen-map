@@ -1,8 +1,8 @@
 FROM node:14.17.6
 
-WORKDIR /LivesenMapFrontend
+WORKDIR /livesen
 
 COPY . .
-RUN npm install --silent
+RUN npm install --silent -f
 
-ENTRYPOINT ["npm", "run", "start"]
+CMD ["npm", "run", "start"]
