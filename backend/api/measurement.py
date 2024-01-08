@@ -104,7 +104,7 @@ def upgister_measurement(user_id, data, measurement_id):
         total_recommended_fertilizer = 0
         subfield_recommended_fertilizer = {}
         for subfield in subfields:
-            if subfield["measurement_id"] != measurement_id:
+            if subfield["measurement_id"] == measurement_id:
                 subfield_id = subfield["id"]
                 recommended_fertilizer = compute_fertilizer_recommendation(subfield["ndvi"],
                                                                            updated_measurement)
@@ -114,7 +114,8 @@ def upgister_measurement(user_id, data, measurement_id):
                 subfield_recommended_fertilizer[subfield_id] = recommended_fertilizer
                 total_recommended_fertilizer += recommended_fertilizer
             else:
-                total_recommended_fertilizer += subfield["recommended_fertilizer_amount"]
+                recommended_fertilizer = subfield["recommended_fertilizer_amount"]
+                total_recommended_fertilizer += recommended_fertilizer if recommended_fertilizer is not None else 0
         updated_recommended_fertilizer["subfield_recommended_fertilizer"] = subfield_recommended_fertilizer
         data = {
             "recommended_fertilizer_amount": total_recommended_fertilizer
