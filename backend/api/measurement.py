@@ -1,11 +1,10 @@
 from flask import Blueprint, jsonify
 from api.authentication import authentication_required
 from services.store.storage import DbCursor
-from services.store.field import get_field, insert_field_ndvi_raster
 from services.store.season import get_season, update_season
 from services.store.measurement import list_measurements, get_measurement, insert_measurement, update_measurement
 from services.store.subfield import list_subfields, insert_subfield, update_subfield_recommended_fertilizer_amount
-from services.field_operation.field_ndvi import get_field_ndvi
+from api.ndvi_raster import handle_ndvi_raster
 from services.field_operation.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from services.field_operation.measurement_position import find_measurement_position
 from services.field_operation.fertilizer_recommendation import compute_fertilizer_recommendation
@@ -16,7 +15,7 @@ api = Blueprint("measurement", __name__, url_prefix="/measurement")
 
 @api.route("/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def list_all_measurements(user_id, _, field_id, season_id):
+def retrieve_measurements(user_id, _, field_id, season_id):
     measurements = list_measurements(user_id, field_id, season_id)
     if measurements is not None and len(measurements) > 0:
         return measurements, 200
@@ -26,7 +25,7 @@ def list_all_measurements(user_id, _, field_id, season_id):
 
 @api.route("/subfield/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def list_all_subfields(user_id, _, field_id, season_id):
+def retrieve_subfields(user_id, _, field_id, season_id):
     subfields = list_subfields(user_id, field_id, season_id)
     if subfields is not None and len(subfields) > 0:
         return subfields, 200
@@ -34,23 +33,13 @@ def list_all_subfields(user_id, _, field_id, season_id):
         return jsonify({"data": "Failed to retrieve all subfields"}), 500
 
 
-@api.route("/determine_positions/<int:field_id>/<season_id>", methods=["GET"])
+@api.route("/position/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def determine_measurement_positions(user_id, _, field_id, season_id):
-    field = get_field(user_id, field_id)
-    if field is None:
-        return jsonify({"data": "Cannot find the field"}), 404
-    coordinates = field["coordinates"]
-    ndvi_rasters = field["ndvi_rasters"]
-    ndvi_raster = None
-    if season_id in ndvi_rasters:
-        ndvi_raster = ndvi_rasters[season_id]
-    if ndvi_raster is None:
-        ndvi_raster = get_field_ndvi(coordinates, season_id + ".nc")
-        if ndvi_raster is None:
-            return jsonify({"data": "No ndvi-scan of field in given period"}), 500
-        elif not insert_field_ndvi_raster(field_id, season_id, ndvi_raster):
-            return jsonify({"data": "Failed to process field ndvi"}), 500
+def retrieve_measurement_positions(user_id, _, field_id, season_id):
+    response, status_code = handle_ndvi_raster(user_id, field_id, season_id)
+    if status_code >= 400:
+        return response, status_code
+    ndvi_raster = response.get_json()["data"]
     subfield_groups = get_subfields_pixel_based_split(ndvi_raster)
     # subfield_groups = get_subfields_region_based_split(coordinates, tiff_file)
     db_cursor = DbCursor()
@@ -112,29 +101,21 @@ def upgister_measurement(user_id, data, measurement_id):
                                                  cursor=cursor)
         if updated_measurement is None:
             return jsonify({"data": "Failed to update the measurement"}), 500
-        total_recommended_fertilizer_change = 0
+        total_recommended_fertilizer = 0
         subfield_recommended_fertilizer = {}
         for subfield in subfields:
             if subfield["measurement_id"] != measurement_id:
-                continue
-            subfield_id = subfield["id"]
-            recommended_fertilizer = compute_fertilizer_recommendation(subfield["ndvi"],
-                                                                       updated_measurement)
-            update_subfield_recommended_fertilizer_amount(subfield_id,
-                                                          recommended_fertilizer,
-                                                          cursor=cursor)
-            subfield_recommended_fertilizer[subfield_id] = recommended_fertilizer
-            subfield_recommended_fertilier = subfield["recommended_fertilizer_amount"]
-            total_recommended_fertilizer_change += (
-                (0 if recommended_fertilizer is None else recommended_fertilizer)
-                - (0 if subfield_recommended_fertilier is None else subfield_recommended_fertilier)
-            )
+                subfield_id = subfield["id"]
+                recommended_fertilizer = compute_fertilizer_recommendation(subfield["ndvi"],
+                                                                           updated_measurement)
+                update_subfield_recommended_fertilizer_amount(subfield_id,
+                                                              recommended_fertilizer,
+                                                              cursor=cursor)
+                subfield_recommended_fertilizer[subfield_id] = recommended_fertilizer
+                total_recommended_fertilizer += recommended_fertilizer
+            else:
+                total_recommended_fertilizer += subfield["recommended_fertilizer_amount"]
         updated_recommended_fertilizer["subfield_recommended_fertilizer"] = subfield_recommended_fertilizer
-        season_recommended_fertilizer = season["recommended_fertilizer_amount"]
-        total_recommended_fertilizer = (
-            (0 if season_recommended_fertilizer is None else season_recommended_fertilizer)
-            + total_recommended_fertilizer_change
-        )
         data = {
             "recommended_fertilizer_amount": total_recommended_fertilizer
         }
@@ -146,7 +127,7 @@ def upgister_measurement(user_id, data, measurement_id):
         return jsonify({"data": "Failed to update the measurement"}), 500
 
 
-@api.route("/upgister_position/<int:measurement_id>", methods=["PUT"])
+@api.route("/position/<int:measurement_id>", methods=["PUT"])
 @authentication_required
 def upgister_measurement_position(user_id, data, measurement_id):
     updated_measurement = update_measurement(user_id, measurement_id, data)

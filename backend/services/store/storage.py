@@ -84,7 +84,6 @@ def __init_tables() -> None:
             region GEOMETRY(POLYGON, 4326) not null,
             area double precision,
             straubing_distance double precision,
-            ndvi_rasters json not null default '{}',
             FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
         )
         """
@@ -114,6 +113,18 @@ def __init_tables() -> None:
             PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
+        )
+        """
+        create_table_ndvi_raster_cmd = """
+        CREATE TABLE IF NOT EXISTS ndvi_raster (
+            user_id integer not null,
+            field_id integer not null,
+            season_id text not null,
+            ndvi_raster text not null,
+            PRIMARY KEY (field_id, season_id),
+            FOREIGN KEY (user_id) REFERENCES "user"(id),
+            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE,
+            FOREIGN KEY (field_id, season_id) REFERENCES season(field_id, season_id) ON DELETE CASCADE
         )
         """
         create_table_measurement_cmd = """
@@ -152,6 +163,7 @@ def __init_tables() -> None:
             create_table_user_cmd,
             create_table_field_cmd,
             create_table_season_cmd,
+            create_table_ndvi_raster_cmd,
             create_table_measurement_cmd,
             create_table_subfield_cmd,
         ]:

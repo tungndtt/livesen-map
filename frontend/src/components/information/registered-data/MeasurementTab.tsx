@@ -94,13 +94,10 @@ export default function MeasurementTab() {
   }, [authenticationToken, selectedFieldId, selectedSeasonId]);
 
   const determineMeasurementPositions = () => {
-    fetch(
-      `${serverUrl}/determine_positions/${selectedFieldId}/${selectedSeasonId}`,
-      {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      }
-    )
+    fetch(`${serverUrl}/position/${selectedFieldId}/${selectedSeasonId}`, {
+      headers: { "Auth-Token": authenticationToken },
+      method: "GET",
+    })
       .then(async (response) => {
         const responseBody = await response.json();
         if (response.ok) {

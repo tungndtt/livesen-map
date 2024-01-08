@@ -100,12 +100,14 @@ def insert_season(
     return inserted_season if db_cursor.error is None else None
 
 
-@transaction_decorator
-def delete_season(user_id: int, field_id: int, season_id: str, cursor: Cursor | None = None) -> None:
-    cursor.execute(
-        "DELETE FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
-        (user_id, field_id, season_id,)
-    )
+def delete_season(user_id: int, field_id: int, season_id: str) -> bool:
+    db_cursor = DbCursor()
+    with db_cursor as cursor:
+        cursor.execute(
+            "DELETE FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
+            (user_id, field_id, season_id,)
+        )
+    return db_cursor.error is None
 
 
 def get_season(user_id: int, field_id: int, season_id: str) -> dict[str, Any] | None:

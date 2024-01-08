@@ -4,6 +4,7 @@ import AuthenticationProvider from "./contexts/AuthenticationContext";
 import RegionInterestProvider from "./contexts/RegionInterestContext";
 import SelectionProvider from "./contexts/SelectionContext";
 import FieldProvider from "./contexts/FieldContext";
+import NdviRasterProvider from "./contexts/NdviRasterContext";
 import MeasurementProvider from "./contexts/MeasurementContext";
 import SeasonProvider from "./contexts/SeasonContext";
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -19,13 +20,15 @@ ReactDOM.render(
         <RegionInterestProvider>
           <FieldProvider>
             <FieldProvider>
-              <MeasurementProvider>
-                <SeasonProvider>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <App />
-                  </LocalizationProvider>
-                </SeasonProvider>
-              </MeasurementProvider>
+              <NdviRasterProvider>
+                <MeasurementProvider>
+                  <SeasonProvider>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <App />
+                    </LocalizationProvider>
+                  </SeasonProvider>
+                </MeasurementProvider>
+              </NdviRasterProvider>
             </FieldProvider>
           </FieldProvider>
         </RegionInterestProvider>

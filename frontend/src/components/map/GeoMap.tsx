@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer } from "react-leaflet";
 import FieldLayer from "./FieldLayer";
+import NdviRasterLayer from "./NdviRasterLayer";
 import MeasurementLayer from "./MeasurementLayer";
 import RegionInterestLayer from "./RegionInterestLayer";
 
@@ -21,6 +22,7 @@ export default function GeoMap() {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <FieldLayer />
+      <NdviRasterLayer />
       <MeasurementLayer />
       <RegionInterestLayer />
     </MapContainer>

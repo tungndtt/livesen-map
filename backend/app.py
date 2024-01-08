@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from api import authentication, user, field, season, measurement
+from api import authentication, user, field, season, ndvi_raster, measurement
 from services.download import downloader
 from services.store import storage
 from services.mail import mailer
@@ -18,6 +18,7 @@ if __name__ == "__main__":
         app.register_blueprint(user.api)
         app.register_blueprint(field.api)
         app.register_blueprint(season.api)
+        app.register_blueprint(ndvi_raster.api)
         app.register_blueprint(measurement.api)
         app.run(host=APP.host, port=APP.port)
     except Exception as error:

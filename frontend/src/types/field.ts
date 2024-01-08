@@ -1,16 +1,11 @@
 import { Coordinates, parseCoordinates } from "./coordinate";
 
-export type NdviRasterMap = {
-  [seasonId: string]: string;
-};
-
 export type Field = {
   id: number;
   name: string;
   coordinates: Coordinates;
   straubingDistance: number;
   area: number;
-  ndviRasters: NdviRasterMap;
 };
 
 export const parseField = (field: any) => {
@@ -19,15 +14,13 @@ export const parseField = (field: any) => {
     name,
     coordinates,
     straubing_distance: straubingDistance,
-    area,
-    ndvi_rasters: ndviRasters,
+    area
   } = field;
   return {
     id,
     name,
     coordinates: parseCoordinates(coordinates),
     straubingDistance,
-    area,
-    ndviRasters,
+    area
   } as Field;
 };

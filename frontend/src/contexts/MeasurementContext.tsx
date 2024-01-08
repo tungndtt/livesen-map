@@ -14,7 +14,6 @@ import {
   parseMeasurementPosition,
   deparseMeasurementPosition,
 } from "../types/measurement";
-import { Coordinate } from "../types/coordinate";
 
 type MeasurementPositionMap = {
   [measurementId: number]: MeasurementPosition;
@@ -111,7 +110,7 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   const updateMeasurementPosition = (
     measurementPosition: MeasurementPosition
   ) => {
-    fetch(`${serverUrl}/upgister_position/${measurementPosition.id}`, {
+    fetch(`${serverUrl}/position/${measurementPosition.id}`, {
       headers: {
         "Content-Type": "application/json",
         "Auth-Token": authenticationToken,

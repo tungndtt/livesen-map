@@ -8,6 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useFieldContext } from "../../../contexts/FieldContext";
+import { useNdviRasterContext } from "../../../contexts/NdviRasterContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
 import { Field, parseField } from "../../../types/field";
 
@@ -15,12 +16,9 @@ export default function FieldTab() {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, refreshFieldOptions, selectedSeasonId } =
     useSelectionContext();
-  const {
-    visibility,
-    setupFieldLayer,
-    toggleFieldRegion,
-    toggleFieldNdviRaster,
-  } = useFieldContext();
+  const { fieldVisible, setupFieldLayer, toggleFieldVisible } =
+    useFieldContext();
+  const { ndviRasterVisible, toggleNdviRasterVisible } = useNdviRasterContext();
   const notify = useNotificationContext();
   const [field, setField] = useState<Field | undefined>(undefined);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
@@ -37,7 +35,7 @@ export default function FieldTab() {
           if (response.ok) {
             const field = parseField(responseBody);
             setField(field);
-            setupFieldLayer(field);
+            setupFieldLayer(field.coordinates);
           } else reset();
         })
         .catch(reset);
@@ -111,22 +109,20 @@ export default function FieldTab() {
           color="primary"
           disabled={!field}
           fullWidth
-          endIcon={
-            visibility.coordinates ? <VisibilityOffIcon /> : <VisibilityIcon />
-          }
-          onClick={toggleFieldRegion}
+          endIcon={fieldVisible ? <VisibilityOffIcon /> : <VisibilityIcon />}
+          onClick={toggleFieldVisible}
         >
-          {!field || !visibility.coordinates ? "Show field" : "Hide field"}
+          {!field || !fieldVisible ? "Show field" : "Hide field"}
         </Button>
         <Button
           variant="outlined"
           color="success"
           disabled={!selectedFieldId || !selectedSeasonId}
           fullWidth
-          endIcon={visibility.ndviRaster ? <LayersClearIcon /> : <LayersIcon />}
-          onClick={toggleFieldNdviRaster}
+          endIcon={ndviRasterVisible ? <LayersClearIcon /> : <LayersIcon />}
+          onClick={toggleNdviRasterVisible}
         >
-          {visibility.ndviRaster ? "Hide ndvi" : "Show ndvi"}
+          {ndviRasterVisible ? "Hide ndvi" : "Show ndvi"}
         </Button>
       </Box>
       <Button
