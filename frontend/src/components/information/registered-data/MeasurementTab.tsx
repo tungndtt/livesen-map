@@ -195,7 +195,7 @@ export default function MeasurementTab() {
                   size="small"
                   disabled
                   label="NDVI"
-                  value={measurement.ndvi}
+                  value={measurement.ndvi.toFixed(3)}
                 />
                 <MeasurementValues
                   measurement={measurement}
@@ -301,7 +301,7 @@ function MeasurementValues(props: MeasurementValuesProps) {
           fullWidth
           size="small"
           name={name}
-          label={label}
+          label={label + " (mg/L)"}
           type="number"
           value={options?.[name as MeasurementNutrientField] ?? ""}
           onChange={onChangeOptions}

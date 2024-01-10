@@ -43,7 +43,7 @@ export default function MeasurementLayer() {
           high = Math.max(high, recommendedFertilizerAmount);
         })
       );
-      return [low, high];
+      return [low / maxFertilizer, high / maxFertilizer];
     }, [subfields]);
   const [menuContext, setMenuContext] = useState<
     | { anchor: PopoverPosition; position: Coordinate; measurementId: number }
@@ -68,10 +68,11 @@ export default function MeasurementLayer() {
           }}
         >
           <GradientBar
-            caption="Subfield Recommended Fertilizer Amount"
-            low={subfieldRecommendFertilizerLow}
-            high={subfieldRecommendFertilizerHigh}
-            scale={maxFertilizer}
+            caption="Subfield Recommended Fertilizer Amount (mg/L)"
+            low={1 - subfieldRecommendFertilizerLow}
+            high={1 - subfieldRecommendFertilizerHigh}
+            lowLabel={subfieldRecommendFertilizerLow * maxFertilizer}
+            highLabel={subfieldRecommendFertilizerHigh * maxFertilizer}
             unknownColor={unknownColor}
           />
         </Box>
@@ -100,7 +101,9 @@ export default function MeasurementLayer() {
                 color={
                   recommendationVisible
                     ? recommendedFertilizerAmount
-                      ? ndvi2RBGA(recommendedFertilizerAmount / maxFertilizer)
+                      ? ndvi2RBGA(
+                          1 - recommendedFertilizerAmount / maxFertilizer
+                        )
                       : unknownColor
                     : number2RBG(measurementId)
                 }
@@ -113,10 +116,18 @@ export default function MeasurementLayer() {
               >
                 <Tooltip sticky>
                   <b>Measurement {measurementId}</b> <br />
-                  Area: <b>{area}</b> <br />
-                  NDVI: <b>{ndvi}</b> <br />
-                  Recommended Fertilizer Amount:{" "}
-                  <b>{recommendedFertilizerAmount ?? "-"}</b>
+                  Area (km²): <b>{(area * 1000000).toFixed(3)}</b> <br />
+                  NDVI: <b>{ndvi.toFixed(3)}</b> <br />
+                  {recommendationVisible && (
+                    <>
+                      Rec. Fert. Amount (mg/L):{" "}
+                      <b>
+                        {recommendedFertilizerAmount
+                          ? recommendedFertilizerAmount.toFixed(3)
+                          : "-"}
+                      </b>
+                    </>
+                  )}
                 </Tooltip>
               </Polygon>
             )

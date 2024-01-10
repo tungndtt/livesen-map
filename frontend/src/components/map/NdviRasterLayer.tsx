@@ -106,7 +106,8 @@ export default function NdviRasterLayer() {
             caption="NDVI"
             low={ndviRange[0]}
             high={ndviRange[1]}
-            scale={1}
+            lowLabel={ndviRange[0]}
+            highLabel={ndviRange[1]}
           />
         </Box>
       )}

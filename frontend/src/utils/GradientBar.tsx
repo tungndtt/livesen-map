@@ -5,7 +5,8 @@ type GradientBarProps = {
   caption: string;
   low: number;
   high: number;
-  scale: number;
+  lowLabel: number;
+  highLabel: number;
   unknownColor?: string;
 };
 
@@ -13,7 +14,8 @@ export default function GradientBar({
   caption,
   low,
   high,
-  scale,
+  lowLabel,
+  highLabel,
   unknownColor,
 }: GradientBarProps) {
   return (
@@ -39,18 +41,18 @@ export default function GradientBar({
             paddingX: "2px",
             background: `linear-gradient(
               to right, 
-              ${ndvi2RBGA(low / scale)},
-              ${ndvi2RBGA(high / scale)}
+              ${ndvi2RBGA(low)},
+              ${ndvi2RBGA(high)}
             )`,
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
           <Typography variant="caption" align="center">
-            <b>{low.toFixed(2)}</b>
+            <b>{lowLabel.toFixed(3)}</b>
           </Typography>
           <Typography variant="caption" align="center">
-            <b>{high.toFixed(2)}</b>
+            <b>{highLabel.toFixed(3)}</b>
           </Typography>
         </Box>
       </Box>

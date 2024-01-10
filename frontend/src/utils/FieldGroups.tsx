@@ -34,6 +34,7 @@ type SubmitProps = {
   submitTitle: string;
   submitDisabled: boolean;
   onSubmit: (data: any) => void;
+  resetOnSubmit?: boolean;
 };
 
 type FieldGroupsProps = {
@@ -50,7 +51,7 @@ type ChangeArgs = {
 export default function FieldGroups({
   fieldGroups,
   data,
-  submitProps: { submitTitle, submitDisabled, onSubmit },
+  submitProps: { submitTitle, submitDisabled, onSubmit, resetOnSubmit },
 }: FieldGroupsProps) {
   const [options, setOptions] = useState<any>({});
   const [expandedOptions, setExpandedOptions] = useState<{
@@ -73,6 +74,8 @@ export default function FieldGroups({
     else options[fieldId] = value;
     setOptions({ ...options });
   };
+
+  const reset = () => setOptions(structuredClone(data) ?? {});
 
   return (
     <Box
@@ -179,6 +182,7 @@ export default function FieldGroups({
                           label={label}
                           type={type}
                           value={option?.[fieldId] ?? ""}
+                          onWheel={(e) => e.currentTarget.blur()}
                           onChange={(e) => onChange(e, { groupId, index })}
                         />
                       )
@@ -221,6 +225,7 @@ export default function FieldGroups({
                       label={label}
                       type={type}
                       value={options?.[fieldId] ?? ""}
+                      onWheel={(e) => e.currentTarget.blur()}
                       onChange={onChange}
                     />
                   )
@@ -236,7 +241,10 @@ export default function FieldGroups({
           color="warning"
           endIcon={<SendIcon />}
           disabled={submitDisabled}
-          onClick={() => onSubmit(options)}
+          onClick={() => {
+            onSubmit(options);
+            if (resetOnSubmit) reset();
+          }}
         >
           {submitTitle}
         </Button>
@@ -246,7 +254,7 @@ export default function FieldGroups({
           variant="outlined"
           color="secondary"
           endIcon={<ClearIcon />}
-          onClick={() => setOptions(structuredClone(data) ?? {})}
+          onClick={reset}
         >
           Reset
         </Button>

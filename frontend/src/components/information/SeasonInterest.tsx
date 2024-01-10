@@ -28,7 +28,11 @@ const fieldGroups = [
       { fieldId: "fertilizer", label: "Fertilizer", type: "string" },
       { fieldId: "type", label: "Fertilizer Type", type: "string" },
       { fieldId: "amount", label: "Fertilizer Amount", type: "number" },
-      { fieldId: "nitrogen", label: "Plant-shared Nitrogen", type: "number" },
+      {
+        fieldId: "nitrogen",
+        label: "Plant-shared Nitrogen (mg/L)",
+        type: "number",
+      },
       { fieldId: "date", label: "Fertilizer Date", type: "date" },
       { fieldId: "stadium", label: "EC Stadium", type: "number" },
     ],
@@ -53,17 +57,21 @@ const fieldGroups = [
   {
     group: "Nutrient Information",
     fields: [
-      { fieldId: "nitrate", label: "Nitrate", type: "number" },
-      { fieldId: "phosphor", label: "Phosphor", type: "number" },
-      { fieldId: "potassium", label: "Potassium", type: "number" },
-      { fieldId: "rks", label: "RKS", type: "number" },
-      { fieldId: "ph", label: "Ph", type: "number" },
+      { fieldId: "nitrate", label: "Nitrate (mg/L)", type: "number" },
+      { fieldId: "phosphor", label: "Phosphor (mg/L)", type: "number" },
+      { fieldId: "potassium", label: "Potassium (mg/L)", type: "number" },
+      { fieldId: "rks", label: "RKS (mg/L)", type: "number" },
+      { fieldId: "ph", label: "Ph (mg/L)", type: "number" },
     ],
   },
   {
     group: "Harvest Information",
     fields: [
-      { fieldId: "harvestWeight", label: "Harvest Weight", type: "number" },
+      {
+        fieldId: "harvestWeight",
+        label: "Harvest Weight (kg)",
+        type: "number",
+      },
       { fieldId: "harvestDate", label: "Harvest Date", type: "date" },
     ],
   },
@@ -139,6 +147,7 @@ export default function SeasonInterest() {
           submitTitle: "Register Season",
           submitDisabled: !fieldId || !season,
           onSubmit: registerSeason,
+          resetOnSubmit: true,
         }}
       />
     </Box>
