@@ -144,7 +144,7 @@ def upgister_measurement_position(user_id, data, measurement_id):
         return jsonify({"data": "Failed to update the measurement position"}), 500
 
 
-@api.route("/max_fertilizer", methods=["GET"])
+@api.route("/max_recommended_fertilizer", methods=["GET"])
 @authentication_required
 def retrieve_max_fertilizer(_, __):
     return jsonify({"data": CONSTANT.max_recommended_fertilizer}), 200
