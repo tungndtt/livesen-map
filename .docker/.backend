@@ -26,5 +26,13 @@
     "host": "livesen-backend",
     "port": 2204,
     "is_testing": false
+  },
+  "constant": {
+    "straubing_coordination": [
+      12.5828575,
+      48.8846284
+    ],
+    "max_recommended_fertilizer": 80,
+    "fertilizer_per_m2": 1
   }
 }
