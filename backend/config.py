@@ -63,6 +63,17 @@ class App:
         self.is_testing = config["is_testing"]
 
 
+class Constant:
+    straubing_coordination: tuple[float] | None = None
+    max_recommended_fertilizer: float | None = None
+    fertilizer_per_m2: float | None = None
+
+    def parse(self, config: dict[str, Any]) -> None:
+        self.straubing_coordination = config["straubing_coordination"]
+        self.max_recommended_fertilizer = config["max_recommended_fertilizer"]
+        self.fertilizer_per_m2 = config["fertilizer_per_m2"]
+
+
 __initialized = False
 JWTOKEN = Jwtoken()
 MAILER = Mailer()
@@ -70,10 +81,11 @@ NDVI = Ndvi()
 DOWNLOADER = Downloader()
 STORAGE = Storage()
 APP = App()
+CONSTANT = Constant()
 
 
 def __init():
-    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE
+    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, APP, CONSTANT
     if not __initialized:
         import json
         with open("config.json", "r") as f:
@@ -84,6 +96,7 @@ def __init():
         DOWNLOADER.parse(config["downloader"])
         STORAGE.parse(config["storage"])
         APP.parse(config["app"])
+        CONSTANT.parse(config["constant"])
         __initialized = True
 
 

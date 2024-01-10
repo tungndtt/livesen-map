@@ -8,6 +8,7 @@ from api.ndvi_raster import handle_ndvi_raster
 from services.field_operation.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from services.field_operation.measurement_position import find_measurement_position
 from services.field_operation.fertilizer_recommendation import compute_fertilizer_recommendation
+from config import CONSTANT
 
 
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
@@ -112,10 +113,15 @@ def upgister_measurement(user_id, data, measurement_id):
                                                               recommended_fertilizer,
                                                               cursor=cursor)
                 subfield_recommended_fertilizer[subfield_id] = recommended_fertilizer
-                total_recommended_fertilizer += recommended_fertilizer
             else:
                 recommended_fertilizer = subfield["recommended_fertilizer_amount"]
-                total_recommended_fertilizer += recommended_fertilizer if recommended_fertilizer is not None else 0
+                recommended_fertilizer = recommended_fertilizer if recommended_fertilizer is not None else 0
+            total_recommended_fertilizer += (
+                recommended_fertilizer
+                * subfield["area"]
+                * 10000
+                * CONSTANT.fertilizer_per_m2
+            )
         updated_recommended_fertilizer["subfield_recommended_fertilizer"] = subfield_recommended_fertilizer
         data = {
             "recommended_fertilizer_amount": total_recommended_fertilizer
@@ -136,3 +142,9 @@ def upgister_measurement_position(user_id, data, measurement_id):
         return updated_measurement, 200
     else:
         return jsonify({"data": "Failed to update the measurement position"}), 500
+
+
+@api.route("/max_fertilizer", methods=["GET"])
+@authentication_required
+def retrieve_max_fertilizer(_, __):
+    return jsonify({"data": CONSTANT.max_recommended_fertilizer}), 200

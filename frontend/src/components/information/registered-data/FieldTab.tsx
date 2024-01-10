@@ -83,8 +83,8 @@ export default function FieldTab() {
           fullWidth
           size="small"
           disabled
-          label="Field Area (km²)"
-          value={field?.area ? (field?.area * 1000000).toFixed(3) : "-"}
+          label="Field Area (ha)"
+          value={field?.area ? field?.area.toFixed(3) : "-"}
         />
         <TextField
           fullWidth
@@ -92,9 +92,7 @@ export default function FieldTab() {
           disabled
           label="Straubing distance (km)"
           value={
-            field?.straubingDistance
-              ? (field?.straubingDistance * 1000).toFixed(3)
-              : "-"
+            field?.straubingDistance ? field?.straubingDistance.toFixed(3) : "-"
           }
         />
       </Box>

@@ -12,9 +12,7 @@ import number2RBG from "../../utils/number2RBG";
 
 window.proj4 = proj4;
 
-// TODO: change this hard-coded values
-const unknownColor = "grey";
-const maxFertilizer = 80;
+const UNKNOWN_COLOR = "grey";
 
 export default function MeasurementLayer() {
   const {
@@ -22,6 +20,7 @@ export default function MeasurementLayer() {
     subfields,
     visibility,
     recommendationVisible,
+    maxRecommendedFertilizer,
     updateMeasurementPosition,
   } = useMeasurementContext();
   const { coordinates } = useFieldContext();
@@ -35,7 +34,7 @@ export default function MeasurementLayer() {
   );
   const [subfieldRecommendFertilizerLow, subfieldRecommendFertilizerHigh] =
     useMemo(() => {
-      let low = maxFertilizer;
+      let low = maxRecommendedFertilizer;
       let high = 0;
       Object.values(subfields ?? {}).forEach((subfield) =>
         subfield.forEach(({ recommendedFertilizerAmount }) => {
@@ -45,7 +44,7 @@ export default function MeasurementLayer() {
           }
         })
       );
-      return [low / maxFertilizer, high / maxFertilizer];
+      return [low / maxRecommendedFertilizer, high / maxRecommendedFertilizer];
     }, [subfields]);
   const [menuContext, setMenuContext] = useState<
     | { anchor: PopoverPosition; position: Coordinate; measurementId: number }
@@ -73,9 +72,11 @@ export default function MeasurementLayer() {
             caption="Subfield Recommended Fertilizer Amount (mg/L)"
             low={1 - subfieldRecommendFertilizerLow}
             high={1 - subfieldRecommendFertilizerHigh}
-            lowLabel={subfieldRecommendFertilizerLow * maxFertilizer}
-            highLabel={subfieldRecommendFertilizerHigh * maxFertilizer}
-            unknownColor={unknownColor}
+            lowLabel={subfieldRecommendFertilizerLow * maxRecommendedFertilizer}
+            highLabel={
+              subfieldRecommendFertilizerHigh * maxRecommendedFertilizer
+            }
+            unknownColor={UNKNOWN_COLOR}
           />
         </Box>
       )}
@@ -104,9 +105,11 @@ export default function MeasurementLayer() {
                   recommendationVisible
                     ? typeof recommendedFertilizerAmount === "number"
                       ? ndvi2RBGA(
-                          1 - recommendedFertilizerAmount / maxFertilizer
+                          1 -
+                            recommendedFertilizerAmount /
+                              maxRecommendedFertilizer
                         )
-                      : unknownColor
+                      : UNKNOWN_COLOR
                     : number2RBG(measurementId)
                 }
                 fillOpacity={
@@ -118,7 +121,7 @@ export default function MeasurementLayer() {
               >
                 <Tooltip sticky>
                   <b>Measurement {measurementId}</b> <br />
-                  Area (km²): <b>{(area * 1000000).toFixed(3)}</b> <br />
+                  Area (ha): <b>{area.toFixed(3)}</b> <br />
                   NDVI: <b>{ndvi.toFixed(3)}</b> <br />
                   {recommendationVisible && (
                     <>

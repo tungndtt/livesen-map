@@ -1,4 +1,5 @@
 from services.store.storage import DbCursor
+from config import CONSTANT
 from json import loads as json_parse
 from typing import Any
 
@@ -44,15 +45,16 @@ def insert_field(user_id: int, name: str, region: str) -> dict[str, Any] | None:
             (user_id, name, region,)
         )
         field_id = cursor.fetchone()[0]
-        straubing_position = "POINT(12.5828575 48.8846284)"
+        longitude, latitude = CONSTANT.straubing_coordination
+        straubing_position = f"POINT({longitude} {latitude})"
         cursor.execute(
             """
             UPDATE field
             SET straubing_distance = ST_Distance(
                 (SELECT region FROM field WHERE id = %s),
                 ST_GeomFromText(%s, 4326)
-            ),
-            area = ST_Area(region)
+            ) / 1000,
+            area = ST_Area(ST_Transform(region::geometry, 3857)) / 100000000
             WHERE id = %s
             RETURNING id, user_id, name, ST_AsGeoJSON(region), straubing_distance, area
             """,
