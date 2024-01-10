@@ -39,8 +39,10 @@ export default function MeasurementLayer() {
       let high = 0;
       Object.values(subfields ?? {}).forEach((subfield) =>
         subfield.forEach(({ recommendedFertilizerAmount }) => {
-          low = Math.min(low, recommendedFertilizerAmount);
-          high = Math.max(high, recommendedFertilizerAmount);
+          if (typeof recommendedFertilizerAmount === "number") {
+            low = Math.min(low, recommendedFertilizerAmount);
+            high = Math.max(high, recommendedFertilizerAmount);
+          }
         })
       );
       return [low / maxFertilizer, high / maxFertilizer];
@@ -100,7 +102,7 @@ export default function MeasurementLayer() {
                 }}
                 color={
                   recommendationVisible
-                    ? recommendedFertilizerAmount
+                    ? typeof recommendedFertilizerAmount === "number"
                       ? ndvi2RBGA(
                           1 - recommendedFertilizerAmount / maxFertilizer
                         )
@@ -122,7 +124,7 @@ export default function MeasurementLayer() {
                     <>
                       Rec. Fert. Amount (mg/L):{" "}
                       <b>
-                        {recommendedFertilizerAmount
+                        {typeof recommendedFertilizerAmount === "number"
                           ? recommendedFertilizerAmount.toFixed(3)
                           : "-"}
                       </b>

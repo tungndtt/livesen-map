@@ -228,6 +228,7 @@ export default function MeasurementTab() {
             variant="outlined"
             sx={{ my: 2 }}
             endIcon={recommendationVisible ? <GridOffIcon /> : <GridOnIcon />}
+            disabled={Object.keys(visibility ?? {}).length === 0}
             onClick={toggleRecommendationVisible}
           >
             {recommendationVisible

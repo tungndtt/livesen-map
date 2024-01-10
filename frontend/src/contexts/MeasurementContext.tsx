@@ -7,6 +7,7 @@ import {
 } from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
 import { useSelectionContext } from "./SelectionContext";
+import { useNdviRasterContext } from "./NdviRasterContext";
 import { useNotificationContext } from "./NotificationContext";
 import { SubField, parseSubField } from "../types/subfield";
 import {
@@ -57,6 +58,7 @@ const MeasurementContext = createContext<MeasurementContextType>({
 export default function MeasurementProvider(props: { children: ReactNode }) {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
+  const { ndviRasterVisible, toggleNdviRasterVisible } = useNdviRasterContext();
   const notify = useNotificationContext();
   const [positions, setPositions] = useState<
     MeasurementPositionMap | undefined
@@ -68,10 +70,16 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   const [recommendationVisible, setRecommendationVisible] = useState(false);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
 
-  useEffect(() => {
+  const reset = () => {
     setVisibility({});
     setRecommendationVisible(false);
-  }, [selectedFieldId, selectedSeasonId]);
+  };
+
+  useEffect(reset, [selectedFieldId, selectedSeasonId]);
+
+  useEffect(() => {
+    if (ndviRasterVisible) reset();
+  }, [ndviRasterVisible]);
 
   const setupMeasurementLayer = (measurements: any[], subfields: any[]) => {
     const positionMap = {} as MeasurementPositionMap;
@@ -95,6 +103,7 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   const toggleMeasurementRegion = (measurementId: number) => {
     setVisibility((prevVisibility) => {
       if (!prevVisibility) return prevVisibility;
+      if (ndviRasterVisible) toggleNdviRasterVisible();
       if (measurementId in prevVisibility) delete prevVisibility[measurementId];
       else prevVisibility[measurementId] = true;
       return { ...prevVisibility };
@@ -102,9 +111,10 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   };
 
   const toggleRecommendationVisible = () => {
-    setRecommendationVisible(
-      (prevRecommendationVisible) => !prevRecommendationVisible
-    );
+    setRecommendationVisible((prevRecommendationVisible) => {
+      if (ndviRasterVisible) toggleNdviRasterVisible();
+      return !prevRecommendationVisible;
+    });
   };
 
   const updateMeasurementPosition = (

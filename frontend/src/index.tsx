@@ -19,17 +19,15 @@ ReactDOM.render(
       <SelectionProvider>
         <RegionInterestProvider>
           <FieldProvider>
-            <FieldProvider>
-              <NdviRasterProvider>
-                <MeasurementProvider>
-                  <SeasonProvider>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <App />
-                    </LocalizationProvider>
-                  </SeasonProvider>
-                </MeasurementProvider>
-              </NdviRasterProvider>
-            </FieldProvider>
+            <NdviRasterProvider>
+              <MeasurementProvider>
+                <SeasonProvider>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <App />
+                  </LocalizationProvider>
+                </SeasonProvider>
+              </MeasurementProvider>
+            </NdviRasterProvider>
           </FieldProvider>
         </RegionInterestProvider>
       </SelectionProvider>
