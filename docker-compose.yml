@@ -14,7 +14,7 @@ services:
       POSTGRES_USER: livesen
       POSTGRES_PASSWORD: livesen
     volumes:
-      - ./docker-misc/data/store:/var/lib/postgresql/data
+      - ./.docker/data/store:/var/lib/postgresql/data
 
   livesen-backend:
     build: 
@@ -26,9 +26,9 @@ services:
     ports:
       - 2204:2204
     volumes:
-      - ./docker-misc/.backend:/livesen/config.json:ro
-      - ./docker-misc/data/download:/livesen/data/download
-      - ./docker-misc/data/ndvi:/livesen/data/ndvi
+      - ./.docker/.backend:/livesen/config.json:ro
+      - ./.docker/data/download:/livesen/data/download
+      - ./.docker/data/ndvi:/livesen/data/ndvi
     depends_on:
       - livesen-storage
   
@@ -42,7 +42,7 @@ services:
     ports:
       - 3000:3000
     env_file:
-      - ./docker-misc/.frontend
+      - ./.docker/.frontend
   
   livesen-proxy:
     build: 
