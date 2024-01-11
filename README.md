@@ -41,4 +41,4 @@ Following instructions to run the application locally:
 
 ### Docker
 
-Instead of manually setup the local enviroment, it is minimal to run the application with [Docker](https://www.docker.com/) by the command `docker-compose up`. Note: make sure **Docker** installed
+Instead of manually setup the local enviroment, it is minimal to run the application with [Docker](https://www.docker.com/) by the command `docker-compose up`. **Note: make sure Docker installed**
