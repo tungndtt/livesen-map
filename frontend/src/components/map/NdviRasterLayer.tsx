@@ -24,12 +24,12 @@ export default function NdviRasterLayer() {
   const ndviLayerRef = useRef<GeoRasterLayer | undefined>(undefined);
   const context = useLeafletContext();
   const map = useMap();
-  const container = context.layerContainer || context.map;
   const [loadingNdvi, setLoadingNdvi] = useState(false);
   const [ndviRange, setNdviRange] = useState<number[] | undefined>(undefined);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/ndvi_raster";
 
   useEffect(() => {
+    const container = context.layerContainer || context.map;
     if (
       ndviRasterVisible &&
       selectedSeasonId &&

@@ -50,7 +50,7 @@ def insert_subfield(
     cursor.execute(
         """
         UPDATE subfield
-        SET area = ST_Area(ST_Transform(region::geometry, 3857)) / 100000000
+        SET area = ST_Area(region::geography) / 10000
         WHERE id = %s
         RETURNING id, field_id, season_id, measurement_id, ST_AsGeoJSON(region), area, ndvi, recommended_fertilizer_amount
         """,

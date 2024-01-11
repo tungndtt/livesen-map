@@ -52,9 +52,9 @@ def insert_field(user_id: int, name: str, region: str) -> dict[str, Any] | None:
             UPDATE field
             SET straubing_distance = ST_Distance(
                 (SELECT region FROM field WHERE id = %s),
-                ST_GeomFromText(%s, 4326)
+                ST_GeomFromText(%s, 4326)::geography
             ) / 1000,
-            area = ST_Area(ST_Transform(region::geometry, 3857)) / 100000000
+            area = ST_Area(region::geography) / 10000
             WHERE id = %s
             RETURNING id, user_id, name, ST_AsGeoJSON(region), straubing_distance, area
             """,

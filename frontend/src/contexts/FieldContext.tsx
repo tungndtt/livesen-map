@@ -23,16 +23,17 @@ const FieldContext = createContext<FieldContextType>({
 });
 
 export default function FieldProvider(props: { children: ReactNode }) {
-  const { selectedFieldId, selectedSeasonId } = useSelectionContext();
+  const { selectedFieldId } = useSelectionContext();
   const [coordinates, setCoordinates] = useState<Coordinates | undefined>(
     undefined
   );
   const [regionVisible, setRegionVisible] = useState(false);
 
   useEffect(() => {
-    setRegionVisible(
-      (prevRegionVisible) => prevRegionVisible && selectedSeasonId !== undefined
-    );
+    if (selectedFieldId === undefined) {
+      setRegionVisible(false);
+      setCoordinates(undefined);
+    }
   }, [selectedFieldId]);
 
   const setupFieldLayer = (coordinates: Coordinates) => {

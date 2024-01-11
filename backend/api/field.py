@@ -46,11 +46,14 @@ def register_field(user_id, data):
 @authentication_required
 def unregister_field(user_id, __, field_id):
     ndvi_rasters = list_ndvi_rasters(user_id, field_id)
-    if ndvi_rasters is not None and delete_field(user_id, field_id):
-        try:
-            for ndvi_raster in ndvi_rasters.values():
-                os.remove(os.path.join(NDVI.data_folder, ndvi_raster))
-            return jsonify({"data": "Successfully unregister the field"}), 204
-        except Exception as error:
-            print("[Field API]", error)
-    return jsonify({"data": "Failed to unregister the field"}), 500
+    if delete_field(user_id, field_id):
+        if ndvi_rasters is not None:
+            try:
+                for ndvi_raster in ndvi_rasters.values():
+                    os.remove(os.path.join(NDVI.data_folder, ndvi_raster))
+                return jsonify({"data": "Successfully unregister the field"}), 204
+            except Exception as error:
+                print("[Field API]", error)
+        return jsonify({"data": "Successfully unregister the field"}), 204
+    else:
+        return jsonify({"data": "Failed to unregister the field"}), 500
