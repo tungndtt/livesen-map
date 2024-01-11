@@ -3,9 +3,9 @@ import time
 import multiprocessing
 import requests
 import os
-from config import DOWNLOADER
 import datetime
 import pytz
+from config import DOWNLOADER
 
 
 __process = None
@@ -28,6 +28,7 @@ def __product_download():
     timestamp = datetime.datetime(
         year=int(year), month=int(month), day=int(day), tzinfo=timezone
     )
+
     forced_termination = False
     while timestamp < datetime.datetime.now(timezone):
         product = f"{year}{month}{day}"
@@ -62,7 +63,6 @@ def __product_download():
                             for chunk in response.iter_content(chunk_size=chunk_size):
                                 # Process the chunk of data
                                 writer.write(chunk)
-                                print("[Counter]", counter)
                                 counter += 1
                         elif content_type != "application/octet-stream":
                             data_exists = False
@@ -71,7 +71,7 @@ def __product_download():
                         forced_termination = True
                         break
                     except Exception as error:
-                        print("[Error]", error)
+                        print("[Download]", error)
                         connection_broken = True
                     finally:
                         # close the response to release resources

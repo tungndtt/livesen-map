@@ -25,7 +25,7 @@
   "app": {
     "host": "livesen-backend",
     "port": 2204,
-    "is_testing": false
+    "is_testing": true
   },
   "constant": {
     "straubing_coordination": [

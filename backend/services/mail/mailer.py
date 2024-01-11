@@ -9,11 +9,14 @@ __server = None
 def init() -> None:
     global __server
     if __server is None:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.ehlo()
-        server.starttls()
-        server.login(MAILER.email, MAILER.password)
-        __server = server
+        try:
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.ehlo()
+            server.starttls()
+            server.login(MAILER.email, MAILER.password)
+            __server = server
+        except:
+            print("[Mail]: Invalid credentials")
 
 
 def send_email(recipient: str, subject: str, content: str) -> bool:

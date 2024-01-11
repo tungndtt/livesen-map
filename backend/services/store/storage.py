@@ -22,7 +22,7 @@ def __init_database() -> None:
     # Connect to the PostgreSQL server
     retry = 0
     conn = None
-    while retry < 10:
+    while retry < 20:
         from time import sleep
         try:
             conn = connect(**db_params)
@@ -54,7 +54,7 @@ def __init_database() -> None:
         else:
             print(f"Database '{database_name}' already exists.")
     except Exception as error:
-        print("[Error]", error)
+        print("[Storage]", error)
     finally:
         # Close the cursor and connection
         cursor.close()
