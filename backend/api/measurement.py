@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 from api.authentication import authentication_required
 from services.store.storage import DbCursor
-from services.store.season import get_season, update_season
+from services.store.season import get_season
 from services.store.measurement import list_measurements, get_measurement, insert_measurement, update_measurement
 from services.store.subfield import list_subfields, insert_subfield, update_subfield_recommended_fertilizer_amount
 from api.ndvi_raster import handle_ndvi_raster
@@ -84,7 +84,7 @@ def retrieve_measurement_positions(user_id, _, field_id, season_id):
 @api.route("/upgister/<int:measurement_id>", methods=["PUT"])
 @authentication_required
 def upgister_measurement(user_id, data, measurement_id):
-    updated_measurement, updated_recommended_fertilizer = None, {}
+    updated_measurement = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
         measurement = get_measurement(user_id, measurement_id)
@@ -102,7 +102,6 @@ def upgister_measurement(user_id, data, measurement_id):
                                                  cursor=cursor)
         if updated_measurement is None:
             return jsonify({"data": "Failed to update the measurement"}), 500
-        total_recommended_fertilizer = 0
         subfield_recommended_fertilizer = {}
         for subfield in subfields:
             if subfield["measurement_id"] == measurement_id:
@@ -116,20 +115,8 @@ def upgister_measurement(user_id, data, measurement_id):
             else:
                 recommended_fertilizer = subfield["recommended_fertilizer_amount"]
                 recommended_fertilizer = recommended_fertilizer if recommended_fertilizer is not None else 0
-            total_recommended_fertilizer += (
-                recommended_fertilizer
-                * subfield["area"]
-                * 10000
-                * CONSTANT.fertilizer_per_m2
-            )
-        updated_recommended_fertilizer["subfield_recommended_fertilizer"] = subfield_recommended_fertilizer
-        data = {
-            "recommended_fertilizer_amount": total_recommended_fertilizer
-        }
-        update_season(user_id, field_id, season_id, data, cursor=cursor)
-        updated_recommended_fertilizer["total_recommended_fertilizer"] = total_recommended_fertilizer
     if db_cursor.error is None:
-        return {"measurement": updated_measurement, "recommended_fertilizer": updated_recommended_fertilizer}, 200
+        return {"measurement": updated_measurement, "subfield_recommended_fertilizer": subfield_recommended_fertilizer}, 200
     else:
         return jsonify({"data": "Failed to update the measurement"}), 500
 

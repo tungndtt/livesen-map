@@ -19,7 +19,7 @@ def __parse_record(record: tuple) -> dict[str, Any] | None:
             "soil_tillage_applications",
             "crop_protection_applications",
             "nitrate", "phosphor", "potassium", "ph", "rks",
-            "harvest_weight", "harvest_date", "recommended_fertilizer_amount",
+            "harvest_weight", "harvest_date",
         ])
     }
 
@@ -33,7 +33,6 @@ def __extract_nonempty(data: dict[str, Any]) -> tuple[list[str], list[Any]]:
         "max_allowed_fertilizer",
         "nitrate", "phosphor", "potassium", "ph", "rks",
         "harvest_weight", "harvest_date",
-        "recommended_fertilizer_amount",
     ]:
         if col in data and data[col] is not None:
             cols.append(col)

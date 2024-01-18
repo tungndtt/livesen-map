@@ -66,12 +66,10 @@ class App:
 class Constant:
     straubing_coordination: tuple[float] | None = None
     max_recommended_fertilizer: float | None = None
-    fertilizer_per_m2: float | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.straubing_coordination = config["straubing_coordination"]
         self.max_recommended_fertilizer = config["max_recommended_fertilizer"]
-        self.fertilizer_per_m2 = config["fertilizer_per_m2"]
 
 
 __initialized = False

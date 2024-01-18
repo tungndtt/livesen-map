@@ -19,7 +19,6 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useMeasurementContext } from "../../../contexts/MeasurementContext";
-import { useSeasonContext } from "../../../contexts/SeasonContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
 import {
   Measurement,
@@ -39,7 +38,6 @@ export default function MeasurementTab() {
     toggleRecommendationVisible,
     updateSubFieldRecommendedFertilizer,
   } = useMeasurementContext();
-  const { setRecommendedFertilizer } = useSeasonContext();
   const notify = useNotificationContext();
   const [measurements, setMeasurements] = useState<Measurement[] | undefined>(
     undefined
@@ -145,13 +143,11 @@ export default function MeasurementTab() {
             }
             return prevMeasurements;
           });
-          const recommendedFertilizer = responseBody["recommended_fertilizer"];
-          setRecommendedFertilizer(
-            recommendedFertilizer["total_recommended_fertilizer"]
-          );
+          const subfieldRecommendedFertilizer =
+            responseBody["subfield_recommended_fertilizer"];
           updateSubFieldRecommendedFertilizer(
             updatedMeasurement.id,
-            recommendedFertilizer["subfield_recommended_fertilizer"]
+            subfieldRecommendedFertilizer
           );
           notify({
             message: "Successfully updated measurement",

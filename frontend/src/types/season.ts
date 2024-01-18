@@ -51,7 +51,6 @@ export type Season = {
   ph?: number;
   harvestWeight?: number;
   harvestDate?: Date;
-  recommendedFertilizerAmount?: number;
 };
 
 export type SeasonField = 
@@ -92,7 +91,6 @@ export function parseSeason(season: any) {
     ph,
     harvest_weight: harvestWeight,
     harvest_date: harvestDate,
-    recommended_fertilizer_amount: recommendedFertilizerAmount,
   } = season;
   return {
     maincrop, 
@@ -118,7 +116,6 @@ export function parseSeason(season: any) {
     maxAllowedFertilizer,
     harvestWeight,
     harvestDate,
-    recommendedFertilizerAmount,
   } as Season;
 }
 

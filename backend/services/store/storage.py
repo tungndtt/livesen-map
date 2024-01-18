@@ -109,7 +109,6 @@ def __init_tables() -> None:
             rks double precision,
             harvest_weight double precision,
             harvest_date date,
-            recommended_fertilizer_amount double precision default 0.0,
             PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE

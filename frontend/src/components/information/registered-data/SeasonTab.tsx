@@ -14,7 +14,6 @@ import FieldGroups, { FieldGroup } from "../../../utils/FieldGroups";
 import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
-import { useSeasonContext } from "../../../contexts/SeasonContext";
 import { Season, parseSeason, deparseSeason } from "../../../types/season";
 
 const fieldGroups = [
@@ -89,8 +88,6 @@ export default function SeasonInterest() {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId, refreshSeasonOptions } =
     useSelectionContext();
-  const { recommendedFertilizer, setRecommendedFertilizer } =
-    useSeasonContext();
   const notify = useNotificationContext();
   const [season, setSeason] = useState<Season | undefined>(undefined);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/season";
@@ -106,7 +103,6 @@ export default function SeasonInterest() {
           if (response.ok) {
             const parsedSeason = parseSeason(responseBody);
             setSeason(parsedSeason);
-            setRecommendedFertilizer(parsedSeason.recommendedFertilizerAmount);
           } else setSeason(undefined);
         })
         .catch((error) => notify({ message: error.message, isError: true }));
@@ -169,37 +165,6 @@ export default function SeasonInterest() {
     <Box className="tab-container">
       {selectedFieldId && selectedSeasonId ? (
         <>
-          <Accordion
-            disableGutters
-            sx={{
-              boxShadow: "none",
-              border: "2px solid #c7c7c7",
-              borderRadius: "2px",
-              mb: 2,
-            }}
-          >
-            <AccordionSummary
-              sx={{ maxHeight: "fit-content" }}
-              expandIcon={<ExpandMoreIcon />}
-            >
-              <Typography>
-                <b>Recommended Fertilizer Amount</b>
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TextField
-                fullWidth
-                size="small"
-                name="recommendedFertilizerAmount"
-                label="Recommended Fertilizer Amount (mg/L)"
-                type="text"
-                disabled
-                value={
-                  recommendedFertilizer ? recommendedFertilizer.toFixed(3) : "-"
-                }
-              />
-            </AccordionDetails>
-          </Accordion>
           <FieldGroups
             fieldGroups={fieldGroups}
             data={season}
