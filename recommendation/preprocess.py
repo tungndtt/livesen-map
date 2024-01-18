@@ -123,11 +123,10 @@ def init():
     }
     conn = connect(**db_params)
     cursor = conn.cursor()
-    preprocessed_data_file = f"{MODEL.data_folder}/preprocessed_data.csv"
     status = True
-    if os.path.exists(preprocessed_data_file):
+    if os.path.exists(MODEL.processed_data_path):
         return status
-    with open(preprocessed_data_file, "w") as file:
+    with open(MODEL.processed_data_path, "w") as file:
         try:
             columns = __fields.join(",")
             cursor.execute(f"SELECT {columns} FROM season")
@@ -136,7 +135,7 @@ def init():
                 sample.append(label)
                 file.write(",".join(sample))
         except:
-            os.remove(preprocessed_data_file)
+            os.remove(MODEL.processed_data_path)
             status = False
         finally:
             cursor.close()
