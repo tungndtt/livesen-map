@@ -1,0 +1,6 @@
+flask
+flask-cors
+psycopg2-binary
+schedule
+tensorflow==2.13
+levenshtein
