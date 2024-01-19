@@ -172,21 +172,13 @@ export default function SeasonInterest() {
     <Box className="tab-container">
       {selectedFieldId && selectedSeasonId ? (
         <>
-          <FieldGroups
-            fieldGroups={fieldGroups}
-            data={season}
-            submitProps={{
-              submitTitle: "Update Season",
-              submitDisabled: !selectedFieldId || !selectedSeasonId,
-              onSubmit: updateSeason,
-            }}
-          />
           <Accordion
             disableGutters
             sx={{
               boxShadow: "none",
               border: "2px solid #c7c7c7",
               borderRadius: "2px",
+              mb: 2,
             }}
           >
             <AccordionSummary
@@ -201,14 +193,15 @@ export default function SeasonInterest() {
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                gap: 2,
+                gap: 1,
+                alignItems: "start",
               }}
             >
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: "row",
+                  width: "100%",
                   justifyContent: "space-between",
                   alignItems: "center",
                   gap: 1,
@@ -217,21 +210,17 @@ export default function SeasonInterest() {
                 <TextField
                   fullWidth
                   size="small"
+                  variant="standard"
+                  placeholder="Applied Fertilizer"
                   value={fertilizerRecommendation.fertilizer}
                   onChange={(e) =>
-                    setFertilizerRecommendation(
-                      (prevFertilizerRecommendation) => ({
-                        ...prevFertilizerRecommendation,
-                        fertilizer: e.target.value,
-                      })
-                    )
+                    setFertilizerRecommendation({ fertilizer: e.target.value })
                   }
                 />
                 <Button
-                  sx={{ width: "fit-content" }}
-                  size="small"
                   variant="outlined"
                   color="primary"
+                  disabled={!fertilizerRecommendation.fertilizer}
                   onClick={() => {
                     if (
                       selectedFieldId &&
@@ -241,8 +230,14 @@ export default function SeasonInterest() {
                       fetch(
                         `${serverUrl}/recommend_fertilizer/${selectedFieldId}/${selectedSeasonId}`,
                         {
-                          headers: { "Auth-Token": authenticationToken },
+                          headers: {
+                            "Auth-Token": authenticationToken,
+                            "Content-Type": "application/json",
+                          },
                           method: "POST",
+                          body: JSON.stringify({
+                            fertilizer: fertilizerRecommendation.fertilizer,
+                          }),
                         }
                       )
                         .then(async (response) => {
@@ -269,15 +264,25 @@ export default function SeasonInterest() {
                 </Button>
               </Box>
               <Typography>
-                Recommendation:{" "}
+                Recommended Amount:{" "}
                 <b>
                   {fertilizerRecommendation.recommendation
-                    ? "-"
-                    : fertilizerRecommendation.recommendation?.toFixed(3)}
+                    ? fertilizerRecommendation.recommendation?.toFixed(3)
+                    : "-"}
                 </b>
               </Typography>
             </AccordionDetails>
           </Accordion>
+          <FieldGroups
+            fieldGroups={fieldGroups}
+            data={season}
+            submitProps={{
+              submitTitle: "Update Season",
+              submitDisabled: !selectedFieldId || !selectedSeasonId,
+              onSubmit: updateSeason,
+            }}
+          />
+
           <Button
             fullWidth
             size="small"

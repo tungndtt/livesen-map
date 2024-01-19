@@ -74,6 +74,7 @@ def recommend_fertilizer(user_id, data, field_id, season_id):
         season["fertilizer_applications"].append({"fertilizer": fertilizer,
                                                   "amount": -1})
         response = requests.post(RECOMMENDATION.service_url,
+                                 headers={"Content-Type": "application/json"},
                                  json=season).json()
         return jsonify(response), 200
     else:

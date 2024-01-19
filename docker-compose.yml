@@ -73,7 +73,7 @@ services:
       - ./.docker/data/model:/livesen/data/model
       - ./.docker/data/category:/livesen/data/category
     depends_on:
-      - livesen-storage
+      - livesen-backend
   
 networks:
   livesen-network:
