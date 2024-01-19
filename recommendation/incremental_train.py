@@ -43,7 +43,7 @@ def __train_model():
                         data = line.split(",")
                         X.append([float(e) for e in data[:-1]])
                         y.append(float(data[-1]))
-                    if not X:
+                    if len(X) < 10:
                         break
                     history = model.fit(numpy.array(X), numpy.array(y),
                                         epochs=1, validation_split=0.1)
@@ -56,7 +56,7 @@ def __train_model():
                 patience_count += 1
                 if patience_count == 10:
                     break
-        except KeyboardInterrupt:
+        except:
             train_done = False
             model.save_weights(MODEL.temp_weights_path)
     return train_done

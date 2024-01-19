@@ -22,7 +22,6 @@ def recommendation():
 if __name__ == "__main__":
     try:
         incremental_train.init()
-        model.init()
         app.run(host=APP.host, port=APP.port)
     except Exception as error:
         print("[App]", error)
