@@ -67,7 +67,7 @@ services:
     networks: 
       - livesen-network
     ports:
-      - 2204:2204
+      - 1998:1998
     volumes:
       - ./.docker/.recommendation:/livesen/config.json:ro
       - ./.docker/data/model:/livesen/data/model

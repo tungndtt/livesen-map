@@ -72,18 +72,26 @@ class Constant:
         self.max_recommended_fertilizer = config["max_recommended_fertilizer"]
 
 
+class Recommendation:
+    service_url: str | None = None
+
+    def parse(self, config: dict[str, Any]) -> None:
+        self.service_url = config["service_url"]
+
+
 __initialized = False
 JWTOKEN = Jwtoken()
 MAILER = Mailer()
 NDVI = Ndvi()
 DOWNLOADER = Downloader()
 STORAGE = Storage()
+RECOMMENDATION = Recommendation()
 APP = App()
 CONSTANT = Constant()
 
 
 def __init():
-    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, APP, CONSTANT
+    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, RECOMMENDATION, APP, CONSTANT
     if not __initialized:
         import json
         with open("config.json", "r") as f:
@@ -93,6 +101,7 @@ def __init():
         NDVI.parse(config["ndvi"])
         DOWNLOADER.parse(config["downloader"])
         STORAGE.parse(config["storage"])
+        RECOMMENDATION.parse(config["recommendation"])
         APP.parse(config["app"])
         CONSTANT.parse(config["constant"])
         __initialized = True

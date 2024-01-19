@@ -84,12 +84,19 @@ const fieldGroups = [
   },
 ] as FieldGroup[];
 
+type FertilizerRecommendation = {
+  fertilizer: string;
+  recommendation?: number;
+};
+
 export default function SeasonInterest() {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId, refreshSeasonOptions } =
     useSelectionContext();
   const notify = useNotificationContext();
   const [season, setSeason] = useState<Season | undefined>(undefined);
+  const [fertilizerRecommendation, setFertilizerRecommendation] =
+    useState<FertilizerRecommendation>({ fertilizer: "" });
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/season";
 
   useEffect(() => {
@@ -174,6 +181,103 @@ export default function SeasonInterest() {
               onSubmit: updateSeason,
             }}
           />
+          <Accordion
+            disableGutters
+            sx={{
+              boxShadow: "none",
+              border: "2px solid #c7c7c7",
+              borderRadius: "2px",
+            }}
+          >
+            <AccordionSummary
+              sx={{ maxHeight: "fit-content" }}
+              expandIcon={<ExpandMoreIcon />}
+            >
+              <Typography>
+                <b>Fertilizer Application Recommendation</b>
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  value={fertilizerRecommendation.fertilizer}
+                  onChange={(e) =>
+                    setFertilizerRecommendation(
+                      (prevFertilizerRecommendation) => ({
+                        ...prevFertilizerRecommendation,
+                        fertilizer: e.target.value,
+                      })
+                    )
+                  }
+                />
+                <Button
+                  sx={{ width: "fit-content" }}
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => {
+                    if (
+                      selectedFieldId &&
+                      selectedSeasonId &&
+                      authenticationToken
+                    ) {
+                      fetch(
+                        `${serverUrl}/recommend_fertilizer/${selectedFieldId}/${selectedSeasonId}`,
+                        {
+                          headers: { "Auth-Token": authenticationToken },
+                          method: "POST",
+                        }
+                      )
+                        .then(async (response) => {
+                          const responseBody = await response.json();
+                          setFertilizerRecommendation(
+                            (prevFertilizerRecommendation) => {
+                              const recommendation = response.ok
+                                ? responseBody["data"]
+                                : undefined;
+                              return {
+                                ...prevFertilizerRecommendation,
+                                recommendation,
+                              };
+                            }
+                          );
+                        })
+                        .catch((error) =>
+                          notify({ message: error.message, isError: true })
+                        );
+                    }
+                  }}
+                >
+                  Recommend
+                </Button>
+              </Box>
+              <Typography>
+                Recommendation:{" "}
+                <b>
+                  {fertilizerRecommendation.recommendation
+                    ? "-"
+                    : fertilizerRecommendation.recommendation?.toFixed(3)}
+                </b>
+              </Typography>
+            </AccordionDetails>
+          </Accordion>
           <Button
             fullWidth
             size="small"

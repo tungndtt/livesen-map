@@ -2,8 +2,9 @@ from flask import Blueprint, jsonify
 from services.store.season import get_season, list_season_ids, insert_season, update_season, delete_season
 from services.store.ndvi_raster import get_ndvi_raster
 from api.authentication import authentication_required
-from config import NDVI
+from config import NDVI, RECOMMENDATION
 import os
+import requests
 
 
 api = Blueprint("season", __name__, url_prefix="/season")
@@ -62,3 +63,18 @@ def unregister_season(user_id, _, field_id, season_id):
         return jsonify({"data": "Successfully unregister the season"}), 204
     else:
         return jsonify({"data": "Failed to unregister the season"}), 500
+
+
+@api.route("/recommend_fertilizer/<int:field_id>/<season_id>", methods=["POST"])
+@authentication_required
+def recommend_fertilizer(user_id, data, field_id, season_id):
+    season = get_season(user_id, field_id, season_id)
+    if season is not None:
+        fertilizer = data["fertilizer"]
+        season["fertilizer_applications"].append({"fertilizer": fertilizer,
+                                                  "amount": -1})
+        response = requests.post(RECOMMENDATION.service_url,
+                                 json=season).json()
+        return jsonify(response), 200
+    else:
+        return jsonify({"data": "Failed to retrieve the season"}), 500
