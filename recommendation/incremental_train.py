@@ -22,13 +22,16 @@ def __load_model():
 
 def __train_model():
     model = __load_model()
+    if model is None:
+        return False
+    train_done = True
     model.compile(optimizer="adam", loss="mean_squared_error")
     # train the model in 100 epochs with batch size = 128
     # early stop with patience = 10 and save the best model
     best_val_loss = None
     patience_count = 0
     for _ in range(100):
-        val_loss = 0
+        total_val_loss = 0
         try:
             with open(MODEL.processed_data_path, "r", encoding="utf-8") as f:
                 while True:
@@ -44,27 +47,29 @@ def __train_model():
                         break
                     history = model.fit(numpy.array(X), numpy.array(y),
                                         epochs=1, validation_split=0.1)
-                    val_loss += history.history["val_loss"][0]
-            if best_val_loss is None or best_val_loss > val_loss:
+                    total_val_loss += history.history["val_loss"][0]
+            if best_val_loss is None or best_val_loss > total_val_loss:
                 model.save_weights(MODEL.weights_path)
-                best_val_loss = val_loss
+                best_val_loss = total_val_loss
                 patience_count = 0
             else:
                 patience_count += 1
                 if patience_count == 10:
                     break
         except KeyboardInterrupt:
+            train_done = False
             model.save_weights(MODEL.temp_weights_path)
+    return train_done
 
 
 def __incremental_train():
-    # preporcess data
+    # preprocess data
     if not preprocess.init():
         return
     # train the model
-    __train_model()
-    # cleanup preprocessed data
-    os.remove(MODEL.processed_data_path)
+    if __train_model():
+        # cleanup preprocessed data if train is done
+        os.remove(MODEL.processed_data_path)
 
 
 # process for incremental training
@@ -72,11 +77,12 @@ __process = None
 
 
 def __run_job():
+    days = 14
     __incremental_train()
-    schedule.every(14).days.do(__incremental_train)
+    schedule.every(days).days.do(__incremental_train)
     while True:
         schedule.run_pending()
-        time.sleep(14 * 24 * 60 * 60)
+        time.sleep(days * 24 * 60 * 60)
 
 
 def init():

@@ -16,7 +16,7 @@ def __update_model():
 
 
 def __run_job(event: Event):
-    days = 14
+    days = 7
     __update_model()
     schedule.every(days).days.do(__update_model)
     while event.is_set():
@@ -37,7 +37,7 @@ def init():
 
 def recommend(data):
     if __model:
-        encoded_data, _ = preprocess.encode_data(data, is_labeled=False)
-        return __model.predict(encoded_data)
+        encoded_data, _ = preprocess.encode_data(data)
+        return __model.predict([encoded_data])[0][0]
     else:
         return None

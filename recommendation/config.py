@@ -11,7 +11,7 @@ class Model:
 
     def parse(self, config: dict[str, Any]) -> None:
         self.data_folder = config["data_folder"]
-        self.model_path = os.path.join(self.data_folder, "model.h5")
+        self.model_path = os.path.join(self.data_folder, "model.keras")
         self.weights_path = os.path.join(self.data_folder, "weights.h5")
         self.temp_weights_path = os.path.join(self.data_folder,
                                               "temp_weights.h5")

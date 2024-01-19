@@ -17,7 +17,7 @@ __fields = [
 ]
 
 
-def __load_category_data():
+def __load_categories():
     global __categories
     __categories = {}
     for field, csv_file in [
@@ -52,7 +52,9 @@ def __find_category(data: str | None, field: str):
     return closest_category
 
 
-def encode_data(d, is_labeled: bool = True):
+def encode_data(d):
+    if __categories is None:
+        __load_categories()
     sample, label = {}, 0
     for field in __fields:
         data = d[field]
@@ -71,7 +73,7 @@ def encode_data(d, is_labeled: bool = True):
             for k in ["amount", "nitrogen"]:
                 for category in __categories[field]:
                     sample[f"{field}_{k}_{category}"] = 0
-                for item in (data[:-1] if is_labeled else data):
+                for item in data[:-1]:
                     category = __find_category(item["fertilizer"], field)
                     value = item[k]
                     if category:
@@ -80,7 +82,7 @@ def encode_data(d, is_labeled: bool = True):
                         )
             for category in __categories[field]:
                 sample[f"category_{category}"] = 0
-            if len(data) > 0 and is_labeled:
+            if len(data) > 0:
                 category = __find_category(data[-1]["fertilizer"], field)
                 sample[f"category_{category}"] = 1
                 label = data[-1]["amount"]
@@ -113,7 +115,6 @@ def __parse_record(record: tuple):
 
 
 def init():
-    __load_category_data()
     db_params = {
         "dbname": STORAGE.dbname,
         "user": STORAGE.user,
@@ -128,16 +129,17 @@ def init():
         return status
     with open(MODEL.processed_data_path, "w") as file:
         try:
-            columns = __fields.join(",")
+            columns = ",".join(__fields)
             cursor.execute(f"SELECT {columns} FROM season")
             for record in cursor:
                 sample, label = encode_data(__parse_record(record))
                 sample.append(label)
-                file.write(",".join(sample))
+                file.write(",".join([str(e) for e in sample]) + "\n")
         except:
             os.remove(MODEL.processed_data_path)
             status = False
         finally:
             cursor.close()
             conn.close()
-            return status
+            file.close()
+    return status
