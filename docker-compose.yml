@@ -58,6 +58,23 @@ services:
       - livesen-backend
       - livesen-frontend
   
+  livesen-recommendation:
+    build: 
+      context: ./recommendation
+      dockerfile: Dockerfile
+    container_name: livesen-recommendation
+    restart: unless-stopped
+    networks: 
+      - livesen-network
+    ports:
+      - 2204:2204
+    volumes:
+      - ./.docker/.recommendation:/livesen/config.json:ro
+      - ./.docker/data/model:/livesen/data/model
+      - ./.docker/data/category:/livesen/data/category
+    depends_on:
+      - livesen-storage
+  
 networks:
   livesen-network:
     driver: bridge

@@ -122,7 +122,19 @@ def init():
         "host": STORAGE.host,
         "port": STORAGE.port,
     }
-    conn = connect(**db_params)
+    # Connect to the PostgreSQL server
+    retry = 0
+    conn = None
+    while retry < 20:
+        from time import sleep
+        try:
+            conn = connect(**db_params)
+            break
+        except:
+            retry += 1
+            sleep(1)
+    if conn is None:
+        return False
     cursor = conn.cursor()
     status = True
     if os.path.exists(MODEL.processed_data_path):

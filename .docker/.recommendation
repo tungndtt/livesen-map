@@ -1,0 +1,19 @@
+{
+  "model": {
+    "data_folder": "./data/model"
+  },
+  "category": {
+    "data_folder": "./data/category"
+  },
+  "storage": {
+    "user": "livesen",
+    "password": "livesen",
+    "host": "livesen-storage",
+    "port": 5432,
+    "dbname": "livesen"
+  },
+  "app": {
+    "host": "livesen-recommendation",
+    "port": 1998
+  }
+}
