@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import app_state
 import incremental_train
 import model
 from config import APP
@@ -21,7 +22,10 @@ def recommendation():
 
 if __name__ == "__main__":
     try:
+        app_state.on()
         incremental_train.init()
+        model.init()
         app.run(host=APP.host, port=APP.port)
+        app_state.off()
     except Exception as error:
         print("[App]", error)

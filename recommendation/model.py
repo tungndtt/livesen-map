@@ -1,28 +1,36 @@
-from datetime import datetime, timedelta
+import time
+import schedule
+from threading import Thread
 from keras.models import load_model
+import app_state
 import preprocess
 from config import MODEL
 
 
 __model = None
-__last_update = None
 
 
-def __load_model():
-    global __model, __last_update
+def __update_model():
+    global __model
     __model = load_model(MODEL.model_path)
     __model.load_weights(MODEL.weights_path)
-    __last_update = datetime.now()
+
+
+def __run_job():
+    __update_model()
+    schedule.every(7).days.do(__update_model)
+    while app_state.is_on():
+        schedule.run_pending()
+        time.sleep(4)
+
+
+def init():
+    Thread(target=__run_job).start()
 
 
 def recommend(data):
-    global __model, __last_update
-    if __model is None:
-        __load_model()
+    global __model
     if __model:
-        # lazy update model every week
-        if __last_update < datetime.now() - timedelta(days=7):
-            __load_model()
         encoded_data, _ = preprocess.encode_data(data)
         return float(__model.predict([encoded_data])[0][0])
     else:

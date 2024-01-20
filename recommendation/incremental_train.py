@@ -4,8 +4,13 @@ import time
 import multiprocessing
 import numpy
 from keras.models import load_model
+import app_state
 import preprocess
 from config import MODEL
+
+
+# process for incremental training
+__process = None
 
 
 def __load_model():
@@ -72,17 +77,12 @@ def __incremental_train():
         os.remove(MODEL.processed_data_path)
 
 
-# process for incremental training
-__process = None
-
-
 def __run_job():
-    days = 14
     __incremental_train()
-    schedule.every(days).days.do(__incremental_train)
-    while True:
+    schedule.every(14).days.do(__incremental_train)
+    while app_state.is_on():
         schedule.run_pending()
-        time.sleep(days * 24 * 60 * 60)
+        time.sleep(4)
 
 
 def init():
