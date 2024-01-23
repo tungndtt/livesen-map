@@ -79,7 +79,7 @@ def __incremental_train():
 
 def __run_job():
     __incremental_train()
-    schedule.every(14).days.do(__incremental_train)
+    schedule.every(MODEL.train_period).days.do(__incremental_train)
     while app_state.is_on():
         schedule.run_pending()
         time.sleep(4)
@@ -87,6 +87,6 @@ def __run_job():
 
 def init():
     global __process
-    if __process is None:
+    if __process is None and MODEL.train_period is not None:
         __process = multiprocessing.Process(target=__run_job)
         __process.start()

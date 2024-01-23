@@ -1,6 +1,8 @@
 {
   "model": {
-    "data_folder": "./data/model"
+    "data_folder": "./data/model",
+    "train_period": 14,
+    "update_period": 7
   },
   "category": {
     "data_folder": "./data/category"

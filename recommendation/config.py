@@ -8,6 +8,8 @@ class Model:
     weights_path: str | None = None
     temp_weights_path: str | None = None
     processed_data_path: str | None = None
+    train_period: int | None = None
+    update_period: int | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.data_folder = config["data_folder"]
@@ -17,6 +19,8 @@ class Model:
                                               "temp_weights.h5")
         self.processed_data_path = os.path.join(self.data_folder,
                                                 "preprocessed_data.csv")
+        self.train_period = config["train_period"]
+        self.update_period = config["update_period"]
 
 
 class Category:

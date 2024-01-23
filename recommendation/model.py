@@ -18,7 +18,7 @@ def __update_model():
 
 def __run_job():
     __update_model()
-    schedule.every(7).days.do(__update_model)
+    schedule.every(MODEL.update_period).days.do(__update_model)
     while app_state.is_on():
         schedule.run_pending()
         time.sleep(4)
