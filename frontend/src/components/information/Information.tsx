@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Drawer,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -14,6 +15,7 @@ import AgricultureIcon from "@mui/icons-material/Agriculture";
 import StorageIcon from "@mui/icons-material/Storage";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
+import { useResizeContext } from "../../contexts/ResizeContext";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import RegionInterest from "./RegionInterest";
 import SeasonInterest from "./SeasonInterest";
@@ -40,24 +42,25 @@ const tabs = [
 ];
 
 export default function Information() {
+  const { layout, sidebar } = useResizeContext();
   const { signOut } = useAuthenticationContext();
   const [tab, setTab] = useState(0);
 
   return (
     <Box
-      sx={{
-        position: "absolute",
-        height: "100%",
-        right: 0,
-        width: "45%",
-      }}
+      sx={
+        layout === "row"
+          ? {
+              height: "100%",
+              width: "70%",
+            }
+          : {
+              height: "50%",
+              width: "100%",
+            }
+      }
     >
-      <Box
-        width="calc(100% - 225px)"
-        height="100%"
-        display="flex"
-        flexDirection="column"
-      >
+      <Box width="100%" height="100%" display="flex" flexDirection="column">
         <Box
           sx={{
             display: tab === 0 ? "flex" : "none",
@@ -102,46 +105,64 @@ export default function Information() {
             flexDirection: "column",
             justifyContent: "space-between",
             alignItems: "center",
-            width: "225px",
+            width: `var(--sidebar-${sidebar})`,
             backgroundColor: "#f1ebeb",
             borderLeft: 0,
+            overflowX: "hidden",
           },
         }}
         variant="persistent"
         anchor="right"
         open
       >
-        <img src="livesen-map-logo.png" alt="logo" width={80} />
+        <img
+          src="livesen-map-logo.png"
+          alt="logo"
+          style={{ width: "80%", maxWidth: 80 }}
+        />
         <List>
           {tabs.map(({ name, icon }, i) => (
             <ListItem key={name}>
               <ListItemButton
                 onClick={() => setTab(i)}
                 selected={tab === i}
-                sx={{ borderRadius: 2 }}
+                sx={{
+                  pl: 1,
+                  borderRadius: 2,
+                  width: `var(--sidebar-item-${sidebar})`,
+                }}
               >
                 <ListItemIcon>{icon}</ListItemIcon>
-                <ListItemText
-                  primary={name}
-                  primaryTypographyProps={{
-                    fontSize: "12px",
-                    fontWeight: tab === i ? 600 : 300,
-                  }}
-                />
+                {sidebar === "expand" && (
+                  <ListItemText
+                    primary={name}
+                    primaryTypographyProps={{
+                      fontSize: "12px",
+                      fontWeight: tab === i ? 600 : 300,
+                    }}
+                  />
+                )}
               </ListItemButton>
             </ListItem>
           ))}
         </List>
-        <Button
-          sx={{ width: "85%", m: 2 }}
-          size="small"
-          variant="outlined"
-          color="error"
-          onClick={() => signOut()}
-          endIcon={<LogoutIcon />}
-        >
-          Logout
-        </Button>
+        {sidebar === "expand" ? (
+          <Button
+            sx={{ width: "85%", mb: 1 }}
+            size="small"
+            variant="outlined"
+            color="error"
+            onClick={() => signOut()}
+            endIcon={<LogoutIcon />}
+          >
+            Logout
+          </Button>
+        ) : (
+          <IconButton color="error" onClick={() => signOut()}>
+            {" "}
+            <LogoutIcon />
+          </IconButton>
+        )}
       </Drawer>
     </Box>
   );

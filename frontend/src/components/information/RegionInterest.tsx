@@ -92,34 +92,36 @@ export default function RegionInterest() {
         label="Region Coordinates"
         value={JSON.stringify(roi) ?? "[]"}
       />
-      <input
-        name="upload-region-interest"
-        type="file"
-        accept="application/json"
-        onChange={uploadRegionInterest}
-      />
+      <Box display="flex" justifyContent="flex-start">
+        <input
+          name="upload-region-interest"
+          type="file"
+          accept="application/json"
+          onChange={uploadRegionInterest}
+        />
+      </Box>
       <Box className="button-row-container">
         <Button
-          size="small"
           fullWidth
+          size="small"
           disabled={!roi || !roiName}
           variant="outlined"
           color="success"
           endIcon={<AddIcon />}
           onClick={registerRegion}
         >
-          Register region
+          Register Region
         </Button>
         <Button
+          sx={{ width: "30%" }}
           size="small"
-          fullWidth
           disabled={!roi}
           variant="outlined"
           color="error"
           endIcon={<ClearIcon />}
           onClick={clearRegion}
         >
-          Clear region
+          Reset
         </Button>
       </Box>
     </Box>

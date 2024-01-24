@@ -128,7 +128,7 @@ export default function FieldTab() {
         </Button>
       </Box>
       <Button
-        sx={{ mt: 1 }}
+        sx={{ mb: 1 }}
         variant="outlined"
         color="error"
         disabled={!selectedFieldId}

@@ -222,7 +222,7 @@ export default function MeasurementTab() {
             fullWidth
             size="small"
             variant="outlined"
-            sx={{ my: 2 }}
+            sx={{ my: 1 }}
             endIcon={recommendationVisible ? <GridOffIcon /> : <GridOnIcon />}
             disabled={Object.keys(visibility ?? {}).length === 0}
             onClick={toggleRecommendationVisible}
@@ -320,7 +320,7 @@ function MeasurementValues(props: MeasurementValuesProps) {
           Update measurement
         </Button>
         <Button
-          sx={{ width: "40%" }}
+          sx={{ width: "35%" }}
           size="small"
           variant="outlined"
           color="error"

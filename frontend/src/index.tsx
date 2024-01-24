@@ -1,4 +1,5 @@
 import ReactDOM from "react-dom";
+import ResizeProvider from "./contexts/ResizeContext";
 import NotificationProvider from "./contexts/NotificationContext";
 import AuthenticationProvider from "./contexts/AuthenticationContext";
 import RegionInterestProvider from "./contexts/RegionInterestContext";
@@ -13,22 +14,24 @@ import "./styles.css";
 
 const rootElement = document.getElementById("root");
 ReactDOM.render(
-  <NotificationProvider>
-    <AuthenticationProvider>
-      <SelectionProvider>
-        <RegionInterestProvider>
-          <FieldProvider>
-            <NdviRasterProvider>
-              <MeasurementProvider>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <App />
-                </LocalizationProvider>
-              </MeasurementProvider>
-            </NdviRasterProvider>
-          </FieldProvider>
-        </RegionInterestProvider>
-      </SelectionProvider>
-    </AuthenticationProvider>
-  </NotificationProvider>,
+  <ResizeProvider>
+    <NotificationProvider>
+      <AuthenticationProvider>
+        <SelectionProvider>
+          <RegionInterestProvider>
+            <FieldProvider>
+              <NdviRasterProvider>
+                <MeasurementProvider>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <App />
+                  </LocalizationProvider>
+                </MeasurementProvider>
+              </NdviRasterProvider>
+            </FieldProvider>
+          </RegionInterestProvider>
+        </SelectionProvider>
+      </AuthenticationProvider>
+    </NotificationProvider>
+  </ResizeProvider>,
   rootElement
 );

@@ -83,7 +83,6 @@ export default function FieldGroups({
         display: "flex",
         flexDirection: "column",
         gap: "15px",
-        pb: "10px",
       }}
     >
       {fieldGroups.map(({ groupId, group, fields }) => (
