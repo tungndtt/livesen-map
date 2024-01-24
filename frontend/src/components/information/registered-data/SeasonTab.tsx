@@ -18,7 +18,7 @@ import { Season, parseSeason, deparseSeason } from "../../../types/season";
 
 const fieldGroups = [
   {
-    group: "General Information",
+    group: "General",
     fields: [
       { fieldId: "maincrop", label: "Main Crop", type: "string" },
       { fieldId: "intercrop", label: "Inter Crop", type: "string" },
@@ -30,7 +30,7 @@ const fieldGroups = [
   },
   {
     groupId: "fertilizerApplications",
-    group: "Fertilizer Application Information",
+    group: "Fertilizer Application",
     fields: [
       { fieldId: "fertilizer", label: "Fertilizer", type: "string" },
       { fieldId: "type", label: "Fertilizer Type", type: "string" },
@@ -46,7 +46,7 @@ const fieldGroups = [
   },
   {
     groupId: "soilTillageApplications",
-    group: "Soil Tillage Application Information",
+    group: "Soil Tillage",
     fields: [
       { fieldId: "type", label: "Soil Tillage Type", type: "string" },
       { fieldId: "date", label: "Soil Tillage Date", type: "date" },
@@ -54,7 +54,7 @@ const fieldGroups = [
   },
   {
     groupId: "cropProtectionApplications",
-    group: "Crop Protection Application Information",
+    group: "Crop Protection",
     fields: [
       { fieldId: "type", label: "Crop Protection Type", type: "string" },
       { fieldId: "amount", label: "Crop Protection Amount", type: "number" },
@@ -62,7 +62,7 @@ const fieldGroups = [
     ],
   },
   {
-    group: "Nutrient Information",
+    group: "Nutrient",
     fields: [
       { fieldId: "nitrate", label: "Nitrate (mg/L)", type: "number" },
       { fieldId: "phosphor", label: "Phosphor (mg/L)", type: "number" },
@@ -72,7 +72,7 @@ const fieldGroups = [
     ],
   },
   {
-    group: "Harvest Information",
+    group: "Harvestment",
     fields: [
       {
         fieldId: "harvestWeight",
@@ -264,11 +264,11 @@ export default function SeasonInterest() {
                 </Button>
               </Box>
               <Typography>
-                Recommended Amount:{" "}
+                Recommended Amount (mg/L):{" "}
                 <b>
                   {fertilizerRecommendation.recommendation
                     ? fertilizerRecommendation.recommendation?.toFixed(3)
-                    : "-"}
+                    : "N/A"}
                 </b>
               </Typography>
             </AccordionDetails>
@@ -288,7 +288,7 @@ export default function SeasonInterest() {
             size="small"
             variant="outlined"
             color="error"
-            sx={{ mb: 2 }}
+            sx={{ mb: 1 }}
             endIcon={<DeleteIcon />}
             disabled={!selectedFieldId || !selectedSeasonId}
             onClick={deleteSeason}

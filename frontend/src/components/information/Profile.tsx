@@ -148,7 +148,6 @@ export default function Profile() {
           Update profile
         </Button>
         <Button
-          sx={{ width: "40%" }}
           fullWidth
           size="small"
           variant="outlined"

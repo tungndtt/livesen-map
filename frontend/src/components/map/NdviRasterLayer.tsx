@@ -100,6 +100,9 @@ export default function NdviRasterLayer() {
             position: "absolute",
             right: "10px",
             zIndex: 1000,
+            width: "70%",
+            display: "flex",
+            justifyContent: "flex-end",
           }}
         >
           <GradientBar

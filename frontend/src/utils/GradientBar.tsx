@@ -25,10 +25,11 @@ export default function GradientBar({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
+        width: "100%",
         gap: 1,
       }}
     >
-      <Box sx={{ display: "flex", flexDirection: "column", width: "500px" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
         <Typography variant="caption">
           <b>{caption}</b>
         </Typography>
