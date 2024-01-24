@@ -78,12 +78,18 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
       fetch(`${serverUrl}/max_recommended_fertilizer`, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
-      }).then(async (response) => {
-        if (response.ok) {
-          const responseBody = await response.json();
-          setMaxRecommendedFertilizer(responseBody["data"]);
-        }
-      });
+      })
+        .then(async (response) => {
+          if (response.ok) {
+            const responseBody = await response.json();
+            setMaxRecommendedFertilizer(responseBody["data"]);
+          } else
+            notify({
+              message: "Failed to retrieve max recommended fertilizer",
+              isError: true,
+            });
+        })
+        .catch((error) => notify({ message: error.message, isError: true }));
     }
   }, [authenticationToken]);
 

@@ -23,7 +23,7 @@ const AuthenticationContext = createContext<AuthenticationContextType>({
 export default function AuthenticationProvider(props: { children: ReactNode }) {
   const [authenticationToken, setAuthenticationToken] = useState(
     localStorage.getItem("authentication_token") ??
-      process.env.REACT_APP_IS_TESTING
+      process.env.REACT_APP_IS_TESTING?.toLocaleLowerCase() === "true"
       ? "test"
       : ""
   );
