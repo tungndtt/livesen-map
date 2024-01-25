@@ -95,24 +95,13 @@ export default function NdviRasterLayer() {
   return (
     <>
       {ndviRange && ndviRasterVisible && (
-        <Box
-          sx={{
-            position: "absolute",
-            right: "10px",
-            zIndex: 1000,
-            width: "70%",
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <GradientBar
-            caption="NDVI"
-            low={ndviRange[0]}
-            high={ndviRange[1]}
-            lowLabel={ndviRange[0]}
-            highLabel={ndviRange[1]}
-          />
-        </Box>
+        <GradientBar
+          caption="NDVI"
+          low={ndviRange[0]}
+          high={ndviRange[1]}
+          lowLabel={ndviRange[0]}
+          highLabel={ndviRange[1]}
+        />
       )}
       <Modal
         sx={{

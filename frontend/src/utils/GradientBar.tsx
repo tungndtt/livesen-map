@@ -21,11 +21,14 @@ export default function GradientBar({
   return (
     <Box
       sx={{
+        position: "absolute",
+        right: "10px",
+        zIndex: 1000,
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        width: "100%",
+        width: "70%",
         gap: 1,
       }}
     >

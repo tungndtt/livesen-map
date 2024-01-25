@@ -61,27 +61,14 @@ export default function MeasurementLayer() {
   return (
     <FeatureGroup>
       {recommendationVisible && measurementIds.length > 0 && (
-        <Box
-          sx={{
-            position: "absolute",
-            right: "10px",
-            zIndex: 1000,
-            width: "70%",
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <GradientBar
-            caption="Subfield Recommended Fertilizer Amount (mg/L)"
-            low={1 - subfieldRecommendFertilizerLow}
-            high={1 - subfieldRecommendFertilizerHigh}
-            lowLabel={subfieldRecommendFertilizerLow * maxRecommendedFertilizer}
-            highLabel={
-              subfieldRecommendFertilizerHigh * maxRecommendedFertilizer
-            }
-            unknownColor={UNKNOWN_COLOR}
-          />
-        </Box>
+        <GradientBar
+          caption="Subfield Recommended Fertilizer Amount (mg/L)"
+          low={1 - subfieldRecommendFertilizerLow}
+          high={1 - subfieldRecommendFertilizerHigh}
+          lowLabel={subfieldRecommendFertilizerLow * maxRecommendedFertilizer}
+          highLabel={subfieldRecommendFertilizerHigh * maxRecommendedFertilizer}
+          unknownColor={UNKNOWN_COLOR}
+        />
       )}
       {measurementIds.map((measurementId) => (
         <Fragment key={`${measurementId}-${recommendationVisible}`}>
