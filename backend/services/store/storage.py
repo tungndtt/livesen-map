@@ -50,9 +50,9 @@ def __init_database() -> None:
             ).format(dbname, user)
             cursor.execute(create_cmd)
             cursor.execute(grant_cmd)
-            print(f"Database '{database_name}' created.")
+            print(f"[Database] '{database_name}' created.")
         else:
-            print(f"Database '{database_name}' already exists.")
+            print(f"[Database] '{database_name}' already exists.")
     except Exception as error:
         print("[Storage]", error)
     finally:
@@ -201,8 +201,10 @@ class DbCursor:
         self.__cursor = self.__conn.cursor()
         return self.__cursor
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, error_type, error, _) -> None:
         global _dbpool
+        if error_type is not None:
+            self.error = error
         try:
             self.__conn.commit()
         except Exception as error:
@@ -212,6 +214,7 @@ class DbCursor:
         finally:
             self.__cursor.close()
             _dbpool.putconn(self.__conn)
+        return True
 
 
 def transaction_decorator(f):

@@ -53,16 +53,17 @@ def upgister_season(user_id, data, field_id, season_id):
 @api.route("/unregister/<int:field_id>/<season_id>", methods=["DELETE"])
 @authentication_required
 def unregister_season(user_id, _, field_id, season_id):
-    deleted_ndvi_raster = get_ndvi_raster(user_id, field_id, season_id)
-    if deleted_ndvi_raster is not None and delete_season(user_id, field_id, season_id):
-        try:
-            os.remove(os.path.join(NDVI.data_folder, deleted_ndvi_raster))
-        except Exception as error:
-            print("[Season API]", error)
-            return jsonify({"data": "Failed to unregister the associated NDVI raster"}), 500
+    if delete_season(user_id, field_id, season_id):
+        deleted_ndvi_raster = get_ndvi_raster(user_id, field_id, season_id)
+        if deleted_ndvi_raster is not None:
+            try:
+                os.remove(os.path.join(NDVI.data_folder, deleted_ndvi_raster))
+            except Exception as error:
+                print("[Season API]", error)
+                return jsonify({"data": "Failed to unregister the associated NDVI raster"}), 500
         return jsonify({"data": "Successfully unregister the season"}), 204
     else:
-        return jsonify({"data": "Failed to unregister the season"}), 500
+        return jsonify({"data": "Failed to unregister the associated NDVI raster"}), 500
 
 
 @api.route("/recommend_fertilizer/<int:field_id>/<season_id>", methods=["POST"])
