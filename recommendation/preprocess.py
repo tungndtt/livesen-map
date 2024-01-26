@@ -14,6 +14,7 @@ __fields = [
     "soil_tillage_applications",
     "crop_protection_applications",
     "nitrate", "phosphor", "potassium", "ph", "rks",
+    "harvest_weight"
 ]
 
 
