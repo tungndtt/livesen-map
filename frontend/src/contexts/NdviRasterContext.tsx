@@ -5,6 +5,7 @@ import {
   ReactNode,
   useEffect,
 } from "react";
+import { useNotificationContext } from "./NotificationContext";
 import { useAuthenticationContext } from "./AuthenticationContext";
 import { useSelectionContext } from "./SelectionContext";
 
@@ -25,6 +26,7 @@ const NdviRasterContext = createContext<NdviRasterContextType>({
 });
 
 export default function NdviRasterProvider(props: { children: ReactNode }) {
+  const notify = useNotificationContext();
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const [ndviRasters, setNdviRasters] = useState<NdviRasterMap>({});
@@ -55,6 +57,7 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
 
   const getNdviRaster = () => {
     if (authenticationToken && selectedFieldId && selectedSeasonId) {
+      setNdviRasterVisible(true);
       fetch(`${serverUrl}/${selectedFieldId}/${selectedSeasonId}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
@@ -67,10 +70,15 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
               ...prevNdviMap,
               [selectedSeasonId]: data,
             }));
-            setNdviRasterVisible(true);
-          } else setNdviRasterVisible(false);
+          } else {
+            setNdviRasterVisible(false);
+            notify({ message: data, isError: true });
+          }
         })
-        .catch(() => setNdviRasterVisible(false));
+        .catch((error) => {
+          setNdviRasterVisible(false);
+          notify({ message: error.message, isError: true });
+        });
     }
   };
 

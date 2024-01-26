@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Modal, CircularProgress, Box } from "@mui/material";
+import { Modal, Typography } from "@mui/material";
 import { useLeafletContext } from "@react-leaflet/core";
 import { useMap } from "react-leaflet";
 //@ts-ignore
@@ -24,7 +24,7 @@ export default function NdviRasterLayer() {
   const ndviLayerRef = useRef<GeoRasterLayer | undefined>(undefined);
   const context = useLeafletContext();
   const map = useMap();
-  const [loadingNdvi, setLoadingNdvi] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [ndviRange, setNdviRange] = useState<number[] | undefined>(undefined);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/ndvi_raster";
 
@@ -35,7 +35,7 @@ export default function NdviRasterLayer() {
       selectedSeasonId &&
       ndviRasters?.[selectedSeasonId]
     ) {
-      setLoadingNdvi(true);
+      setIsLoading(true);
       fetch(`${serverUrl}/${ndviRasters[selectedSeasonId]}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
@@ -44,12 +44,18 @@ export default function NdviRasterLayer() {
           if (response.ok) {
             const arrayBuffer = await response.arrayBuffer();
             parseGeoraster(arrayBuffer).then((georaster: GeoRaster) => {
-              let count = 0;
-              let ndviRange = [1, -1];
-              const resolution = georaster.width * georaster.height;
               if (ndviLayerRef.current) {
                 container.removeLayer(ndviLayerRef.current);
               }
+              let progress = { current: 0, previous: -1 };
+              let ndviRange = [1, -1];
+              const resolution = georaster.width * georaster.height;
+              const progressTracker = setInterval(() => {
+                if (progress.previous === progress.current) {
+                  clearInterval(progressTracker);
+                  setIsLoading(false);
+                } else progress.previous = progress.current;
+              }, 2000);
               ndviLayerRef.current = new GeoRasterLayer({
                 georaster: georaster,
                 opacity: 1,
@@ -59,9 +65,9 @@ export default function NdviRasterLayer() {
                     ndviRange[0] = Math.min(ndviRange[0], ndvi);
                     ndviRange[1] = Math.max(ndviRange[1], ndvi);
                   }
-                  count++;
-                  if (count == resolution) {
-                    setLoadingNdvi(false);
+                  progress.current++;
+                  if (progress.current == resolution) {
+                    setIsLoading(false);
                     ndviRange[0] = Math.max(ndviRange[0], 0);
                     ndviRange[1] = Math.min(ndviRange[1], 1);
                     setNdviRange([...ndviRange]);
@@ -78,13 +84,13 @@ export default function NdviRasterLayer() {
               signOut();
               notify({ message: "Access token is outdated", isError: true });
             } else notify({ message: await response.text(), isError: true });
-            setLoadingNdvi(false);
+            setIsLoading(false);
           }
         })
         .catch((error) => {
           signOut();
           notify({ message: error.message, isError: true });
-          setLoadingNdvi(false);
+          setIsLoading(false);
         });
     }
     return () => {
@@ -110,9 +116,11 @@ export default function NdviRasterLayer() {
           justifyContent: "center",
           zIndex: 3000,
         }}
-        open={loadingNdvi}
+        open={isLoading}
       >
-        <CircularProgress />
+        <Typography fontWeight={800} color="#ffa200">
+          <b>Loading NDVI Map ...</b>
+        </Typography>
       </Modal>
     </>
   );
