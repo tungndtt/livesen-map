@@ -5,6 +5,7 @@ import requests
 import os
 import datetime
 import pytz
+import atexit
 from config import DOWNLOADER
 
 
@@ -28,7 +29,6 @@ def __product_download():
     timestamp = datetime.datetime(
         year=int(year), month=int(month), day=int(day), tzinfo=timezone
     )
-
     forced_termination = False
     while timestamp < datetime.datetime.now(timezone):
         product = f"{year}{month}{day}"
@@ -68,6 +68,7 @@ def __product_download():
                             data_exists = False
                             break
                     except KeyboardInterrupt:
+                        print("[Download]: Stop the downloading process")
                         forced_termination = True
                         break
                     except Exception as error:
@@ -100,6 +101,11 @@ def __run_job():
         time.sleep(10 * 24 * 60 * 60)
 
 
+def __stop_process():
+    global __process
+    __process.terminate()
+
+
 def init():
     if not DOWNLOADER.is_downloading:
         return
@@ -109,6 +115,7 @@ def init():
     if __process is None:
         __process = multiprocessing.Process(target=__run_job)
         __process.start()
+        atexit.register(__stop_process)
 
 
 if __name__ == "__main__":

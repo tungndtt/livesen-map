@@ -3,6 +3,7 @@
 # pg_ctl status -D <data-folder>
 from psycopg2 import pool, sql, connect
 from psycopg2._psycopg import cursor as Cursor
+import atexit
 from config import STORAGE, APP
 from typing import Any
 
@@ -177,6 +178,12 @@ def __init_tables() -> None:
             )
 
 
+def __close_connection():
+    global _dbpool
+    if _dbpool is not None:
+        _dbpool.closeall()
+
+
 def init() -> None:
     global _dbpool
     __init_database()
@@ -189,31 +196,39 @@ def init() -> None:
     }
     _dbpool = pool.ThreadedConnectionPool(minconn=1, maxconn=64, **db_params)
     __init_tables()
+    atexit.register(__close_connection)
 
 
 class DbCursor:
     def __init__(self) -> None:
         self.error = None
+        self.__conn = None
+        self.__cursor = None
 
     def __enter__(self) -> Cursor:
         global _dbpool
-        self.__conn = _dbpool.getconn()
-        self.__cursor = self.__conn.cursor()
-        return self.__cursor
+        try:
+            self.__conn = _dbpool.getconn()
+            self.__cursor = self.__conn.cursor()
+            return self.__cursor
+        except Exception as error:
+            self.error = error
 
     def __exit__(self, error_type, error, _) -> None:
         global _dbpool
-        if error_type is not None:
-            self.error = error
         try:
-            self.__conn.commit()
+            if error_type is not None:
+                self.error = error
+            else:
+                self.__conn.commit()
         except Exception as error:
-            self.__conn.rollback()
             print("[Storage]", error)
             self.error = error
+            self.__conn.rollback()
         finally:
-            self.__cursor.close()
-            _dbpool.putconn(self.__conn)
+            if self.__cursor is not None:
+                self.__cursor.close()
+                _dbpool.putconn(self.__conn)
         return True
 
 

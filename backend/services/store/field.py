@@ -36,6 +36,7 @@ def insert_field(user_id: int, name: str, region: str) -> dict[str, Any] | None:
     inserted_field = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
+        print("asdasddsds")
         cursor.execute(
             """
             INSERT INTO field(user_id, name, region)

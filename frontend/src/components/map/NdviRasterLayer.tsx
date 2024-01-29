@@ -116,7 +116,7 @@ export default function NdviRasterLayer() {
           justifyContent: "center",
           zIndex: 3000,
         }}
-        open={isLoading}
+        open={isLoading || ndviRasterVisible === undefined}
       >
         <Typography fontWeight={800} color="#ffa200">
           <b>Loading NDVI Map ...</b>

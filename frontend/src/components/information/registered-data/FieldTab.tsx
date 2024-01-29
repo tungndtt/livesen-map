@@ -119,7 +119,11 @@ export default function FieldTab() {
         <Button
           variant="outlined"
           color="success"
-          disabled={!selectedFieldId || !selectedSeasonId}
+          disabled={
+            !selectedFieldId ||
+            !selectedSeasonId ||
+            ndviRasterVisible === undefined
+          }
           fullWidth
           endIcon={ndviRasterVisible ? <LayersClearIcon /> : <LayersIcon />}
           onClick={toggleNdviRasterVisible}

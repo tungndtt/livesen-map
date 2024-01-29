@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useState,
+  useRef,
   ReactNode,
   useEffect,
 } from "react";
@@ -15,7 +16,7 @@ type NdviRasterMap = {
 
 type NdviRasterContextType = {
   ndviRasters: NdviRasterMap;
-  ndviRasterVisible: boolean;
+  ndviRasterVisible: boolean | undefined;
   toggleNdviRasterVisible: () => void;
 };
 
@@ -30,7 +31,10 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const [ndviRasters, setNdviRasters] = useState<NdviRasterMap>({});
-  const [ndviRasterVisible, setNdviRasterVisible] = useState(false);
+  const [ndviRasterVisible, setNdviRasterVisible] = useState<
+    boolean | undefined
+  >(false);
+  const seasonId = useRef<string | undefined>(undefined);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/ndvi_raster";
 
   useEffect(() => {
@@ -47,7 +51,15 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
 
   useEffect(() => {
     if (ndviRasterVisible && selectedSeasonId !== undefined) getNdviRaster();
-    else setNdviRasterVisible(false);
+    else {
+      if (!selectedSeasonId && seasonId.current)
+        setNdviRasters((prevNdviMap) => {
+          delete prevNdviMap[seasonId.current!];
+          return { ...prevNdviMap };
+        });
+      setNdviRasterVisible(false);
+    }
+    seasonId.current = selectedSeasonId;
   }, [selectedSeasonId]);
 
   const toggleNdviRasterVisible = () => {
@@ -57,7 +69,7 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
 
   const getNdviRaster = () => {
     if (authenticationToken && selectedFieldId && selectedSeasonId) {
-      setNdviRasterVisible(true);
+      setNdviRasterVisible(undefined);
       fetch(`${serverUrl}/${selectedFieldId}/${selectedSeasonId}`, {
         headers: { "Auth-Token": authenticationToken },
         method: "GET",
@@ -70,6 +82,7 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
               ...prevNdviMap,
               [selectedSeasonId]: data,
             }));
+            setNdviRasterVisible(true);
           } else {
             setNdviRasterVisible(false);
             notify({ message: data, isError: true });

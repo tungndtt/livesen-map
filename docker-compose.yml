@@ -21,6 +21,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: livesen-backend
+    restart: unless-stopped
     networks:
       - livesen-network
     ports:
@@ -37,6 +38,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: livesen-frontend
+    restart: unless-stopped
     networks:
       - livesen-network
     ports:
