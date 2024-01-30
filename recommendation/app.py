@@ -22,10 +22,13 @@ def recommendation():
 
 if __name__ == "__main__":
     try:
-        app_state.on()
+        app_state.init()
         incremental_train.init()
         model.init()
         app.run(host=APP.host, port=APP.port)
-        app_state.off()
     except Exception as error:
         print("[App]", error)
+    finally:
+        app_state.term()
+        incremental_train.term()
+        model.term()

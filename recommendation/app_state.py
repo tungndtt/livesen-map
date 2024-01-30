@@ -3,16 +3,16 @@ from threading import Event
 __app_state = Event()
 
 
-def on():
+def init():
     global __app_state
     __app_state.set()
 
 
-def off():
+def term():
     global __app_state
     __app_state.clear()
 
 
-def is_on():
+def is_running():
     global __app_state
     return __app_state.is_set()

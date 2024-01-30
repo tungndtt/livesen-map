@@ -6,7 +6,7 @@ import app_state
 import preprocess
 from config import MODEL
 
-
+__thread = None
 __model = None
 
 
@@ -19,13 +19,22 @@ def __update_model():
 def __run_job():
     __update_model()
     schedule.every(MODEL.update_period).days.do(__update_model)
-    while app_state.is_on():
+    while app_state.is_running():
         schedule.run_pending()
         time.sleep(4)
 
 
 def init():
-    Thread(target=__run_job).start()
+    global __thread
+    if __thread is None:
+        __thread = Thread(target=__run_job)
+        __thread.start()
+
+
+def term():
+    global __thread
+    if __thread is not None:
+        __thread.join()
 
 
 def recommend(data):

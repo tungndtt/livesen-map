@@ -4,7 +4,6 @@ import time
 import multiprocessing
 import numpy
 from keras.models import load_model
-import app_state
 import preprocess
 from config import MODEL
 
@@ -78,11 +77,14 @@ def __incremental_train():
 
 
 def __run_job():
-    __incremental_train()
-    schedule.every(MODEL.train_period).days.do(__incremental_train)
-    while app_state.is_on():
-        schedule.run_pending()
-        time.sleep(4)
+    try:
+        __incremental_train()
+        schedule.every(MODEL.train_period).days.do(__incremental_train)
+        while True:
+            schedule.run_pending()
+            time.sleep(24 * 60 * 60)
+    except:
+        print("[Incremental Train] Stop the training process")
 
 
 def init():
@@ -90,3 +92,9 @@ def init():
     if __process is None and MODEL.train_period is not None:
         __process = multiprocessing.Process(target=__run_job)
         __process.start()
+
+
+def term():
+    global __process
+    if __process is not None:
+        __process.terminate()
