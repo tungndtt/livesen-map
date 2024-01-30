@@ -69,11 +69,11 @@ def __product_download():
                             data_exists = False
                             break
                     except KeyboardInterrupt:
-                        print("[Download] Stop the downloading process")
+                        print("[Downloader] Interrupt the download")
                         forced_termination = True
                         break
                     except Exception as error:
-                        print("[Download]", error)
+                        print("[Downloader]", error)
                         connection_broken = True
                     finally:
                         # close the response to release resources
@@ -95,11 +95,14 @@ def __product_download():
 
 
 def __run_job():
-    __product_download()
-    schedule.every(10).days.do(__product_download)
-    while True:
-        schedule.run_pending()
-        time.sleep(10 * 24 * 60 * 60)
+    try:
+        __product_download()
+        schedule.every(10).days.do(__product_download)
+        while True:
+            schedule.run_pending()
+            time.sleep(24 * 60 * 60)
+    except:
+        print("[Downloader] Stop downloading process")
 
 
 def init():
