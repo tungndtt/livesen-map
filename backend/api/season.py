@@ -1,10 +1,10 @@
-from flask import Blueprint, jsonify
-from services.store.season import get_season, list_season_ids, insert_season, update_season, delete_season
-from services.store.ndvi_raster import get_ndvi_raster
-from api.authentication import authentication_required
-from config import NDVI, RECOMMENDATION
 import os
 import requests
+from flask import Blueprint, jsonify
+from api.authentication import authentication_required
+from services.store.dafs.season import get_season, list_season_ids, insert_season, update_season, delete_season
+from services.store.dafs.ndvi_raster import get_ndvi_raster
+from config import NDVI, RECOMMENDATION
 
 
 api = Blueprint("season", __name__, url_prefix="/season")

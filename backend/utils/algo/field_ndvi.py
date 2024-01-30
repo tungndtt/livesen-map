@@ -1,10 +1,10 @@
+import os
+import uuid
+import numpy as np
 import xarray as xr
 import rasterio
 from rasterio import mask, windows
 from shapely.geometry import Polygon, box
-import numpy as np
-import uuid
-import os
 from config import NDVI, DOWNLOADER
 
 
@@ -97,7 +97,7 @@ def get_field_ndvi(
         os.system("gdal_translate %s %s -co TILED=YES -co COMPRESS=DEFLATE" %
                   (temp_tiff_file_2, out_tiff_file))
     except Exception as error:
-        print("[Rastextractor]", error)
+        print("[Field NDVI]", error)
         tiff_file = None
         if os.path.isfile(out_tiff_file):
             os.remove(out_tiff_file)

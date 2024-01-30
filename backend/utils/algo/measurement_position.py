@@ -1,5 +1,5 @@
-from shapely.geometry import Point, Polygon
 import random
+from shapely.geometry import Point, Polygon
 
 
 def find_measurement_position(

@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
-from services.store.user import get_user, update_user, insert_user
-from services.jwt.token import verify_token
 from api.authentication import authentication_required
-from services.hash.hasher import encrypt
+from services.store.dafs.user import get_user, update_user, insert_user
+from utils.jwt.token import verify_token
+from utils.hash.hasher import encrypt
 
 api = Blueprint("user", __name__, url_prefix="/user")
 

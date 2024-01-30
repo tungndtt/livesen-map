@@ -3,7 +3,6 @@
 # pg_ctl status -D <data-folder>
 from psycopg2 import pool, sql, connect
 from psycopg2._psycopg import cursor as Cursor
-import atexit
 from config import STORAGE, APP
 from typing import Any
 
@@ -51,9 +50,9 @@ def __init_database() -> None:
             ).format(dbname, user)
             cursor.execute(create_cmd)
             cursor.execute(grant_cmd)
-            print(f"[Database] '{database_name}' created.")
+            print(f"[Storage] '{database_name}' created.")
         else:
-            print(f"[Database] '{database_name}' already exists.")
+            print(f"[Storage] '{database_name}' already exists.")
     except Exception as error:
         print("[Storage]", error)
     finally:
@@ -178,12 +177,6 @@ def __init_tables() -> None:
             )
 
 
-def __close_connection():
-    global _dbpool
-    if _dbpool is not None:
-        _dbpool.closeall()
-
-
 def init() -> None:
     global _dbpool
     __init_database()
@@ -196,7 +189,12 @@ def init() -> None:
     }
     _dbpool = pool.ThreadedConnectionPool(minconn=1, maxconn=64, **db_params)
     __init_tables()
-    atexit.register(__close_connection)
+
+
+def term():
+    global _dbpool
+    if _dbpool is not None:
+        _dbpool.closeall()
 
 
 class DbCursor:

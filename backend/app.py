@@ -23,3 +23,7 @@ if __name__ == "__main__":
         app.run(host=APP.host, port=APP.port)
     except Exception as error:
         print("[App]", error)
+    finally:
+        downloader.term()
+        storage.term()
+        mailer.term()

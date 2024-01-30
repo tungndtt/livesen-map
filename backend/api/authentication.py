@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
-from services.store.user import get_user
-from services.jwt.token import generate_token, verify_token
-from services.hash.hasher import encrypt, check
+from services.store.dafs.user import get_user
 from services.mail.mailer import send_email
+from utils.jwt.token import generate_token, verify_token
+from utils.hash.hasher import encrypt, check
 from config import APP
 
 

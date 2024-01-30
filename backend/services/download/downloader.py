@@ -5,6 +5,7 @@ import requests
 import os
 import datetime
 import pytz
+import signal
 import atexit
 from config import DOWNLOADER
 
@@ -68,7 +69,7 @@ def __product_download():
                             data_exists = False
                             break
                     except KeyboardInterrupt:
-                        print("[Download]: Stop the downloading process")
+                        print("[Download] Stop the downloading process")
                         forced_termination = True
                         break
                     except Exception as error:
@@ -101,11 +102,6 @@ def __run_job():
         time.sleep(10 * 24 * 60 * 60)
 
 
-def __stop_process():
-    global __process
-    __process.terminate()
-
-
 def init():
     if not DOWNLOADER.is_downloading:
         return
@@ -115,8 +111,18 @@ def init():
     if __process is None:
         __process = multiprocessing.Process(target=__run_job)
         __process.start()
-        atexit.register(__stop_process)
+
+
+def term():
+    global __process
+    if __process is not None:
+        __process.terminate()
 
 
 if __name__ == "__main__":
-    pass
+    try:
+        init()
+    except:
+        pass
+    finally:
+        term()
