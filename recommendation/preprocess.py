@@ -133,7 +133,7 @@ def init():
             break
         except:
             retry += 1
-            sleep(1)
+            sleep(2)
     if conn is None:
         return False
     cursor = conn.cursor()

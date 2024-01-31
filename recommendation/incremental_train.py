@@ -13,15 +13,19 @@ __process = None
 
 
 def __load_model():
-    model = load_model(MODEL.model_path)
-    # continue to train the weights on the last pause
-    if os.path.isfile(MODEL.temp_weights_path):
-        model.load_weights(MODEL.temp_weights_path)
-        os.remove(MODEL.temp_weights_path)
-    # otherwise, train the current weights
-    else:
-        model.load_weights(MODEL.weights_path)
-    return model
+    try:
+        model = load_model(MODEL.model_path)
+        # continue to train the weights on the last pause
+        if os.path.isfile(MODEL.temp_weights_path):
+            model.load_weights(MODEL.temp_weights_path)
+            os.remove(MODEL.temp_weights_path)
+        # otherwise, train the current weights
+        else:
+            model.load_weights(MODEL.weights_path)
+        return model
+    except Exception as error:
+        print("[Increment Train]", error)
+        return None
 
 
 def __train_model():
@@ -30,17 +34,17 @@ def __train_model():
         return False
     train_done = True
     model.compile(optimizer="adam", loss="mean_squared_error")
-    # train the model in 100 epochs with batch size = 128
-    # early stop with patience = 10 and save the best model
+    # train the model in epochs with batch size
+    # early stop with patience and save the best model
     best_val_loss = None
     patience_count = 0
-    for _ in range(100):
+    for _ in range(MODEL.epochs):
         total_val_loss = 0
         try:
             with open(MODEL.processed_data_path, "r", encoding="utf-8") as f:
                 while True:
                     X, y = [], []
-                    for _ in range(128):
+                    for _ in range(MODEL.batch_size):
                         line = f.readline()
                         if not line:
                             break
@@ -58,7 +62,7 @@ def __train_model():
                 patience_count = 0
             else:
                 patience_count += 1
-                if patience_count == 10:
+                if patience_count == MODEL.patience:
                     break
         except:
             train_done = False

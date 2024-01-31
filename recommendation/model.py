@@ -12,8 +12,11 @@ __model = None
 
 def __update_model():
     global __model
-    __model = load_model(MODEL.model_path)
-    __model.load_weights(MODEL.weights_path)
+    try:
+        __model = load_model(MODEL.model_path)
+        __model.load_weights(MODEL.weights_path)
+    except Exception as error:
+        print("[Model]", error)
 
 
 def __run_job():

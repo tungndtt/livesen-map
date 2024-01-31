@@ -1,6 +1,9 @@
 {
   "model": {
     "data_folder": "./data/model",
+    "epochs": 100,
+    "batch_size": 128,
+    "patience": 10,
     "train_period": 14,
     "update_period": 7
   },
