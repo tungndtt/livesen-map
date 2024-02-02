@@ -23,15 +23,24 @@ export default function RegionInterest() {
       const regionInterest = JSON.parse(content ?? "{}");
       const coordinates = regionInterest?.["coordinates"];
       if (coordinates) {
-        setRoi(parseCoordinates(coordinates) as Coordinate[]);
+        const roi = parseCoordinates(coordinates) as Coordinate[][];
+        if (roi.every((r) => r?.length)) {
+          setRoi(roi);
+          const name = regionInterest?.["name"];
+          if (name) setRoiName(name);
+        } else {
+          notify({
+            message:
+              "The coordinates from uploaded file must follow the example format",
+            isError: true,
+          });
+        }
       } else {
         notify({
           message: "Cannot find the coordinates from uploaded file",
           isError: true,
         });
       }
-      const name = regionInterest?.["name"];
-      if (name) setRoiName(name);
     };
     reader.readAsText(e.target?.files?.[0] as Blob);
     e.target.value = "";
@@ -43,7 +52,7 @@ export default function RegionInterest() {
   };
 
   const registerRegion = () => {
-    if (!roi || roi?.length < 3) {
+    if (!roi) {
       notify({ message: "No valid region is specified", isError: true });
       return;
     }
@@ -55,7 +64,7 @@ export default function RegionInterest() {
       method: "POST",
       body: JSON.stringify({
         name: roiName,
-        coordinates: roi.map(({ lat, lng }) => [lng, lat]),
+        coordinates: roi.map((r) => r.map(({ lat, lng }) => [lng, lat])),
       }),
     })
       .then(async (response) => {
@@ -92,13 +101,36 @@ export default function RegionInterest() {
         label="Region Coordinates"
         value={JSON.stringify(roi) ?? "[]"}
       />
-      <Box display="flex" justifyContent="flex-start">
-        <input
-          name="upload-region-interest"
-          type="file"
-          accept="application/json"
-          onChange={uploadRegionInterest}
-        />
+      <Box
+        display="flex"
+        justifyContent="flex-start"
+        alignItems="center"
+        gap={1}
+      >
+        <label
+          style={{
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "small",
+            display: "inline-block",
+            padding: "4px 12px",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            name="upload-region-interest"
+            type="file"
+            accept="application/json"
+            style={{ display: "none" }}
+            onChange={uploadRegionInterest}
+          />
+          Upload region
+        </label>
+        <label style={{ fontSize: "small" }}>
+          <a href="example.json" download>
+            example format
+          </a>
+        </label>
       </Box>
       <Box className="button-row-container">
         <Button

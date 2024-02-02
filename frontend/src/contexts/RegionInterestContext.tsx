@@ -9,8 +9,8 @@ import {
 import { Coordinate } from "../types/coordinate";
 
 type RegionInterestContextType = {
-  roi: Coordinate[] | undefined;
-  setRoi: Dispatch<SetStateAction<Coordinate[] | undefined>>;
+  roi: Coordinate[][] | undefined;
+  setRoi: Dispatch<SetStateAction<Coordinate[][] | undefined>>;
 };
 
 const RegionInterestContext = createContext<RegionInterestContextType>({
@@ -19,7 +19,7 @@ const RegionInterestContext = createContext<RegionInterestContextType>({
 });
 
 export default function RegionInterestProvider(props: { children: ReactNode }) {
-  const [roi, setRoi] = useState<Coordinate[] | undefined>(undefined);
+  const [roi, setRoi] = useState<Coordinate[][] | undefined>(undefined);
 
   return (
     <RegionInterestContext.Provider value={{ roi, setRoi }}>

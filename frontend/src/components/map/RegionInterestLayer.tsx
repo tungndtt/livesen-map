@@ -39,13 +39,13 @@ export default function DrawController() {
   const onCreate = (e: any) => {
     const { layerType, layer } = e;
     if (layerType === "polygon") {
-      setRoi(layer.getLatLngs()[0]);
+      setRoi(layer.getLatLngs());
     }
   };
 
   const onEdit = (e: any) => {
     const layer = e.layers.getLayers()[0];
-    setRoi(layer.getLatLngs()[0]);
+    setRoi(layer.getLatLngs());
   };
 
   return (

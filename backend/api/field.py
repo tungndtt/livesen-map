@@ -33,13 +33,24 @@ def retrieve_field(user_id, _, field_id):
 @api.route("/register", methods=["POST"])
 @authentication_required
 def register_field(user_id, data):
-    name = data["name"]
-    coordinates = Polygon(data["coordinates"]).__str__()
-    inserted_field = insert_field(user_id, name, coordinates)
-    if inserted_field is not None:
-        return inserted_field, 201
-    else:
-        return jsonify({"data": "Failed to register the field"}), 500
+    if (
+        "name" not in data or not data["name"] or
+        "coordinates" not in data or not data["coordinates"]
+    ):
+        return jsonify({"data": "Cannot register the field without 'name' or 'coordinates'"}), 500
+    try:
+        name = data["name"]
+        coordinates = data["coordinates"]
+        shell = coordinates[0]
+        holes = coordinates[1:]
+        region = Polygon(shell, holes).__str__()
+        inserted_field = insert_field(user_id, name, region)
+        if inserted_field is not None:
+            return inserted_field, 201
+        else:
+            return jsonify({"data": "Failed to register the field"}), 500
+    except:
+        return jsonify({"data": "Registered field must be polygon and its coordinates must follow GeoJSON format"}), 500
 
 
 @api.route("/unregister/<int:field_id>", methods=["DELETE"])
