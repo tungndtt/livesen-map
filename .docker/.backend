@@ -23,7 +23,7 @@
     "dbname": "livesen"
   },
   "recommendation": {
-    "service_url": "livesen-recommendation:1998"
+    "service_url": "http://livesen-recommendation:1998"
   },
   "app": {
     "host": "livesen-backend",
