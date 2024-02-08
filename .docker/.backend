@@ -4,7 +4,8 @@
   },
   "mailer": {
     "email": "<replace with your email>",
-    "password": "<replace with your api password>"
+    "password": "<replace with your api password>",
+    "service_url": "http://127.0.0.1:8080"
   },
   "ndvi": {
     "data_folder": "./data/ndvi"

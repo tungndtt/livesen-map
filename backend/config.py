@@ -11,10 +11,12 @@ class Jwtoken:
 class Mailer:
     email: str | None = None
     password: str | None = None
+    service_url: str | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.email = config["email"]
         self.password = config["password"]
+        self.service_url = config["service_url"]
 
 
 class Ndvi:

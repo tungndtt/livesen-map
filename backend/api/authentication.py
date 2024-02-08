@@ -3,7 +3,7 @@ from services.store.dafs.user import get_user
 from services.mail.mailer import send_email
 from utils.jwt.token import generate_token, verify_token
 from utils.hash.hasher import encrypt, check
-from config import APP
+from config import APP, MAILER
 
 
 def authentication_required(f):
@@ -50,7 +50,7 @@ def sign_up():
         data["password"] = encrypted_password
         duration = 10
         registration_token = generate_token(data, duration)
-        registration_link = f"http://{APP.host}:{APP.port}/user/register?registration_token={registration_token}"
+        registration_link = f"{MAILER.service_url}/user/register?registration_token={registration_token}"
         subject = "Livesen Registration"
         content = f"""
         <html>
