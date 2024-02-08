@@ -113,7 +113,12 @@ export default function AuthenticationModal() {
               ? signIn(email, password)
               : signUp(email, password, options);
             promise
-              .then((message) => notify({ message: message, isError: false }))
+              .then((message) => {
+                setEmail("");
+                setPassword("");
+                setOptions({});
+                notify({ message: message, isError: false });
+              })
               .catch((error) => notify({ message: error, isError: true }));
           }}
         >

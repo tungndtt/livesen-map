@@ -23,9 +23,7 @@ const AuthenticationContext = createContext<AuthenticationContextType>({
 export default function AuthenticationProvider(props: { children: ReactNode }) {
   const [authenticationToken, setAuthenticationToken] = useState(
     localStorage.getItem("authentication_token") ??
-      process.env.REACT_APP_IS_TESTING?.toLowerCase() === "true"
-      ? "test"
-      : ""
+      (process.env.REACT_APP_IS_TESTING?.toLowerCase() === "true" ? "test" : "")
   );
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/authentication";
 
@@ -68,7 +66,10 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
     });
   };
 
-  const signOut = () => setAuthenticationToken("");
+  const signOut = () => {
+    setAuthenticationToken("");
+    localStorage.setItem("authentication_token", "");
+  };
 
   return (
     <AuthenticationContext.Provider

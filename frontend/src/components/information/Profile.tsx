@@ -26,7 +26,7 @@ const fields = [
 ];
 
 export default function Profile() {
-  const { authenticationToken } = useAuthenticationContext();
+  const { authenticationToken, signOut } = useAuthenticationContext();
   const notify = useNotificationContext();
   const [user, setUser] = useState<UserProfile | undefined>(undefined);
   const [options, setOptions] = useState<UserProfile>({});
@@ -51,9 +51,13 @@ export default function Profile() {
             });
           } else {
             notify({ message: responseBody["data"], isError: true });
+            signOut();
           }
         })
-        .catch((error) => notify({ message: error.message, isError: true }));
+        .catch((error) => {
+          notify({ message: error.message, isError: true });
+          signOut();
+        });
     } else {
       setUser(undefined);
     }
