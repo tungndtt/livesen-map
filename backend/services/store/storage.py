@@ -80,10 +80,11 @@ def __init_tables() -> None:
         CREATE TABLE IF NOT EXISTS field (
             id serial PRIMARY KEY,
             user_id integer not null,
-            name text not null unique,
+            name text not null,
             region GEOMETRY(POLYGON, 4326) not null,
             area double precision,
             straubing_distance double precision,
+            UNIQUE (user_id, name),
             FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
         )
         """
