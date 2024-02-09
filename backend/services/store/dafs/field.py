@@ -1,5 +1,4 @@
 from services.store.storage import DbCursor
-from config import CONSTANT
 from json import loads as json_parse
 from typing import Any
 
@@ -45,8 +44,7 @@ def insert_field(user_id: int, name: str, region: str) -> dict[str, Any] | None:
             (user_id, name, region,)
         )
         field_id = cursor.fetchone()[0]
-        longitude, latitude = CONSTANT.straubing_coordination
-        straubing_position = f"POINT({longitude} {latitude})"
+        straubing_position = "POINT(12.5828575 48.8846284)"
         cursor.execute(
             """
             UPDATE field

@@ -32,10 +32,7 @@
     "is_testing": true
   },
   "constant": {
-    "straubing_coordination": [
-      12.5828575,
-      48.8846284
-    ],
+    "category_folder": "./data/category",
     "max_recommended_fertilizer": 80
   }
 }

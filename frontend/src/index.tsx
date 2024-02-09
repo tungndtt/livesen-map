@@ -2,6 +2,7 @@ import ReactDOM from "react-dom";
 import ResizeProvider from "./contexts/ResizeContext";
 import NotificationProvider from "./contexts/NotificationContext";
 import AuthenticationProvider from "./contexts/AuthenticationContext";
+import MetadataProvider from "./contexts/MetadataContext";
 import RegionInterestProvider from "./contexts/RegionInterestContext";
 import SelectionProvider from "./contexts/SelectionContext";
 import FieldProvider from "./contexts/FieldContext";
@@ -17,19 +18,21 @@ ReactDOM.render(
   <ResizeProvider>
     <NotificationProvider>
       <AuthenticationProvider>
-        <SelectionProvider>
-          <RegionInterestProvider>
-            <FieldProvider>
-              <NdviRasterProvider>
-                <MeasurementProvider>
-                  <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <App />
-                  </LocalizationProvider>
-                </MeasurementProvider>
-              </NdviRasterProvider>
-            </FieldProvider>
-          </RegionInterestProvider>
-        </SelectionProvider>
+        <MetadataProvider>
+          <SelectionProvider>
+            <RegionInterestProvider>
+              <FieldProvider>
+                <NdviRasterProvider>
+                  <MeasurementProvider>
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <App />
+                    </LocalizationProvider>
+                  </MeasurementProvider>
+                </NdviRasterProvider>
+              </FieldProvider>
+            </RegionInterestProvider>
+          </SelectionProvider>
+        </MetadataProvider>
       </AuthenticationProvider>
     </NotificationProvider>
   </ResizeProvider>,

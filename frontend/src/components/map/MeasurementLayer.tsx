@@ -1,8 +1,9 @@
 import { Fragment, useState, useEffect, useMemo } from "react";
-import { Box, Menu, MenuItem, PopoverPosition } from "@mui/material";
+import { Menu, MenuItem, PopoverPosition } from "@mui/material";
 import L from "leaflet";
 import { useMap, Marker, Polygon, FeatureGroup, Tooltip } from "react-leaflet";
 import proj4 from "proj4";
+import { useMetadataContext } from "../../contexts/MetadataContext";
 import { useMeasurementContext } from "../../contexts/MeasurementContext";
 import { useFieldContext } from "../../contexts/FieldContext";
 import { Coordinate } from "../../types/coordinate";
@@ -15,12 +16,12 @@ window.proj4 = proj4;
 const UNKNOWN_COLOR = "grey";
 
 export default function MeasurementLayer() {
+  const { maxRecommendedFertilizer } = useMetadataContext();
   const {
     positions,
     subfields,
     visibility,
     recommendationVisible,
-    maxRecommendedFertilizer,
     updateMeasurementPosition,
   } = useMeasurementContext();
   const { coordinates } = useFieldContext();

@@ -13,10 +13,30 @@ const fieldGroups = [
   {
     group: "General",
     fields: [
-      { fieldId: "maincrop", label: "Main Crop", type: "string" },
-      { fieldId: "intercrop", label: "Inter Crop", type: "string" },
-      { fieldId: "soilType", label: "Soil Type", type: "string" },
-      { fieldId: "variety", label: "Variety", type: "string" },
+      {
+        fieldId: "maincrop",
+        label: "Main Crop",
+        type: "category",
+        categoryId: "crop",
+      },
+      {
+        fieldId: "intercrop",
+        label: "Inter Crop",
+        type: "category",
+        categoryId: "crop",
+      },
+      {
+        fieldId: "soilType",
+        label: "Soil Type",
+        type: "category",
+        categoryId: "soil",
+      },
+      {
+        fieldId: "variety",
+        label: "Variety",
+        type: "category",
+        categoryId: "variety",
+      },
       { fieldId: "seedDensity", label: "Seed Density", type: "number" },
       { fieldId: "seedDate", label: "Seed Date", type: "date" },
     ],
@@ -25,8 +45,18 @@ const fieldGroups = [
     groupId: "fertilizerApplications",
     group: "Fertilizer Application",
     fields: [
-      { fieldId: "fertilizer", label: "Fertilizer", type: "string" },
-      { fieldId: "type", label: "Fertilizer Type", type: "string" },
+      {
+        fieldId: "fertilizer",
+        label: "Fertilizer",
+        type: "category",
+        categoryId: "fertilizer",
+      },
+      {
+        fieldId: "type",
+        label: "Fertilizer Type",
+        type: "category",
+        categoryId: "fertilizerType",
+      },
       { fieldId: "amount", label: "Fertilizer Amount", type: "number" },
       {
         fieldId: "nitrogen",
@@ -41,7 +71,12 @@ const fieldGroups = [
     groupId: "soilTillageApplications",
     group: "Soil Tillage",
     fields: [
-      { fieldId: "type", label: "Soil Tillage Type", type: "string" },
+      {
+        fieldId: "type",
+        label: "Soil Tillage Type",
+        type: "category",
+        categoryId: "soilTillage",
+      },
       { fieldId: "date", label: "Soil Tillage Date", type: "date" },
     ],
   },
@@ -49,7 +84,12 @@ const fieldGroups = [
     groupId: "cropProtectionApplications",
     group: "Crop Protection",
     fields: [
-      { fieldId: "type", label: "Crop Protection Type", type: "string" },
+      {
+        fieldId: "type",
+        label: "Crop Protection Type",
+        type: "category",
+        categoryId: "cropProtection",
+      },
       { fieldId: "amount", label: "Crop Protection Amount", type: "number" },
       { fieldId: "date", label: "Crop Protection Date", type: "date" },
     ],

@@ -30,6 +30,7 @@ services:
       - ./.docker/.backend:/livesen/config.json:ro
       - ./.docker/data/download:/livesen/data/download
       - ./.docker/data/ndvi:/livesen/data/ndvi
+      - ./.docker/data/category:/livesen/data/category
     depends_on:
       - livesen-storage
   

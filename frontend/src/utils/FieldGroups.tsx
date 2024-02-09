@@ -3,6 +3,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Autocomplete,
   Box,
   Button,
   IconButton,
@@ -15,13 +16,15 @@ import SendIcon from "@mui/icons-material/Send";
 import ClearIcon from "@mui/icons-material/Clear";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useMetadataContext } from "../contexts/MetadataContext";
 import deepCompare from "./deep-compare";
 import dayjs from "dayjs";
 
 type Field = {
   fieldId: string;
   label: string;
-  type: "string" | "number" | "date";
+  type: "string" | "number" | "date" | "category";
+  categoryId?: string;
 };
 
 export type FieldGroup = {
@@ -53,6 +56,7 @@ export default function FieldGroups({
   data,
   submitProps: { submitTitle, submitDisabled, onSubmit, resetOnSubmit },
 }: FieldGroupsProps) {
+  const { categories } = useMetadataContext();
   const [options, setOptions] = useState<any>({});
   const [expandedOptions, setExpandedOptions] = useState<{
     [group: string]: boolean;
@@ -156,7 +160,7 @@ export default function FieldGroups({
                       gap: 2,
                     }}
                   >
-                    {fields.map(({ fieldId, label, type }) =>
+                    {fields.map(({ fieldId, label, type, categoryId }) =>
                       type === "date" ? (
                         <DatePicker
                           slotProps={{
@@ -171,6 +175,24 @@ export default function FieldGroups({
                               index,
                             })
                           }
+                        />
+                      ) : type === "category" ? (
+                        <Autocomplete
+                          key={fieldId}
+                          fullWidth
+                          size="small"
+                          value={option?.[fieldId] ?? ""}
+                          onChange={(_, value) => {
+                            onChangeOption(fieldId, value, { groupId, index });
+                          }}
+                          options={categories[categoryId!!] ?? []}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              name={fieldId}
+                              label={label}
+                            />
+                          )}
                         />
                       ) : (
                         <TextField
@@ -202,7 +224,7 @@ export default function FieldGroups({
                     </Button>
                   </Box>
                 ))
-              : fields.map(({ fieldId, label, type }) =>
+              : fields.map(({ fieldId, label, type, categoryId }) =>
                   type === "date" ? (
                     <DatePicker
                       slotProps={{
@@ -214,6 +236,18 @@ export default function FieldGroups({
                       onChange={(value) =>
                         onChangeOption(fieldId, value?.toDate())
                       }
+                    />
+                  ) : type === "category" ? (
+                    <Autocomplete
+                      key={fieldId}
+                      fullWidth
+                      size="small"
+                      value={options?.[fieldId] ?? ""}
+                      onChange={(_, value) => onChangeOption(fieldId, value)}
+                      options={categories[categoryId!!] ?? []}
+                      renderInput={(params) => (
+                        <TextField {...params} name={fieldId} label={label} />
+                      )}
                     />
                   ) : (
                     <TextField

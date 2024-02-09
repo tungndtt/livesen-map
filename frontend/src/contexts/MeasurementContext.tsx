@@ -33,7 +33,6 @@ type MeasurementContextType = {
   subfields: MeasurementSubFieldMap | undefined;
   visibility: Visibility;
   recommendationVisible: boolean;
-  maxRecommendedFertilizer: number;
   setupMeasurementLayer: (measurements: any[], subfields: any[]) => void;
   toggleMeasurementRegion: (measurementId: number) => void;
   toggleRecommendationVisible: () => void;
@@ -49,7 +48,6 @@ const MeasurementContext = createContext<MeasurementContextType>({
   subfields: undefined,
   visibility: {},
   recommendationVisible: false,
-  maxRecommendedFertilizer: 0,
   setupMeasurementLayer: () => {},
   toggleMeasurementRegion: () => {},
   toggleRecommendationVisible: () => {},
@@ -70,28 +68,7 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   >(undefined);
   const [visibility, setVisibility] = useState<Visibility>({});
   const [recommendationVisible, setRecommendationVisible] = useState(false);
-  const [maxRecommendedFertilizer, setMaxRecommendedFertilizer] = useState(0);
   const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
-
-  useEffect(() => {
-    if (authenticationToken) {
-      fetch(`${serverUrl}/max_recommended_fertilizer`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
-        .then(async (response) => {
-          if (response.ok) {
-            const responseBody = await response.json();
-            setMaxRecommendedFertilizer(responseBody["data"]);
-          } else
-            notify({
-              message: "Failed to retrieve max recommended fertilizer",
-              isError: true,
-            });
-        })
-        .catch((error) => notify({ message: error.message, isError: true }));
-    }
-  }, [authenticationToken]);
 
   const reset = () => {
     setVisibility({});
@@ -199,7 +176,6 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
         subfields,
         visibility,
         recommendationVisible,
-        maxRecommendedFertilizer,
         setupMeasurementLayer,
         toggleMeasurementRegion,
         toggleRecommendationVisible,

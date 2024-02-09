@@ -9,7 +9,6 @@ from utils.algo.subfield_split import get_subfields_region_based_split, get_subf
 from utils.algo.measurement_position import find_measurement_position
 from utils.algo.fertilizer_recommendation import compute_fertilizer_recommendation
 from utils.timeout.function_time import timeout_function
-from config import CONSTANT
 
 
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
@@ -134,9 +133,3 @@ def upgister_measurement_position(user_id, data, measurement_id):
         return updated_measurement, 200
     else:
         return jsonify({"data": "Failed to update the measurement position"}), 500
-
-
-@api.route("/max_recommended_fertilizer", methods=["GET"])
-@authentication_required
-def retrieve_max_fertilizer(_, __):
-    return jsonify({"data": CONSTANT.max_recommended_fertilizer}), 200

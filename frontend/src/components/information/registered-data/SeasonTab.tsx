@@ -3,6 +3,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Autocomplete,
   Box,
   Button,
   TextField,
@@ -14,16 +15,37 @@ import FieldGroups, { FieldGroup } from "../../../utils/FieldGroups";
 import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
+import { useMetadataContext } from "../../../contexts/MetadataContext";
 import { Season, parseSeason, deparseSeason } from "../../../types/season";
 
 const fieldGroups = [
   {
     group: "General",
     fields: [
-      { fieldId: "maincrop", label: "Main Crop", type: "string" },
-      { fieldId: "intercrop", label: "Inter Crop", type: "string" },
-      { fieldId: "soilType", label: "Soil Type", type: "string" },
-      { fieldId: "variety", label: "Variety", type: "string" },
+      {
+        fieldId: "maincrop",
+        label: "Main Crop",
+        type: "category",
+        categoryId: "crop",
+      },
+      {
+        fieldId: "intercrop",
+        label: "Inter Crop",
+        type: "category",
+        categoryId: "crop",
+      },
+      {
+        fieldId: "soilType",
+        label: "Soil Type",
+        type: "category",
+        categoryId: "soil",
+      },
+      {
+        fieldId: "variety",
+        label: "Variety",
+        type: "category",
+        categoryId: "variety",
+      },
       { fieldId: "seedDensity", label: "Seed Density", type: "number" },
       { fieldId: "seedDate", label: "Seed Date", type: "date" },
     ],
@@ -32,8 +54,18 @@ const fieldGroups = [
     groupId: "fertilizerApplications",
     group: "Fertilizer Application",
     fields: [
-      { fieldId: "fertilizer", label: "Fertilizer", type: "string" },
-      { fieldId: "type", label: "Fertilizer Type", type: "string" },
+      {
+        fieldId: "fertilizer",
+        label: "Fertilizer",
+        type: "category",
+        categoryId: "fertilizer",
+      },
+      {
+        fieldId: "type",
+        label: "Fertilizer Type",
+        type: "category",
+        categoryId: "fertilizerType",
+      },
       { fieldId: "amount", label: "Fertilizer Amount", type: "number" },
       {
         fieldId: "nitrogen",
@@ -48,7 +80,12 @@ const fieldGroups = [
     groupId: "soilTillageApplications",
     group: "Soil Tillage",
     fields: [
-      { fieldId: "type", label: "Soil Tillage Type", type: "string" },
+      {
+        fieldId: "type",
+        label: "Soil Tillage Type",
+        type: "category",
+        categoryId: "soilTillage",
+      },
       { fieldId: "date", label: "Soil Tillage Date", type: "date" },
     ],
   },
@@ -56,7 +93,12 @@ const fieldGroups = [
     groupId: "cropProtectionApplications",
     group: "Crop Protection",
     fields: [
-      { fieldId: "type", label: "Crop Protection Type", type: "string" },
+      {
+        fieldId: "type",
+        label: "Crop Protection Type",
+        type: "category",
+        categoryId: "cropProtection",
+      },
       { fieldId: "amount", label: "Crop Protection Amount", type: "number" },
       { fieldId: "date", label: "Crop Protection Date", type: "date" },
     ],
@@ -93,6 +135,7 @@ export default function SeasonInterest() {
   const { authenticationToken } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId, refreshSeasonOptions } =
     useSelectionContext();
+  const { categories } = useMetadataContext();
   const notify = useNotificationContext();
   const [season, setSeason] = useState<Season | undefined>(undefined);
   const [fertilizerRecommendation, setFertilizerRecommendation] =
@@ -207,15 +250,17 @@ export default function SeasonInterest() {
                   gap: 1,
                 }}
               >
-                <TextField
+                <Autocomplete
                   fullWidth
                   size="small"
-                  variant="standard"
-                  placeholder="Applied Fertilizer"
                   value={fertilizerRecommendation.fertilizer}
-                  onChange={(e) =>
-                    setFertilizerRecommendation({ fertilizer: e.target.value })
+                  onChange={(_, value) =>
+                    setFertilizerRecommendation({ fertilizer: value ?? "" })
                   }
+                  options={categories?.fertilizer ?? []}
+                  renderInput={(params) => (
+                    <TextField {...params} variant="standard" />
+                  )}
                 />
                 <Button
                   variant="outlined"

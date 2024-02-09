@@ -65,13 +65,31 @@ class App:
         self.is_testing = config["is_testing"]
 
 
-class Constant:
-    straubing_coordination: tuple[float] | None = None
+class Metadata:
     max_recommended_fertilizer: float | None = None
+    crops: list[str] | None = None
+    soils: list[str] | None = None
+    varieties: list[str] | None = None
+    fertilizers: list[str] | None = None
+    fertilizer_types: list[str] | None = None
+    crop_protections: list[str] | None = None
+    soil_tillages: list[str] | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
-        self.straubing_coordination = config["straubing_coordination"]
         self.max_recommended_fertilizer = config["max_recommended_fertilizer"]
+        category_folder = config["category_folder"]
+        import os
+        for field, filename in [
+            ["crops", "crop.csv"],
+            ["soils", "soil.csv"],
+            ["varieties", "variety.csv"],
+            ["fertilizers", "fertilizer.csv"],
+            ["fertilizer_types", "fertilizer_type.csv"],
+            ["crop_protections", "crop_protection.csv"],
+            ["soil_tillages", "soil_tillage.csv"]
+        ]:
+            with open(os.path.join(category_folder, filename), "r", encoding="utf-8") as file:
+                setattr(self, field, file.readline().split(","))
 
 
 class Recommendation:
@@ -89,11 +107,11 @@ DOWNLOADER = Downloader()
 STORAGE = Storage()
 RECOMMENDATION = Recommendation()
 APP = App()
-CONSTANT = Constant()
+METADATA = Metadata()
 
 
 def __init():
-    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, RECOMMENDATION, APP, CONSTANT
+    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, RECOMMENDATION, APP, METADATA
     if not __initialized:
         import json
         with open("config.json", "r") as f:
@@ -105,7 +123,7 @@ def __init():
         STORAGE.parse(config["storage"])
         RECOMMENDATION.parse(config["recommendation"])
         APP.parse(config["app"])
-        CONSTANT.parse(config["constant"])
+        METADATA.parse(config["metadata"])
         __initialized = True
 
 
