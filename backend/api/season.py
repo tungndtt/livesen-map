@@ -53,8 +53,9 @@ def upgister_season(user_id, data, field_id, season_id):
 @api.route("/unregister/<int:field_id>/<season_id>", methods=["DELETE"])
 @authentication_required
 def unregister_season(user_id, _, field_id, season_id):
+    data = get_ndvi_raster(user_id, field_id, season_id)
     if delete_season(user_id, field_id, season_id):
-        deleted_ndvi_raster = get_ndvi_raster(user_id, field_id, season_id)
+        deleted_ndvi_raster, _ = data
         if deleted_ndvi_raster is not None:
             try:
                 os.remove(os.path.join(NDVI.data_folder, deleted_ndvi_raster))
