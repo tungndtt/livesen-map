@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import datetime, timedelta
 import numpy as np
 import xarray as xr
 import rasterio
@@ -66,18 +67,30 @@ def __extract_polygon(polygon: Polygon, in_tiff_file: str, out_tiff_file: str) -
                            indexes=1, window=window)
 
 
-def get_field_ndvi(
-    coordinates: Polygon | list[list[list[float]]],
-    in_nc_file: str,
-    out_tiff_file: str | None = None
-) -> str:
-    in_nc_file = os.path.join(DOWNLOADER.data_folder, in_nc_file)
+def get_field_ndvi(coordinates: Polygon | list[list[list[float]]], season_id: str) -> tuple[str, datetime] | None:
+    year, month, day = season_id[:4], season_id[4:6], season_id[6:]
+    source_date = datetime(year=int(year), month=int(month), day=int(day))
+    # check whether there is available data within 5 days
+    nc_file = None
+    for day_diff in range(6):
+        for direction in [-1, 1]:
+            date = source_date + direction * timedelta(days=day_diff)
+            year = "%04d" % date.year
+            month = "%02d" % date.month
+            day = "%02d" % date.day
+            file = f"{year}{month}{day}.nc"
+            if os.path.isfile(os.path.join(DOWNLOADER.data_folder, file)):
+                source_date = date
+                nc_file = file
+                break
+        if nc_file is not None:
+            break
+    if nc_file is None:
+        return None
+    in_nc_file = os.path.join(DOWNLOADER.data_folder, nc_file)
     if not os.path.isdir(NDVI.data_folder):
         os.mkdir(NDVI.data_folder)
-    if out_tiff_file is None:
-        tiff_file = str(uuid.uuid1()) + ".tiff"
-    else:
-        tiff_file = out_tiff_file
+    tiff_file = str(uuid.uuid1()) + ".tiff"
     out_tiff_file = os.path.join(NDVI.data_folder, tiff_file)
     temp_tiff_file_1 = os.path.join(
         NDVI.data_folder, "temp_1_%s" % tiff_file
@@ -106,4 +119,4 @@ def get_field_ndvi(
             os.remove(temp_tiff_file_1)
         if os.path.isfile(temp_tiff_file_2):
             os.remove(temp_tiff_file_2)
-    return tiff_file
+    return tiff_file, source_date

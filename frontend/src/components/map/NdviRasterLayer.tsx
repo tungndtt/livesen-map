@@ -83,7 +83,11 @@ export default function NdviRasterLayer() {
             if (response.status === 401) {
               signOut();
               notify({ message: "Access token is outdated", isError: true });
-            } else notify({ message: await response.text(), isError: true });
+            } else
+              notify({
+                message: (await response.json())["data"],
+                isError: true,
+              });
             setIsLoading(false);
           }
         })

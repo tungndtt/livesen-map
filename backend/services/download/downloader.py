@@ -5,8 +5,6 @@ import requests
 import os
 import datetime
 import pytz
-import signal
-import atexit
 from config import DOWNLOADER
 
 

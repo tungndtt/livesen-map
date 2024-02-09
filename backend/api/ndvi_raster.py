@@ -32,16 +32,18 @@ def register_ndvi_raster(user_id, _, field_id, season_id):
 
 
 def handle_ndvi_raster(user_id, field_id, season_id):
-    ndvi_raster = get_ndvi_raster(user_id, field_id, season_id)
-    if ndvi_raster is not None:
-        return jsonify({"data": ndvi_raster}), 200
+    data = get_ndvi_raster(user_id, field_id, season_id)
+    if data is not None:
+        return jsonify({"data": data}), 200
     field = get_field(user_id, field_id)
     if field is None:
         return jsonify({"data": "No field with given id"}), 404
-    ndvi_raster = get_field_ndvi(field["coordinates"], season_id + ".nc")
-    if ndvi_raster is None:
+    data = get_field_ndvi(field["coordinates"], season_id)
+    if data is None:
         return jsonify({"data": "No ndvi-scan of field in given period"}), 404
-    elif insert_ndvi_raster(user_id, field_id, season_id, ndvi_raster):
-        return jsonify({"data": ndvi_raster}), 201
     else:
-        return jsonify({"data": "Failed to process field ndvi"}), 500
+        ndvi_raster, source_date = data
+        if insert_ndvi_raster(user_id, field_id, season_id, ndvi_raster, source_date):
+            return jsonify({"data": data}), 201
+        else:
+            return jsonify({"data": "Failed to process field ndvi"}), 500

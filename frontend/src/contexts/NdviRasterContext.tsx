@@ -78,11 +78,19 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
           const responseBody = await response.json();
           const data = responseBody["data"];
           if (response.ok) {
+            const [ndviRaster, sourceDate] = data;
             setNdviRasters((prevNdviMap) => ({
               ...prevNdviMap,
-              [selectedSeasonId]: data,
+              [selectedSeasonId]: ndviRaster,
             }));
+            const date = new Date(Date.parse(sourceDate));
             setNdviRasterVisible(true);
+            notify({
+              message: `Fetch NDVI map generated from downloadled data on ${date.getDate()}/${
+                date.getMonth() + 1
+              }/${date.getFullYear()}`,
+              isError: false,
+            });
           } else {
             setNdviRasterVisible(false);
             notify({ message: data, isError: true });

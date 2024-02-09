@@ -41,9 +41,10 @@ def retrieve_measurement_positions(user_id, _, field_id, season_id):
     response, status_code = handle_ndvi_raster(user_id, field_id, season_id)
     if status_code >= 400:
         return response, status_code
-    ndvi_raster = response.get_json()["data"]
+    ndvi_raster, _ = response.get_json()["data"]
     subfield_groups = timeout_function(
-        10, get_subfields_pixel_based_split, ndvi_raster)
+        20, get_subfields_pixel_based_split, ndvi_raster
+    )
     # subfield_groups = get_subfields_region_based_split(coordinates, tiff_file)
     if subfield_groups is None:
         return jsonify({"data": "[Timeout] Field is too large and cannot be splitted into subfields"}), 500

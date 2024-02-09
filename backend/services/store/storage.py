@@ -121,6 +121,7 @@ def __init_tables() -> None:
             field_id integer not null,
             season_id text not null,
             ndvi_raster text not null,
+            source_date date not null,
             PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE,
