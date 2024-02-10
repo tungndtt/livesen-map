@@ -115,11 +115,13 @@ export default function Information() {
         anchor="right"
         open
       >
-        <img
-          src="livesen-map-logo.png"
-          alt="logo"
-          style={{ width: "80%", maxWidth: 80 }}
-        />
+        <a href="https://www.livesen-map.eu/">
+          <img
+            src="livesen-map-logo.png"
+            alt="logo"
+            style={{ width: "80%", maxWidth: 80 }}
+          />
+        </a>
         <List>
           {tabs.map(({ name, icon }, i) => (
             <ListItem key={name}>
