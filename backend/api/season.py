@@ -1,5 +1,7 @@
 import os
 import requests
+import json
+import datetime
 from flask import Blueprint, jsonify
 from api.authentication import authentication_required
 from services.store.dafs.season import get_season, list_season_ids, insert_season, update_season, delete_season
@@ -75,9 +77,17 @@ def recommend_fertilizer(user_id, data, field_id, season_id):
         fertilizer = data["fertilizer"]
         season["fertilizer_applications"].append({"fertilizer": fertilizer,
                                                   "amount": -1})
-        response = requests.post(RECOMMENDATION.service_url,
-                                 headers={"Content-Type": "application/json"},
-                                 json=season).json()
+
+        def serialize_datetime(obj):
+            if isinstance(obj, datetime.datetime):
+                return obj.isoformat()
+            raise TypeError("Type not serializable")
+
+        response = requests.post(
+            RECOMMENDATION.service_url,
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(season, default=serialize_datetime)
+        ).json()
         return jsonify(response), 200
     else:
         return jsonify({"data": "Failed to retrieve the season"}), 500
