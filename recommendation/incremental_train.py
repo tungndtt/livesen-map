@@ -54,7 +54,7 @@ def __train_model():
                     if len(X) < 10:
                         break
                     history = model.fit(numpy.array(X), numpy.array(y),
-                                        epochs=1, validation_split=0.1)
+                                        batch_size=len(X), epochs=1, validation_split=0.1)
                     total_val_loss += history.history["val_loss"][0]
             if best_val_loss is None or best_val_loss > total_val_loss:
                 model.save_weights(MODEL.weights_path)

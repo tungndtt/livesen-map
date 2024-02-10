@@ -1,25 +1,22 @@
 import os
 from psycopg2 import connect
-from Levenshtein import distance
 from config import CATEGORY, MODEL, STORAGE
 
 
 __categories: dict[str, set[str]] | None = None
 __fields = [
-    "maincrop", "intercrop",
-    "soil_type", "variety",
-    "seed_density",
-    "max_allowed_fertilizer",
+    "nitrate", "phosphor", "potassium", "ph", "rks",
+    "harvest_weight", "seed_density", "max_allowed_fertilizer",
+    "maincrop", "intercrop", "soil_type", "variety",
     "fertilizer_applications",
     "soil_tillage_applications",
     "crop_protection_applications",
-    "nitrate", "phosphor", "potassium", "ph", "rks",
-    "harvest_weight"
 ]
+__column_order: list[str] | None = None
 
 
 def __load_categories():
-    global __categories
+    global __categories, __column_order
     __categories = {}
     for field, csv_file in [
         ["maincrop", "crop.csv"],
@@ -33,24 +30,34 @@ def __load_categories():
         with open(os.path.join(CATEGORY.data_folder, csv_file), "r") as file:
             values = file.readline().split(",")
             __categories[field] = values
-
-
-def __similiarity(c1: str, c2: str):
-    c1 = "".join(c1.split(" ")).lower()
-    c2 = "".join(c2.split(" ")).lower()
-    return distance(c1, c2)
+    __column_order = [
+        "nitrate", "phosphor", "potassium", "ph", "rks",
+        "seed_density", "max_allowed_fertilizer", "harvest_weight",
+    ]
+    for field in [
+        "maincrop", "intercrop", "soil_type", "variety",
+        "soil_tillage_applications",
+        "crop_protection_applications"
+    ]:
+        __column_order += [f"{field}_{category}" for category in __categories[field]]
+    __column_order += [
+        f"fertilizer_applications_nitrogen_{category}"
+        for category in __categories["fertilizer_applications"]
+    ] + [
+        f"fertilizer_applications_amount_{category}"
+        for category in __categories["fertilizer_applications"]
+    ] + [
+        f"category_{category}"
+        for category in __categories["fertilizer_applications"]
+    ]
 
 
 def __find_category(data: str | None, field: str):
     if not data:
         return None
-    most_similiarity, closest_category = 1000, None
     for category in __categories[field]:
-        similiarity = __similiarity(category, data)
-        if most_similiarity > similiarity:
-            most_similiarity = similiarity
-            closest_category = category
-    return closest_category
+        if category == data:
+            return category
 
 
 def encode_data(d):
@@ -106,7 +113,7 @@ def encode_data(d):
                     )
         else:
             sample[field] = float(data) if data else 0
-    return list(sample.values()), label
+    return [sample[column] for column in __column_order], label
 
 
 def __parse_record(record: tuple):

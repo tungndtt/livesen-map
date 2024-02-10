@@ -1,11 +1,11 @@
 import time
 import schedule
-from threading import Thread
+from threading import Thread, Event
 from keras.models import load_model
-import app_state
 import preprocess
 from config import MODEL
 
+__event = None
 __thread = None
 __model = None
 
@@ -22,21 +22,24 @@ def __update_model():
 def __run_job():
     __update_model()
     schedule.every(MODEL.update_period).days.do(__update_model)
-    while app_state.is_running():
+    while __event.is_set():
         schedule.run_pending()
         time.sleep(4)
 
 
 def init():
-    global __thread
+    global __event, __thread
     if __thread is None:
+        __event = Event()
+        __event.set()
         __thread = Thread(target=__run_job)
         __thread.start()
 
 
 def term():
-    global __thread
+    global __event, __thread
     if __thread is not None:
+        __event.clear()
         __thread.join()
 
 
