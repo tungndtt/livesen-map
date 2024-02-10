@@ -8,7 +8,6 @@ import {
   SetStateAction,
 } from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
-import { useNotificationContext } from "./NotificationContext";
 
 type FieldOption = {
   id: number;
@@ -43,8 +42,7 @@ const SelectionContext = createContext<SelectionContextType>({
 });
 
 export default function SelectionProvider(props: { children: ReactNode }) {
-  const { authenticationToken } = useAuthenticationContext();
-  const notify = useNotificationContext();
+  const { authenticationToken, doRequest } = useAuthenticationContext();
   const [fieldOptions, setFieldOptions] = useState<FieldOption[] | undefined>(
     undefined
   );
@@ -57,27 +55,19 @@ export default function SelectionProvider(props: { children: ReactNode }) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(
     undefined
   );
-  const serverUrl = process.env.REACT_APP_SERVER_URL;
 
   const refreshFieldOptions = () => {
     if (authenticationToken) {
-      fetch(`${serverUrl}/field`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
+      doRequest("field", "GET")
         .then(async (response) => {
           const responseBody = await response.json();
-          if (response.ok) {
-            const fieldOptions = responseBody as FieldOption[];
-            setFieldOptions(fieldOptions);
-            if (!fieldOptions.find(({ id }) => id === selectedFieldId)) {
-              setSelectedFieldId(undefined);
-            }
-          } else {
-            notify({ message: responseBody["data"], isError: true });
+          const fieldOptions = responseBody as FieldOption[];
+          setFieldOptions(fieldOptions);
+          if (!fieldOptions.find(({ id }) => id === selectedFieldId)) {
+            setSelectedFieldId(undefined);
           }
         })
-        .catch((error) => notify({ message: error.message, isError: true }));
+        .catch(() => {});
     } else {
       setFieldOptions(undefined);
       setSelectedFieldId(undefined);
@@ -87,35 +77,27 @@ export default function SelectionProvider(props: { children: ReactNode }) {
   useEffect(refreshFieldOptions, [authenticationToken]);
 
   const refreshSeasonOptions = () => {
-    if (authenticationToken && selectedFieldId) {
-      fetch(`${serverUrl}/season/${selectedFieldId}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          if (response.ok) {
-            const seasonOptions = (responseBody as string[]).map((e) => {
-              const year = e.substring(0, 4);
-              const month = e.substring(4, 6);
-              const day = e.substring(6);
-              return { id: e, label: `${day}-${month}-${year}` };
-            }) as SeasonOption[];
-            setSeasonOptions(seasonOptions);
-            if (!seasonOptions.find(({ id }) => id === selectedSeasonId)) {
-              setSelectedSeasonId(undefined);
-            }
-          } else {
-            notify({ message: responseBody["data"], isError: true });
-          }
-        })
-        .catch((error) => {
-          notify({ message: error.message, isError: true });
-        });
-    } else {
+    const reset = () => {
       setSeasonOptions(undefined);
       setSelectedSeasonId(undefined);
-    }
+    };
+    if (selectedFieldId) {
+      doRequest(`season/${selectedFieldId}`, "GET")
+        .then(async (response) => {
+          const responseBody = await response.json();
+          const seasonOptions = (responseBody as string[]).map((e) => {
+            const year = e.substring(0, 4);
+            const month = e.substring(4, 6);
+            const day = e.substring(6);
+            return { id: e, label: `${day}-${month}-${year}` };
+          }) as SeasonOption[];
+          setSeasonOptions(seasonOptions);
+          if (!seasonOptions.find(({ id }) => id === selectedSeasonId)) {
+            setSelectedSeasonId(undefined);
+          }
+        })
+        .catch(reset);
+    } else reset();
   };
 
   useEffect(refreshSeasonOptions, [authenticationToken, selectedFieldId]);

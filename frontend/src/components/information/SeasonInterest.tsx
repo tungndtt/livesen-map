@@ -120,38 +120,29 @@ const fieldGroups = [
 const data = {};
 
 export default function SeasonInterest() {
-  const { authenticationToken } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { fieldOptions, selectedFieldId, refreshSeasonOptions } =
     useSelectionContext();
   const notify = useNotificationContext();
   const [fieldId, setFieldId] = useState<number | undefined>(undefined);
   const [season, setSeason] = useState<Date | undefined>(undefined);
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/season";
 
   const registerSeason = (data: any) => {
-    if (fieldId && season && authenticationToken) {
+    if (fieldId && season) {
       const seasonId = date2YMD(season);
-      fetch(`${serverUrl}/register/${fieldId}/${seasonId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Auth-Token": authenticationToken,
-        },
-        method: "POST",
-        body: JSON.stringify(deparseSeason(data)),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          if (response.ok) {
-            if (selectedFieldId === fieldId) refreshSeasonOptions();
-            notify({
-              message: "Successfully register the season information",
-              isError: false,
-            });
-          } else {
-            notify({ message: responseBody["data"], isError: true });
-          }
+      doRequest(
+        `season/register/${fieldId}/${seasonId}`,
+        "POST",
+        deparseSeason(data)
+      )
+        .then(() => {
+          if (selectedFieldId === fieldId) refreshSeasonOptions();
+          notify({
+            message: "Successfully register the season information",
+            isError: false,
+          });
         })
-        .catch((error) => notify({ message: error.message, isError: true }));
+        .catch((error) => notify({ message: error, isError: true }));
     }
   };
 

@@ -6,7 +6,6 @@ import {
   ReactNode,
 } from "react";
 import { useAuthenticationContext } from "./AuthenticationContext";
-import { useNotificationContext } from "./NotificationContext";
 
 type CategoryMap = {
   [category: string]: string[];
@@ -23,40 +22,27 @@ const MetadataContext = createContext<MetadataContextType>({
 });
 
 export default function MetadataProvider(props: { children: ReactNode }) {
-  const { authenticationToken } = useAuthenticationContext();
-  const notify = useNotificationContext();
+  const { authenticationToken, doRequest } = useAuthenticationContext();
   const [maxRecommendedFertilizer, setMaxRecommendedFertilizer] = useState(0);
   const [categories, setCategories] = useState<CategoryMap>({});
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/metadata";
 
   useEffect(() => {
-    if (authenticationToken) {
-      fetch(serverUrl, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
+    doRequest("metadata", "GET")
+      .then(async (response) => {
+        const responseBody = await response.json();
+        const data = responseBody["data"];
+        setMaxRecommendedFertilizer(data["max_recommended_fertilizer"]);
+        setCategories({
+          crop: data["crops"],
+          soil: data["soils"],
+          variety: data["varieties"],
+          fertilizer: data["fertilizers"],
+          fertilizerType: data["fertilizer_types"],
+          cropProtection: data["crop_protections"],
+          soilTillage: data["soil_tillages"],
+        });
       })
-        .then(async (response) => {
-          if (response.ok) {
-            const responseBody = await response.json();
-            const data = responseBody["data"];
-            setMaxRecommendedFertilizer(data["max_recommended_fertilizer"]);
-            setCategories({
-              crop: data["crops"],
-              soil: data["soils"],
-              variety: data["varieties"],
-              fertilizer: data["fertilizers"],
-              fertilizerType: data["fertilizer_types"],
-              cropProtection: data["crop_protections"],
-              soilTillage: data["soil_tillages"],
-            });
-          } else
-            notify({
-              message: "Failed to retrieve max recommended fertilizer",
-              isError: true,
-            });
-        })
-        .catch((error) => notify({ message: error.message, isError: true }));
-    }
+      .catch(() => {});
   }, [authenticationToken]);
 
   return (

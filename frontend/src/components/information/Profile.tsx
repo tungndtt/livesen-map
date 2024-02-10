@@ -26,65 +26,41 @@ const fields = [
 ];
 
 export default function Profile() {
-  const { authenticationToken, signOut } = useAuthenticationContext();
+  const { authenticationToken, doRequest } = useAuthenticationContext();
   const notify = useNotificationContext();
   const [user, setUser] = useState<UserProfile | undefined>(undefined);
   const [options, setOptions] = useState<UserProfile>({});
   const [showPassword, setShowPassword] = useState(false);
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/user";
 
   useEffect(() => {
-    if (authenticationToken) {
-      fetch(serverUrl, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          if (response.ok) {
-            const userProfile = parseUserProfile(responseBody);
-            setUser(userProfile);
-            setOptions(userProfile);
-            notify({
-              message: "Successfully retrieve the user information",
-              isError: false,
-            });
-          } else {
-            notify({ message: responseBody["data"], isError: true });
-            signOut();
-          }
-        })
-        .catch((error) => {
-          notify({ message: error.message, isError: true });
-          signOut();
+    doRequest("user", "GET")
+      .then(async (response) => {
+        const responseBody = await response.json();
+        const userProfile = parseUserProfile(responseBody);
+        setUser(userProfile);
+        setOptions(userProfile);
+        notify({
+          message: "Successfully retrieve the user information",
+          isError: false,
         });
-    } else {
-      setUser(undefined);
-    }
+      })
+      .catch((error) => {
+        setUser(undefined);
+        notify({ message: error, isError: true });
+      });
   }, [authenticationToken]);
 
   const updateUser = () => {
-    fetch(`${serverUrl}/upgister`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Auth-Token": authenticationToken,
-      },
-      method: "PUT",
-      body: JSON.stringify(options),
-    })
+    doRequest("user/upgister", "PUT", options)
       .then(async (response) => {
         const responseBody = await response.json();
-        if (response.ok) {
-          setUser(parseUserProfile(responseBody));
-          notify({
-            message: "Successfully update the user information",
-            isError: false,
-          });
-        } else {
-          notify({ message: responseBody["data"], isError: true });
-        }
+        setUser(parseUserProfile(responseBody));
+        notify({
+          message: "Successfully update the user information",
+          isError: false,
+        });
       })
-      .catch((error) => notify({ message: error.message, isError: true }));
+      .catch((error) => notify({ message: error, isError: true }));
   };
 
   const onChangeOptions = (e: React.ChangeEvent<HTMLInputElement>) => {

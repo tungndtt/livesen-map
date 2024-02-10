@@ -13,7 +13,7 @@ import { useNotificationContext } from "../../../contexts/NotificationContext";
 import { Field, parseField } from "../../../types/field";
 
 export default function FieldTab() {
-  const { authenticationToken } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, refreshFieldOptions, selectedSeasonId } =
     useSelectionContext();
   const { fieldVisible, setupFieldLayer, toggleFieldVisible } =
@@ -21,43 +21,35 @@ export default function FieldTab() {
   const { ndviRasterVisible, toggleNdviRasterVisible } = useNdviRasterContext();
   const notify = useNotificationContext();
   const [field, setField] = useState<Field | undefined>(undefined);
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
 
   useEffect(() => {
-    const reset = () => setField(undefined);
-    if (authenticationToken && selectedFieldId) {
-      fetch(`${serverUrl}/${selectedFieldId}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
+    if (selectedFieldId) {
+      doRequest(`field/${selectedFieldId}`, "GET")
         .then(async (response) => {
           const responseBody = await response.json();
-          if (response.ok) {
-            const field = parseField(responseBody);
-            setField(field);
-            setupFieldLayer(field.coordinates);
-          } else reset();
+          const field = parseField(responseBody);
+          setField(field);
+          setupFieldLayer(field.coordinates);
         })
-        .catch(reset);
-    } else reset();
-  }, [authenticationToken, selectedFieldId]);
+        .catch((error) => {
+          setField(undefined);
+          notify({ message: error, isError: true });
+        });
+    } else setField(undefined);
+  }, [selectedFieldId]);
 
   const unregisterField = () => {
-    fetch(`${serverUrl}/unregister/${selectedFieldId}`, {
-      headers: { "Auth-Token": authenticationToken },
-      method: "DELETE",
-    })
-      .then(async (response) => {
-        if (response.ok) {
-          refreshFieldOptions();
-          notify({
-            message: "Successfully unregister the field",
-            isError: false,
-          });
-        } else
-          notify({ message: "Failed to unregister the field", isError: true });
+    doRequest(`field/unregister/${selectedFieldId}`, "DELETE")
+      .then(() => {
+        refreshFieldOptions();
+        notify({
+          message: "Successfully unregister the field",
+          isError: false,
+        });
       })
-      .catch((error) => notify({ message: error, isError: true }));
+      .catch(() => {
+        notify({ message: "Failed to unregister the field", isError: true });
+      });
   };
 
   return (

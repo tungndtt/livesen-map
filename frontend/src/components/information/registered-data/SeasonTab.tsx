@@ -132,7 +132,7 @@ type FertilizerRecommendation = {
 };
 
 export default function SeasonInterest() {
-  const { authenticationToken } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId, refreshSeasonOptions } =
     useSelectionContext();
   const { categories } = useMetadataContext();
@@ -140,74 +140,77 @@ export default function SeasonInterest() {
   const [season, setSeason] = useState<Season | undefined>(undefined);
   const [fertilizerRecommendation, setFertilizerRecommendation] =
     useState<FertilizerRecommendation>({ fertilizer: "" });
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/season";
 
   useEffect(() => {
-    if (selectedFieldId && selectedSeasonId && authenticationToken) {
-      fetch(`${serverUrl}/${selectedFieldId}/${selectedSeasonId}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
+    if (selectedFieldId && selectedSeasonId) {
+      doRequest(`season/${selectedFieldId}/${selectedSeasonId}`, "GET")
         .then(async (response) => {
           const responseBody = await response.json();
-          if (response.ok) {
-            const parsedSeason = parseSeason(responseBody);
-            setSeason(parsedSeason);
-          } else setSeason(undefined);
+          const parsedSeason = parseSeason(responseBody);
+          setSeason(parsedSeason);
         })
-        .catch((error) => notify({ message: error.message, isError: true }));
+        .catch(() => setSeason(undefined));
     } else {
       setSeason(undefined);
     }
-  }, [selectedFieldId, selectedSeasonId, authenticationToken]);
+  }, [selectedFieldId, selectedSeasonId]);
 
   const updateSeason = (data: any) => {
-    if (selectedFieldId && selectedSeasonId && authenticationToken) {
-      fetch(`${serverUrl}/upgister/${selectedFieldId}/${selectedSeasonId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Auth-Token": authenticationToken,
-        },
-        method: "POST",
-        body: JSON.stringify(deparseSeason(data)),
-      })
+    if (selectedFieldId && selectedSeasonId) {
+      doRequest(
+        `season/${selectedFieldId}/${selectedSeasonId}`,
+        "POST",
+        deparseSeason(data)
+      )
         .then(async (response) => {
           const responseBody = await response.json();
-          if (response.ok) {
-            setSeason(parseSeason(responseBody));
-            notify({
-              message: "Successfully update the season information",
-              isError: false,
-            });
-          } else {
-            notify({ message: responseBody["data"], isError: true });
-          }
+          setSeason(parseSeason(responseBody));
+          notify({
+            message: "Successfully update the season information",
+            isError: false,
+          });
         })
-        .catch((error) => notify({ message: error.message, isError: true }));
+        .catch((error) => notify({ message: error, isError: true }));
     }
   };
 
   const deleteSeason = () => {
-    if (selectedFieldId && selectedSeasonId && authenticationToken) {
-      fetch(`${serverUrl}/unregister/${selectedFieldId}/${selectedSeasonId}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "DELETE",
-      })
-        .then(async (response) => {
-          if (response.ok) {
-            refreshSeasonOptions();
-            notify({
-              message: "Successfully unregister the season",
-              isError: false,
-            });
-          } else {
-            notify({
-              message: "Failed to unregister the season",
-              isError: true,
-            });
-          }
+    if (selectedFieldId && selectedSeasonId) {
+      doRequest(
+        `season/unregister/${selectedFieldId}/${selectedSeasonId}`,
+        "DELETE"
+      )
+        .then(() => {
+          refreshSeasonOptions();
+          notify({
+            message: "Successfully unregister the season",
+            isError: false,
+          });
         })
-        .catch((error) => notify({ message: error.message, isError: true }));
+        .catch(() =>
+          notify({
+            message: "Failed to unregister the season",
+            isError: true,
+          })
+        );
+    }
+  };
+
+  const recommendSeasonFertilizer = () => {
+    if (selectedFieldId && selectedSeasonId) {
+      doRequest(
+        `season/recommend_fertilizer/${selectedFieldId}/${selectedSeasonId}`,
+        "POST",
+        { fertilizer: fertilizerRecommendation.fertilizer }
+      )
+        .then(async (response) => {
+          const responseBody = await response.json();
+          setFertilizerRecommendation((prevFertilizerRecommendation) => ({
+            ...prevFertilizerRecommendation,
+            recommendation: responseBody["data"],
+          }));
+        })
+        .catch((error) => notify({ message: error, isError: true }));
     }
   };
 
@@ -266,44 +269,7 @@ export default function SeasonInterest() {
                   variant="outlined"
                   color="primary"
                   disabled={!fertilizerRecommendation.fertilizer}
-                  onClick={() => {
-                    if (
-                      selectedFieldId &&
-                      selectedSeasonId &&
-                      authenticationToken
-                    ) {
-                      fetch(
-                        `${serverUrl}/recommend_fertilizer/${selectedFieldId}/${selectedSeasonId}`,
-                        {
-                          headers: {
-                            "Auth-Token": authenticationToken,
-                            "Content-Type": "application/json",
-                          },
-                          method: "POST",
-                          body: JSON.stringify({
-                            fertilizer: fertilizerRecommendation.fertilizer,
-                          }),
-                        }
-                      )
-                        .then(async (response) => {
-                          const responseBody = await response.json();
-                          setFertilizerRecommendation(
-                            (prevFertilizerRecommendation) => {
-                              const recommendation = response.ok
-                                ? responseBody["data"]
-                                : undefined;
-                              return {
-                                ...prevFertilizerRecommendation,
-                                recommendation,
-                              };
-                            }
-                          );
-                        })
-                        .catch((error) =>
-                          notify({ message: error.message, isError: true })
-                        );
-                    }
-                  }}
+                  onClick={recommendSeasonFertilizer}
                 >
                   Recommend
                 </Button>

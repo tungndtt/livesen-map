@@ -9,12 +9,11 @@ import { useNotificationContext } from "../../contexts/NotificationContext";
 import { Coordinate, parseCoordinates } from "../../types/coordinate";
 
 export default function RegionInterest() {
-  const { authenticationToken } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { roi, setRoi } = useRegionInterestContext();
   const { refreshFieldOptions } = useSelectionContext();
   const notify = useNotificationContext();
   const [roiName, setRoiName] = useState("");
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/field";
 
   const uploadRegionInterest = (e: React.ChangeEvent<HTMLInputElement>) => {
     const reader = new FileReader();
@@ -56,29 +55,19 @@ export default function RegionInterest() {
       notify({ message: "No valid region is specified", isError: true });
       return;
     }
-    fetch(`${serverUrl}/register`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Auth-Token": authenticationToken,
-      },
-      method: "POST",
-      body: JSON.stringify({
-        name: roiName,
-        coordinates: roi.map((r) => r.map(({ lat, lng }) => [lng, lat])),
-      }),
+    doRequest("field/register", "POST", {
+      name: roiName,
+      coordinates: roi.map((r) => r.map(({ lat, lng }) => [lng, lat])),
     })
-      .then(async (response) => {
-        const responseBody = await response.json();
-        if (response.ok) {
-          refreshFieldOptions();
-          clearRegion();
-          notify({
-            message: "Successfully register region of interest",
-            isError: false,
-          });
-        } else notify({ message: responseBody["data"], isError: true });
+      .then(() => {
+        refreshFieldOptions();
+        clearRegion();
+        notify({
+          message: "Successfully register region of interest",
+          isError: false,
+        });
       })
-      .catch((error) => notify({ message: error.message, isError: true }));
+      .catch((error) => notify({ message: error, isError: true }));
   };
 
   return (

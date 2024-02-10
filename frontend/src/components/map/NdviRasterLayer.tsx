@@ -16,7 +16,7 @@ import GradientBar from "../../utils/GradientBar";
 window.proj4 = proj4;
 
 export default function NdviRasterLayer() {
-  const { authenticationToken, signOut } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { selectedSeasonId } = useSelectionContext();
   const { ndviRasterVisible, ndviRasters } = useNdviRasterContext();
   const notify = useNotificationContext();
@@ -26,7 +26,6 @@ export default function NdviRasterLayer() {
   const map = useMap();
   const [isLoading, setIsLoading] = useState(false);
   const [ndviRange, setNdviRange] = useState<number[] | undefined>(undefined);
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/ndvi_raster";
 
   useEffect(() => {
     const container = context.layerContainer || context.map;
@@ -36,65 +35,49 @@ export default function NdviRasterLayer() {
       ndviRasters?.[selectedSeasonId]
     ) {
       setIsLoading(true);
-      fetch(`${serverUrl}/${ndviRasters[selectedSeasonId]}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
+      doRequest(`ndvi_raster/${ndviRasters[selectedSeasonId]}`, "GET")
         .then(async (response) => {
-          if (response.ok) {
-            const arrayBuffer = await response.arrayBuffer();
-            parseGeoraster(arrayBuffer).then((georaster: GeoRaster) => {
-              if (ndviLayerRef.current) {
-                container.removeLayer(ndviLayerRef.current);
-              }
-              let progress = { current: 0, previous: -1 };
-              let ndviRange = [1, -1];
-              const resolution = georaster.width * georaster.height;
-              const progressTracker = setInterval(() => {
-                if (progress.previous === progress.current) {
-                  clearInterval(progressTracker);
+          const arrayBuffer = await response.arrayBuffer();
+          parseGeoraster(arrayBuffer).then((georaster: GeoRaster) => {
+            if (ndviLayerRef.current) {
+              container.removeLayer(ndviLayerRef.current);
+            }
+            let progress = { current: 0, previous: -1 };
+            let ndviRange = [1, -1];
+            const resolution = georaster.width * georaster.height;
+            const progressTracker = setInterval(() => {
+              if (progress.previous === progress.current) {
+                clearInterval(progressTracker);
+                setIsLoading(false);
+              } else progress.previous = progress.current;
+            }, 2000);
+            ndviLayerRef.current = new GeoRasterLayer({
+              georaster: georaster,
+              opacity: 1,
+              pixelValuesToColorFn: (values) => {
+                const ndvi = values[0];
+                if (ndvi >= 0) {
+                  ndviRange[0] = Math.min(ndviRange[0], ndvi);
+                  ndviRange[1] = Math.max(ndviRange[1], ndvi);
+                }
+                progress.current++;
+                if (progress.current == resolution) {
                   setIsLoading(false);
-                } else progress.previous = progress.current;
-              }, 2000);
-              ndviLayerRef.current = new GeoRasterLayer({
-                georaster: georaster,
-                opacity: 1,
-                pixelValuesToColorFn: (values) => {
-                  const ndvi = values[0];
-                  if (ndvi >= 0) {
-                    ndviRange[0] = Math.min(ndviRange[0], ndvi);
-                    ndviRange[1] = Math.max(ndviRange[1], ndvi);
-                  }
-                  progress.current++;
-                  if (progress.current == resolution) {
-                    setIsLoading(false);
-                    ndviRange[0] = Math.max(ndviRange[0], 0);
-                    ndviRange[1] = Math.min(ndviRange[1], 1);
-                    setNdviRange([...ndviRange]);
-                  }
-                  return ndvi2RBGA(ndvi);
-                },
-                resolution: resolution,
-              });
-              container.addLayer(ndviLayerRef.current);
-              map.fitBounds(ndviLayerRef.current.getBounds());
+                  ndviRange[0] = Math.max(ndviRange[0], 0);
+                  ndviRange[1] = Math.min(ndviRange[1], 1);
+                  setNdviRange([...ndviRange]);
+                }
+                return ndvi2RBGA(ndvi);
+              },
+              resolution: resolution,
             });
-          } else {
-            if (response.status === 401) {
-              signOut();
-              notify({ message: "Access token is outdated", isError: true });
-            } else
-              notify({
-                message: (await response.json())["data"],
-                isError: true,
-              });
-            setIsLoading(false);
-          }
+            container.addLayer(ndviLayerRef.current);
+            map.fitBounds(ndviLayerRef.current.getBounds());
+          });
         })
         .catch((error) => {
-          signOut();
-          notify({ message: error.message, isError: true });
           setIsLoading(false);
+          notify({ message: error, isError: true });
         });
     }
     return () => {

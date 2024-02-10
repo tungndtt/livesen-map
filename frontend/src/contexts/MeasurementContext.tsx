@@ -56,7 +56,7 @@ const MeasurementContext = createContext<MeasurementContextType>({
 });
 
 export default function MeasurementProvider(props: { children: ReactNode }) {
-  const { authenticationToken } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const { ndviRasterVisible, toggleNdviRasterVisible } = useNdviRasterContext();
   const notify = useNotificationContext();
@@ -68,7 +68,6 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   >(undefined);
   const [visibility, setVisibility] = useState<Visibility>({});
   const [recommendationVisible, setRecommendationVisible] = useState(false);
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
 
   const reset = () => {
     setVisibility({});
@@ -120,35 +119,31 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   const updateMeasurementPosition = (
     measurementPosition: MeasurementPosition
   ) => {
-    fetch(`${serverUrl}/position/${measurementPosition.id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Auth-Token": authenticationToken,
-      },
-      method: "PUT",
-      body: JSON.stringify(deparseMeasurementPosition(measurementPosition)),
-    })
-      .then(async (response) => {
-        if (response.ok) {
-          setPositions((prevPositions) =>
-            prevPositions
-              ? {
-                  ...prevPositions,
-                  [measurementPosition.id]: measurementPosition,
-                }
-              : prevPositions
-          );
-          notify({
-            message: "Successfully updated the measurement position",
-            isError: false,
-          });
-        } else
-          notify({
-            message: "Failed to update the measurement position",
-            isError: true,
-          });
+    doRequest(
+      `measurement/position/${measurementPosition.id}`,
+      "PUT",
+      deparseMeasurementPosition(measurementPosition)
+    )
+      .then(() => {
+        setPositions((prevPositions) =>
+          prevPositions
+            ? {
+                ...prevPositions,
+                [measurementPosition.id]: measurementPosition,
+              }
+            : prevPositions
+        );
+        notify({
+          message: "Successfully updated the measurement position",
+          isError: false,
+        });
       })
-      .catch((error) => notify({ message: error.message, isError: true }));
+      .catch(() => {
+        notify({
+          message: "Failed to update the measurement position",
+          isError: true,
+        });
+      });
   };
 
   const updateSubFieldRecommendedFertilizer = (

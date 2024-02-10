@@ -5,6 +5,7 @@ import {
   AccordionSummary,
   Box,
   Button,
+  CircularProgress,
   TextField,
   Typography,
 } from "@mui/material";
@@ -28,7 +29,7 @@ import {
 } from "../../../types/measurement";
 
 export default function MeasurementTab() {
-  const { authenticationToken } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const {
     visibility,
@@ -42,7 +43,7 @@ export default function MeasurementTab() {
   const [measurements, setMeasurements] = useState<Measurement[] | undefined>(
     undefined
   );
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/measurement";
+  const [isDetermining, setIsDetermining] = useState(false);
 
   const initializeMeasurements = (
     fetchedMeasurements: any[],
@@ -57,105 +58,78 @@ export default function MeasurementTab() {
 
   useEffect(() => {
     const reset = () => setMeasurements(undefined);
-    if (authenticationToken && selectedFieldId && selectedSeasonId) {
+    if (selectedFieldId && selectedSeasonId) {
       Promise.all([
-        fetch(`${serverUrl}/subfield/${selectedFieldId}/${selectedSeasonId}`, {
-          headers: { "Auth-Token": authenticationToken },
-          method: "GET",
-        }),
-        fetch(`${serverUrl}/${selectedFieldId}/${selectedSeasonId}`, {
-          headers: { "Auth-Token": authenticationToken },
-          method: "GET",
-        }),
+        doRequest(
+          `measurement/subfield/${selectedFieldId}/${selectedSeasonId}`,
+          "GET"
+        ),
+        doRequest(`measurement/${selectedFieldId}/${selectedSeasonId}`, "GET"),
       ])
         .then(async ([subfieldResponse, measurementResponse]) => {
           const subfieldResponseBody = await subfieldResponse.json();
           const measurementResponseBody = await measurementResponse.json();
-          if (subfieldResponse.ok && measurementResponse.ok) {
-            initializeMeasurements(
-              measurementResponseBody,
-              subfieldResponseBody
-            );
-          } else reset();
+          initializeMeasurements(measurementResponseBody, subfieldResponseBody);
         })
-        .catch((errors) => {
-          for (let i = 0; i < errors.length; i++) {
-            const error = errors[i];
-            if (error) {
-              notify({ message: error.message, isError: true });
-              break;
-            }
-          }
-          reset();
-        });
+        .catch(reset);
     } else reset();
-  }, [authenticationToken, selectedFieldId, selectedSeasonId]);
+  }, [selectedFieldId, selectedSeasonId]);
 
   const determineMeasurementPositions = () => {
-    fetch(`${serverUrl}/position/${selectedFieldId}/${selectedSeasonId}`, {
-      headers: { "Auth-Token": authenticationToken },
-      method: "GET",
-    })
+    setIsDetermining(true);
+    doRequest(
+      `measurement/position/${selectedFieldId}/${selectedSeasonId}`,
+      "GET"
+    )
       .then(async (response) => {
         const responseBody = await response.json();
-        if (response.ok) {
-          const { measurements, subfields } = responseBody;
-          initializeMeasurements(measurements, subfields);
-          notify({
-            message: "Measurement poisitions were determined",
-            isError: false,
-          });
-        } else notify({ message: responseBody["data"], isError: true });
+        const { measurements, subfields } = responseBody;
+        initializeMeasurements(measurements, subfields);
+        notify({
+          message: "Measurement poisitions were determined",
+          isError: false,
+        });
       })
-      .catch((error) => notify({ message: error.message, isError: true }));
+      .catch((error) => notify({ message: error, isError: true }))
+      .finally(() => setIsDetermining(false));
   };
 
   const updateMeasurement = (
     measurementId: number,
     options: NutrientMeasurement
   ) => {
-    fetch(`${serverUrl}/upgister/${measurementId}`, {
-      headers: {
-        "Auth-Token": authenticationToken,
-        "Content-Type": "application/json",
-      },
-      method: "PUT",
-      body: JSON.stringify(options),
-    })
-      .then(async (response) => {
+    doRequest(`measurement/upgister/${measurementId}`, "PUT", options).then(
+      async (response) => {
         const responseBody = await response.json();
-        if (response.ok) {
-          const measurement = responseBody["measurement"];
-          const updatedMeasurement = parseMeasurement(measurement);
-          setMeasurements((prevMeasurements) => {
-            if (prevMeasurements) {
-              const index = prevMeasurements.findIndex(
-                (prevMeasurement) =>
-                  prevMeasurement.id === updatedMeasurement.id
-              );
-              if (index !== -1) {
-                prevMeasurements[index] = {
-                  ...prevMeasurements[index],
-                  ...updatedMeasurement,
-                };
-                prevMeasurements = [...prevMeasurements];
-              }
+        const measurement = responseBody["measurement"];
+        const updatedMeasurement = parseMeasurement(measurement);
+        setMeasurements((prevMeasurements) => {
+          if (prevMeasurements) {
+            const index = prevMeasurements.findIndex(
+              (prevMeasurement) => prevMeasurement.id === updatedMeasurement.id
+            );
+            if (index !== -1) {
+              prevMeasurements[index] = {
+                ...prevMeasurements[index],
+                ...updatedMeasurement,
+              };
+              prevMeasurements = [...prevMeasurements];
             }
-            return prevMeasurements;
-          });
-          const subfieldRecommendedFertilizer =
-            responseBody["subfield_recommended_fertilizer"];
-          updateSubFieldRecommendedFertilizer(
-            updatedMeasurement.id,
-            subfieldRecommendedFertilizer
-          );
-          notify({
-            message: "Successfully updated measurement",
-            isError: false,
-          });
-        } else notify({ message: responseBody["data"], isError: true });
-      })
-      .catch((error) => notify({ message: error.message, isError: true }));
+          }
+          return prevMeasurements;
+        });
+        const subfieldRecommendedFertilizer =
+          responseBody["subfield_recommended_fertilizer"];
+        updateSubFieldRecommendedFertilizer(
+          updatedMeasurement.id,
+          subfieldRecommendedFertilizer
+        );
+        notify({
+          message: "Successfully updated measurement",
+          isError: false,
+        });
+      }
+    );
   };
 
   return (
@@ -234,16 +208,27 @@ export default function MeasurementTab() {
         </>
       ) : (
         <>
-          <Typography mt={10} mb={2}>
-            <b>No measurement positions available</b>
-          </Typography>
+          <Box
+            mt={10}
+            mb={2}
+            display="flex"
+            flexDirection="row"
+            justifyContent="center"
+            alignItems="center"
+            gap={2}
+          >
+            <Typography>
+              <b>No measurement positions available</b>
+            </Typography>
+            {isDetermining && <CircularProgress size="30px" />}
+          </Box>
           <Button
             fullWidth
             size="small"
             variant="outlined"
             color="warning"
             endIcon={<ViewQuiltIcon />}
-            disabled={!selectedFieldId || !selectedSeasonId}
+            disabled={!selectedFieldId || !selectedSeasonId || isDetermining}
             onClick={determineMeasurementPositions}
           >
             Determine measurement positions

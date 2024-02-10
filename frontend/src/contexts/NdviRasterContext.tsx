@@ -28,24 +28,20 @@ const NdviRasterContext = createContext<NdviRasterContextType>({
 
 export default function NdviRasterProvider(props: { children: ReactNode }) {
   const notify = useNotificationContext();
-  const { authenticationToken } = useAuthenticationContext();
+  const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const [ndviRasters, setNdviRasters] = useState<NdviRasterMap>({});
   const [ndviRasterVisible, setNdviRasterVisible] = useState<
     boolean | undefined
   >(false);
   const seasonId = useRef<string | undefined>(undefined);
-  const serverUrl = process.env.REACT_APP_SERVER_URL + "/ndvi_raster";
 
   useEffect(() => {
-    if (authenticationToken && selectedFieldId) {
-      fetch(`${serverUrl}/${selectedFieldId}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      }).then(async (response) => {
-        if (response.ok) setNdviRasters(await response.json());
-      });
-    }
+    if (selectedFieldId) {
+      doRequest(`ndvi_raster/${selectedFieldId}`, "GET")
+        .then(async (response) => setNdviRasters(await response.json()))
+        .catch(() => setNdviRasters({}));
+    } else setNdviRasters({});
     setNdviRasterVisible(false);
   }, [selectedFieldId]);
 
@@ -68,37 +64,29 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
   };
 
   const getNdviRaster = () => {
-    if (authenticationToken && selectedFieldId && selectedSeasonId) {
+    if (selectedFieldId && selectedSeasonId) {
       setNdviRasterVisible(undefined);
-      fetch(`${serverUrl}/${selectedFieldId}/${selectedSeasonId}`, {
-        headers: { "Auth-Token": authenticationToken },
-        method: "GET",
-      })
+      doRequest(`ndvi_raster/${selectedFieldId}/${selectedSeasonId}`, "GET")
         .then(async (response) => {
           const responseBody = await response.json();
           const data = responseBody["data"];
-          if (response.ok) {
-            const [ndviRaster, sourceDate] = data;
-            setNdviRasters((prevNdviMap) => ({
-              ...prevNdviMap,
-              [selectedSeasonId]: ndviRaster,
-            }));
-            const date = new Date(Date.parse(sourceDate));
-            setNdviRasterVisible(true);
-            notify({
-              message: `Fetch NDVI map generated from downloadled data on ${date.getDate()}/${
-                date.getMonth() + 1
-              }/${date.getFullYear()}`,
-              isError: false,
-            });
-          } else {
-            setNdviRasterVisible(false);
-            notify({ message: data, isError: true });
-          }
+          const [ndviRaster, sourceDate] = data;
+          setNdviRasters((prevNdviMap) => ({
+            ...prevNdviMap,
+            [selectedSeasonId]: ndviRaster,
+          }));
+          const date = new Date(Date.parse(sourceDate));
+          setNdviRasterVisible(true);
+          notify({
+            message: `Fetch NDVI map generated from downloadled data on ${date.getDate()}/${
+              date.getMonth() + 1
+            }/${date.getFullYear()}`,
+            isError: false,
+          });
         })
         .catch((error) => {
           setNdviRasterVisible(false);
-          notify({ message: error.message, isError: true });
+          notify({ message: error, isError: true });
         });
     }
   };
