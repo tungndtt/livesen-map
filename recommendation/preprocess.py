@@ -27,17 +27,17 @@ def __load_categories():
         ["soil_tillage_applications", "soil_tillage.csv"],
         ["crop_protection_applications", "crop_protection.csv"]
     ]:
-        with open(os.path.join(CATEGORY.data_folder, csv_file), "r") as file:
+        with open(os.path.join(CATEGORY.data_folder, csv_file), "r", encoding="utf-8") as file:
             values = file.readline().split(",")
             __categories[field] = values
     __column_order = [
         "nitrate", "phosphor", "potassium", "ph", "rks",
-        "seed_density", "max_allowed_fertilizer", "harvest_weight",
+        "harvest_weight", "seed_density", "max_allowed_fertilizer",
     ]
     for field in [
         "maincrop", "intercrop", "soil_type", "variety",
         "soil_tillage_applications",
-        "crop_protection_applications"
+        "crop_protection_applications",
     ]:
         __column_order += [f"{field}_{category}" for category in __categories[field]]
     __column_order += [
