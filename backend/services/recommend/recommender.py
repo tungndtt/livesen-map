@@ -136,7 +136,7 @@ def __update_model():
 
 def __run_job():
     __update_model()
-    schedule.every(RECOMMENDER.update_period).days.do(__update_model)
+    schedule.every(1).days.do(__update_model)
     while __event.is_set():
         schedule.run_pending()
         time.sleep(4)

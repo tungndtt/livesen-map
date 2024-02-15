@@ -18,8 +18,7 @@
     "dbname": "livesen"
   },
   "recommender": {
-    "model_path": "./data/recommend/model.json",
-    "update_period": 7
+    "model_path": "./data/recommend/model.json"
   },
   "jwtoken": {
     "secret": "livesen"

@@ -94,11 +94,9 @@ class Metadata:
 
 class Recommender:
     model_path: str | None = None
-    update_period: int | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.model_path = config["model_path"]
-        self.update_period = config["update_period"]
 
 
 __initialized = False

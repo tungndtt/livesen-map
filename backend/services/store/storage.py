@@ -1,16 +1,46 @@
 # initdb -U <username> -A password -E utf8 -W -D <data-folder>
 # pg_ctl -D <data-folder> -l <log-file> start/stop
 # pg_ctl status -D <data-folder>
+import time
+import schedule
+from threading import Thread, Event
 from psycopg2 import pool, sql, connect
 from psycopg2._psycopg import cursor as Cursor
 from config import STORAGE, APP
 from typing import Any
 
 
+__event = None
+__thread = None
 _dbpool = None
 
 
-def __init_database() -> None:
+def __init_connection():
+    global _dbpool
+    retry = 20
+    while retry > 0:
+        try:
+            __init_database()
+            db_params = {
+                "dbname": STORAGE.dbname,
+                "user": STORAGE.user,
+                "password": STORAGE.password,
+                "host": STORAGE.host,
+                "port": STORAGE.port,
+            }
+            _dbpool = pool.ThreadedConnectionPool(
+                minconn=1, maxconn=64, **db_params
+            )
+            __init_tables()
+            break
+        except Exception as error:
+            print("[Storage]", error)
+        finally:
+            retry -= 1
+            time.sleep(1)
+
+
+def __get_connection():
     # Database connection parameters
     db_params = {
         "dbname": "postgres",
@@ -20,16 +50,36 @@ def __init_database() -> None:
         "port": STORAGE.port,
     }
     # Connect to the PostgreSQL server
-    retry = 0
+    retry = 20
     conn = None
-    while retry < 20:
-        from time import sleep
+    while retry > 0:
         try:
             conn = connect(**db_params)
             break
         except:
-            retry += 1
-            sleep(1)
+            retry -= 1
+            time.sleep(1)
+    return conn
+
+
+def __check_connection():
+    global _dbpool
+    if _dbpool is None:
+        __init_connection()
+    elif __get_connection() is None:
+        __init_connection()
+
+
+def __run_job():
+    __check_connection()
+    schedule.every(30).minutes.do(__check_connection)
+    while __event.is_set():
+        schedule.run_pending()
+        time.sleep(4)
+
+
+def __init_database() -> None:
+    conn = __get_connection()
     if conn is None:
         raise Exception("Cannot connect to database")
     # Create a cursor
@@ -43,7 +93,7 @@ def __init_database() -> None:
         if cursor.fetchone() is None:
             # Database does not exist; create it
             dbname = sql.Identifier(database_name)
-            user = sql.Identifier(db_params["user"])
+            user = sql.Identifier(STORAGE.user)
             create_cmd = sql.SQL("CREATE DATABASE {}").format(dbname)
             grant_cmd = sql.SQL(
                 "GRANT ALL PRIVILEGES ON DATABASE {} TO {}"
@@ -180,23 +230,21 @@ def __init_tables() -> None:
 
 
 def init() -> None:
-    global _dbpool
-    __init_database()
-    db_params = {
-        "dbname": STORAGE.dbname,
-        "user": STORAGE.user,
-        "password": STORAGE.password,
-        "host": STORAGE.host,
-        "port": STORAGE.port,
-    }
-    _dbpool = pool.ThreadedConnectionPool(minconn=1, maxconn=64, **db_params)
-    __init_tables()
+    global __event, __thread
+    if __thread is None:
+        __event = Event()
+        __event.set()
+        __thread = Thread(target=__run_job)
+        __thread.start()
 
 
 def term():
-    global _dbpool
+    global _dbpool, __thread, __event
     if _dbpool is not None:
         _dbpool.closeall()
+    if __thread is not None:
+        __event.clear()
+        __thread.join()
 
 
 class DbCursor:
