@@ -1,14 +1,8 @@
 {
-  "jwtoken": {
-    "secret": "livesen"
-  },
   "mailer": {
     "email": "<replace with your email>",
     "password": "<replace with your api password>",
-    "service_url": "http://127.0.0.1:8080"
-  },
-  "ndvi": {
-    "data_folder": "./data/ndvi"
+    "service_url": "<replace with your server host>:8080"
   },
   "downloader": {
     "user": "tungndtt",
@@ -23,15 +17,22 @@
     "port": 5432,
     "dbname": "livesen"
   },
-  "recommendation": {
-    "service_url": "http://livesen-recommendation:1998"
+  "recommender": {
+    "model_path": "./data/recommend/model.json",
+    "update_period": 7
+  },
+  "jwtoken": {
+    "secret": "livesen"
+  },
+  "ndvi": {
+    "data_folder": "./data/ndvi"
   },
   "app": {
     "host": "livesen-backend",
     "port": 2204,
-    "is_testing": true
+    "is_testing": false
   },
-  "constant": {
+  "metadata": {
     "category_folder": "./data/category",
     "max_recommended_fertilizer": 80
   }

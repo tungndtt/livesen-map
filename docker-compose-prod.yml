@@ -19,7 +19,7 @@ services:
   livesen-backend:
     build: 
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile-prod
     container_name: livesen-backend
     restart: unless-stopped
     networks:
@@ -27,8 +27,9 @@ services:
     ports:
       - 2204:2204
     volumes:
-      - ./.docker/.backend:/livesen/config.json:ro
+      - ./.docker/.backend-config-prod:/livesen/config.json:ro
       - ./.docker/data/download:/livesen/data/download
+      - ./.docker/data/recommend:/livesen/data/recommend
       - ./.docker/data/ndvi:/livesen/data/ndvi
       - ./.docker/data/category:/livesen/data/category
     depends_on:
@@ -37,7 +38,7 @@ services:
   livesen-frontend:
     build: 
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile-prod
     container_name: livesen-frontend
     restart: unless-stopped
     networks:
@@ -45,12 +46,12 @@ services:
     ports:
       - 3000:3000
     env_file:
-      - ./.docker/.frontend
+      - ./.docker/.frontend-config-prod
   
   livesen-proxy:
     build: 
       context: ./proxy
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: livesen-proxy
     restart: unless-stopped
     networks: 
@@ -60,23 +61,6 @@ services:
     depends_on:
       - livesen-backend
       - livesen-frontend
-  
-  livesen-recommendation:
-    build: 
-      context: ./recommendation
-      dockerfile: Dockerfile
-    container_name: livesen-recommendation
-    restart: unless-stopped
-    networks: 
-      - livesen-network
-    ports:
-      - 1998:1998
-    volumes:
-      - ./.docker/.recommendation:/livesen/config.json:ro
-      - ./.docker/data/model:/livesen/data/model
-      - ./.docker/data/category:/livesen/data/category
-    depends_on:
-      - livesen-backend
   
 networks:
   livesen-network:
