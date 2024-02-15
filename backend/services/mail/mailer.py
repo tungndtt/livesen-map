@@ -33,7 +33,6 @@ def __init_connection():
 
 
 def __check_connection():
-    print("[Mailer]: Check connection ...")
     global __server
     if __server is None:
         __init_connection()
@@ -44,8 +43,6 @@ def __check_connection():
             status = -1
         if status != 250:
             __init_connection()
-        else:
-            print("[Mailer]: Connected ...")
 
 
 def __run_job():
