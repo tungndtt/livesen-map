@@ -1,12 +1,10 @@
 import os
-import requests
-import json
-import datetime
 from flask import Blueprint, jsonify
 from api.authentication import authentication_required
 from services.store.dafs.season import get_season, list_season_ids, insert_season, update_season, delete_season
 from services.store.dafs.ndvi_raster import get_ndvi_raster
-from config import NDVI, RECOMMENDATION
+from services.recommend.recommender import recommend_season_fertilizer
+from config import NDVI
 
 
 api = Blueprint("season", __name__, url_prefix="/season")
@@ -77,17 +75,10 @@ def recommend_fertilizer(user_id, data, field_id, season_id):
         fertilizer = data["fertilizer"]
         season["fertilizer_applications"].append({"fertilizer": fertilizer,
                                                   "amount": -1})
-
-        def serialize_datetime(obj):
-            if isinstance(obj, datetime.datetime):
-                return obj.isoformat()
-            raise TypeError("Type not serializable")
-
-        response = requests.post(
-            RECOMMENDATION.service_url,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(season, default=serialize_datetime)
-        ).json()
-        return jsonify(response), 200
+        recommended_fertilizer = recommend_season_fertilizer(season)
+        if recommend_fertilizer is not None:
+            return jsonify({"data": recommended_fertilizer}), 200
+        else:
+            return jsonify({"data": "Failed to compute the season fertilier recommendation"}), 500
     else:
         return jsonify({"data": "Failed to retrieve the season"}), 500

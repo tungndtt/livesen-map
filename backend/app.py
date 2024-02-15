@@ -4,6 +4,7 @@ from api import authentication, metadata, user, field, season, ndvi_raster, meas
 from services.download import downloader
 from services.store import storage
 from services.mail import mailer
+from services.recommend import recommender
 from config import APP
 
 
@@ -12,6 +13,7 @@ if __name__ == "__main__":
         downloader.init()
         storage.init()
         mailer.init()
+        recommender.init()
         app = Flask(__name__)
         CORS(app)
         app.register_blueprint(authentication.api)
@@ -28,3 +30,4 @@ if __name__ == "__main__":
         downloader.term()
         storage.term()
         mailer.term()
+        recommender.term()

@@ -11,3 +11,5 @@ schedule
 requests
 bcrypt
 PyJWT
+xgboost
+scikit-learn

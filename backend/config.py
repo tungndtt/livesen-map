@@ -92,26 +92,28 @@ class Metadata:
                 setattr(self, field, file.readline().split(","))
 
 
-class Recommendation:
-    service_url: str | None = None
+class Recommender:
+    model_path: str | None = None
+    update_period: int | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
-        self.service_url = config["service_url"]
+        self.model_path = config["model_path"]
+        self.update_period = config["update_period"]
 
 
 __initialized = False
-JWTOKEN = Jwtoken()
 MAILER = Mailer()
-NDVI = Ndvi()
 DOWNLOADER = Downloader()
 STORAGE = Storage()
-RECOMMENDATION = Recommendation()
+RECOMMENDER = Recommender()
+JWTOKEN = Jwtoken()
+NDVI = Ndvi()
 APP = App()
 METADATA = Metadata()
 
 
 def __init():
-    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, RECOMMENDATION, APP, METADATA
+    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, RECOMMENDER, APP, METADATA
     if not __initialized:
         import json
         with open("config.json", "r") as f:
@@ -121,7 +123,7 @@ def __init():
         NDVI.parse(config["ndvi"])
         DOWNLOADER.parse(config["downloader"])
         STORAGE.parse(config["storage"])
-        RECOMMENDATION.parse(config["recommendation"])
+        RECOMMENDER.parse(config["recommender"])
         APP.parse(config["app"])
         METADATA.parse(config["metadata"])
         __initialized = True
