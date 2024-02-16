@@ -23,7 +23,7 @@ if __name__ == "__main__":
         app.register_blueprint(season.api)
         app.register_blueprint(ndvi_raster.api)
         app.register_blueprint(measurement.api)
-        app.run(host=APP.host, port=APP.port)
+        app.run(host=APP.host, port=APP.port, threaded=True)
     except Exception as error:
         print("[App]", error)
     finally:
