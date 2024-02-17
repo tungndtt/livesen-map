@@ -4,6 +4,7 @@ from shapely.geometry import Polygon
 from api.authentication import authentication_required
 from services.store.dafs.field import get_field, insert_field, delete_field, list_fields_info
 from services.store.dafs.ndvi_raster import list_ndvi_rasters
+from services.notify.notifier import publish_event
 from config import NDVI
 
 
@@ -46,7 +47,8 @@ def register_field(user_id, data):
         region = Polygon(shell, holes).__str__()
         inserted_field = insert_field(user_id, name, region)
         if inserted_field is not None:
-            return inserted_field, 201
+            publish_event(user_id, "field.create", inserted_field)
+            return jsonify({"data": "Successfully register the field"}), 201
         else:
             return jsonify({"data": "Failed to register the field"}), 500
     except:
@@ -58,6 +60,7 @@ def register_field(user_id, data):
 def unregister_field(user_id, __, field_id):
     ndvi_rasters = list_ndvi_rasters(user_id, field_id)
     if delete_field(user_id, field_id):
+        publish_event(user_id, "field.delete", {"id": field_id})
         if ndvi_rasters is not None:
             try:
                 for ndvi_raster in ndvi_rasters.values():

@@ -148,7 +148,7 @@ def __init_tables() -> None:
             soil_type text,
             variety text,
             seed_density double precision,
-            seed_date date,
+            seed_date timestamp,
             max_allowed_fertilizer double precision,
             fertilizer_applications json not null default '[]',
             soil_tillage_applications json not null default '[]',
@@ -159,7 +159,7 @@ def __init_tables() -> None:
             ph double precision,
             rks double precision,
             harvest_weight double precision,
-            harvest_date date,
+            harvest_date timestamp,
             PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE

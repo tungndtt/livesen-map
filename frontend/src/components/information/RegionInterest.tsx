@@ -4,16 +4,15 @@ import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useRegionInterestContext } from "../../contexts/RegionInterestContext";
-import { useSelectionContext } from "../../contexts/SelectionContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
+import { useFieldContext } from "../../contexts/FieldContext";
 import { Coordinate, parseCoordinates } from "../../types/coordinate";
 
 export default function RegionInterest() {
-  const { doRequest } = useAuthenticationContext();
-  const { roi, setRoi } = useRegionInterestContext();
-  const { refreshFieldOptions } = useSelectionContext();
   const notify = useNotificationContext();
-  const [roiName, setRoiName] = useState("");
+  const { doRequest } = useAuthenticationContext();
+  const { roi, setRoi, roiName, setRoiName } = useRegionInterestContext();
+  const { registerField } = useFieldContext();
 
   const uploadRegionInterest = (e: React.ChangeEvent<HTMLInputElement>) => {
     const reader = new FileReader();
@@ -55,19 +54,7 @@ export default function RegionInterest() {
       notify({ message: "No valid region is specified", isError: true });
       return;
     }
-    doRequest("field/register", "POST", {
-      name: roiName,
-      coordinates: roi.map((r) => r.map(({ lat, lng }) => [lng, lat])),
-    })
-      .then(() => {
-        refreshFieldOptions();
-        clearRegion();
-        notify({
-          message: "Successfully register region of interest",
-          isError: false,
-        });
-      })
-      .catch((error) => notify({ message: error, isError: true }));
+    registerField();
   };
 
   return (

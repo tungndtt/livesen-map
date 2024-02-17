@@ -4,6 +4,7 @@ from api.authentication import authentication_required
 from services.store.dafs.season import get_season, list_season_ids, insert_season, update_season, delete_season
 from services.store.dafs.ndvi_raster import get_ndvi_raster
 from services.recommend.recommender import recommend_season_fertilizer
+from services.notify.notifier import publish_event
 from config import NDVI
 
 
@@ -35,7 +36,8 @@ def retrieve_season(user_id, _, field_id, season_id):
 def register_season(user_id, data, field_id, season_id):
     inserted_season = insert_season(user_id, field_id, season_id, data)
     if inserted_season is not None:
-        return inserted_season, 201
+        publish_event(user_id, "season.create", inserted_season)
+        return jsonify({"data": "Successfully register the season"}), 201
     else:
         return jsonify({"data": "Failed to register the season"}), 500
 
@@ -45,7 +47,8 @@ def register_season(user_id, data, field_id, season_id):
 def upgister_season(user_id, data, field_id, season_id):
     updated_season = update_season(user_id, field_id, season_id, data)
     if updated_season is not None:
-        return updated_season, 201
+        publish_event(user_id, "season.update", updated_season)
+        return jsonify({"data": "Successfully update the season"}), 201
     else:
         return jsonify({"data": "Failed to update the season"}), 500
 
@@ -55,6 +58,8 @@ def upgister_season(user_id, data, field_id, season_id):
 def unregister_season(user_id, _, field_id, season_id):
     data = get_ndvi_raster(user_id, field_id, season_id)
     if delete_season(user_id, field_id, season_id):
+        publish_event(user_id, "season.delete",
+                      {"field_id": field_id, "season_id": season_id})
         if data is not None:
             deleted_ndvi_raster, _ = data
             try:

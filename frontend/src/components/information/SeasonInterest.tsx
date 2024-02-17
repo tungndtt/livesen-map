@@ -117,12 +117,9 @@ const fieldGroups = [
   },
 ] as FieldGroup[];
 
-const data = {};
-
 export default function SeasonInterest() {
   const { doRequest } = useAuthenticationContext();
-  const { fieldOptions, selectedFieldId, refreshSeasonOptions } =
-    useSelectionContext();
+  const { fieldOptions } = useSelectionContext();
   const notify = useNotificationContext();
   const [fieldId, setFieldId] = useState<number | undefined>(undefined);
   const [season, setSeason] = useState<Date | undefined>(undefined);
@@ -130,13 +127,13 @@ export default function SeasonInterest() {
   const registerSeason = (data: any) => {
     if (fieldId && season) {
       const seasonId = date2YMD(season);
+      console.log(deparseSeason(data));
       doRequest(
         `season/register/${fieldId}/${seasonId}`,
         "POST",
         deparseSeason(data)
       )
         .then(() => {
-          if (selectedFieldId === fieldId) refreshSeasonOptions();
           notify({
             message: "Successfully register the season information",
             isError: false,
@@ -173,7 +170,7 @@ export default function SeasonInterest() {
       />
       <FieldGroups
         fieldGroups={fieldGroups}
-        data={data}
+        data={{}}
         submitProps={{
           submitTitle: "Register Season",
           submitDisabled: !fieldId || !season,

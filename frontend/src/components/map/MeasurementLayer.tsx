@@ -20,15 +20,11 @@ export default function MeasurementLayer() {
   const {
     positions,
     subfields,
-    visibility,
+    measurementVisible: visibility,
     recommendationVisible,
     updateMeasurementPosition,
   } = useMeasurementContext();
-  const { coordinates } = useFieldContext();
-  const field = useMemo(
-    () => (coordinates ? new L.Polygon(coordinates) : undefined),
-    [coordinates]
-  );
+  const { field } = useFieldContext();
   const measurementIds = useMemo(
     () => Object.keys(visibility ?? {}).map(Number),
     [visibility]
@@ -55,7 +51,7 @@ export default function MeasurementLayer() {
 
   useEffect(() => {
     if (measurementIds.length > 0 && field) {
-      map.fitBounds(field.getBounds());
+      map.fitBounds(new L.Polygon(field?.coordinates).getBounds());
     }
   }, [map, measurementIds]);
 

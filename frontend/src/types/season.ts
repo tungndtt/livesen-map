@@ -9,7 +9,7 @@ type FertilizerApplication = {
 
 function parseFertilizerApplication(fertilizerApplication: any) {
   const { fertilizer, type, amount, nitrogen, date, stadium } = fertilizerApplication;
-  return { fertilizer, type, amount, nitrogen, date, stadium } as FertilizerApplication;
+  return { fertilizer, type, amount, nitrogen, date: date? new Date(date) : undefined, stadium } as FertilizerApplication;
 }
 
 type SoilTillageApplication = {
@@ -19,7 +19,7 @@ type SoilTillageApplication = {
 
 function parseSoilTillageApplication(soilTillageApplication: any) {
   const { type, date} = soilTillageApplication;
-  return { type, date} as SoilTillageApplication;
+  return { type, date: date? new Date(date) : undefined} as SoilTillageApplication;
 }
 
 type CropProtectionApplication = {
@@ -30,7 +30,7 @@ type CropProtectionApplication = {
 
 function parseCropProtectionApplication(cropProtectionApplication: any) {
   const {amount, type, date} = cropProtectionApplication;
-  return {amount, type, date} as CropProtectionApplication;
+  return {amount, type, date: date? new Date(date) : undefined} as CropProtectionApplication;
 }
 
 export type Season = {
@@ -98,7 +98,7 @@ export function parseSeason(season: any) {
     soilType, 
     variety, 
     seedDensity, 
-    seedDate,
+    seedDate: seedDate? new Date(seedDate) : undefined,
     fertilizerApplications: (fertilizerApplications as any[]).map(
       (fertilizerApplication) => parseFertilizerApplication(fertilizerApplication)
     ),
@@ -115,7 +115,7 @@ export function parseSeason(season: any) {
     ph,
     maxAllowedFertilizer,
     harvestWeight,
-    harvestDate,
+    harvestDate: harvestDate? new Date(harvestDate) : undefined,
   } as Season;
 }
 

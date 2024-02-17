@@ -11,7 +11,10 @@ import { useNdviRasterContext } from "./NdviRasterContext";
 import { useNotificationContext } from "./NotificationContext";
 import { SubField, parseSubField } from "../types/subfield";
 import {
+  NutrientMeasurement,
+  Measurement,
   MeasurementPosition,
+  parseMeasurement,
   parseMeasurementPosition,
   deparseMeasurementPosition,
 } from "../types/measurement";
@@ -24,71 +27,75 @@ type MeasurementSubFieldMap = {
   [measurementId: number]: SubField[];
 };
 
-type Visibility = {
+type MeasurementVisible = {
   [measurementId: number]: boolean;
 };
 
 type MeasurementContextType = {
+  measurements: Measurement[] | undefined;
   positions: MeasurementPositionMap | undefined;
   subfields: MeasurementSubFieldMap | undefined;
-  visibility: Visibility;
+  measurementVisible: MeasurementVisible;
   recommendationVisible: boolean;
-  setupMeasurementLayer: (measurements: any[], subfields: any[]) => void;
-  toggleMeasurementRegion: (measurementId: number) => void;
+  toggleMeasurementVisible: (measurementId: number) => void;
   toggleRecommendationVisible: () => void;
+  determineMeasurementPositions: () => Promise<void>;
   updateMeasurementPosition: (measurementPosition: MeasurementPosition) => void;
-  updateSubFieldRecommendedFertilizer: (
+  updateMeasurement: (
     measurementId: number,
-    updatedRecommendedFertilizer: any
+    options: NutrientMeasurement
   ) => void;
+  onEvent: (action: string, payload: any) => void;
 };
 
 const MeasurementContext = createContext<MeasurementContextType>({
+  measurements: undefined,
   positions: undefined,
   subfields: undefined,
-  visibility: {},
+  measurementVisible: {},
   recommendationVisible: false,
-  setupMeasurementLayer: () => {},
-  toggleMeasurementRegion: () => {},
+  toggleMeasurementVisible: () => {},
   toggleRecommendationVisible: () => {},
+  determineMeasurementPositions: async () => {},
   updateMeasurementPosition: () => {},
-  updateSubFieldRecommendedFertilizer: () => {},
+  updateMeasurement: () => {},
+  onEvent: () => {},
 });
 
 export default function MeasurementProvider(props: { children: ReactNode }) {
+  const notify = useNotificationContext();
   const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const { ndviRasterVisible, toggleNdviRasterVisible } = useNdviRasterContext();
-  const notify = useNotificationContext();
+  const [measurements, setMeasurements] = useState<Measurement[] | undefined>(
+    undefined
+  );
   const [positions, setPositions] = useState<
     MeasurementPositionMap | undefined
   >(undefined);
   const [subfields, setSubfields] = useState<
     MeasurementSubFieldMap | undefined
   >(undefined);
-  const [visibility, setVisibility] = useState<Visibility>({});
+  const [measurementVisible, setMeasurementVisible] =
+    useState<MeasurementVisible>({});
   const [recommendationVisible, setRecommendationVisible] = useState(false);
 
-  const reset = () => {
-    setVisibility({});
-    setRecommendationVisible(false);
-  };
-
-  useEffect(reset, [selectedFieldId, selectedSeasonId]);
-
-  useEffect(() => {
-    if (ndviRasterVisible) reset();
-  }, [ndviRasterVisible]);
-
-  const setupMeasurementLayer = (measurements: any[], subfields: any[]) => {
+  const initializeMeasurements = (
+    fetchedMeasurements: any[],
+    fetchedSubFields: any[]
+  ) => {
+    const measurements = fetchedMeasurements
+      .map((fetchedMeasurement) => parseMeasurement(fetchedMeasurement))
+      .sort((m1, m2) => m1.ndvi - m2.ndvi);
+    setMeasurements(measurements);
     const positionMap = {} as MeasurementPositionMap;
-    measurements.forEach((measurement) => {
+    fetchedMeasurements.forEach((measurement) => {
       const parsedMeasurementPosition = parseMeasurementPosition(measurement);
       positionMap[parsedMeasurementPosition.id] = parsedMeasurementPosition;
     });
     setPositions(positionMap);
     const subfieldMap = {} as MeasurementSubFieldMap;
-    subfields.forEach((subfield) => {
+    fetchedSubFields.forEach((subfield) => {
       const parsedSubField = parseSubField(subfield);
       const measurementId = parsedSubField.measurementId;
       if (!subfieldMap?.[measurementId]) {
@@ -99,8 +106,62 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
     setSubfields(subfieldMap);
   };
 
-  const toggleMeasurementRegion = (measurementId: number) => {
-    setVisibility((prevVisibility) => {
+  useEffect(() => {
+    const reset = () => setMeasurements(undefined);
+    if (selectedFieldId && selectedSeasonId) {
+      Promise.all([
+        doRequest(
+          `measurement/subfield/${selectedFieldId}/${selectedSeasonId}`,
+          "GET"
+        ),
+        doRequest(`measurement/${selectedFieldId}/${selectedSeasonId}`, "GET"),
+      ])
+        .then(async ([subfieldResponse, measurementResponse]) => {
+          const subfieldResponseBody = await subfieldResponse.json();
+          const measurementResponseBody = await measurementResponse.json();
+          initializeMeasurements(measurementResponseBody, subfieldResponseBody);
+        })
+        .catch(reset);
+    } else reset();
+  }, [selectedFieldId, selectedSeasonId]);
+
+  const determineMeasurementPositions = async () => {
+    return doRequest(
+      `measurement/position/${selectedFieldId}/${selectedSeasonId}`,
+      "GET"
+    )
+      .then(async (response) => {
+        const message = (await response.json())["data"];
+        notify({ message: message, isError: false });
+      })
+      .catch((error) => notify({ message: error, isError: true }));
+  };
+
+  const reset = () => {
+    setMeasurementVisible({});
+    setRecommendationVisible(false);
+  };
+
+  useEffect(reset, [selectedFieldId, selectedSeasonId]);
+
+  useEffect(() => {
+    if (ndviRasterVisible) reset();
+  }, [ndviRasterVisible]);
+
+  const updateMeasurement = (
+    measurementId: number,
+    options: NutrientMeasurement
+  ) => {
+    doRequest(`measurement/upgister/${measurementId}`, "PUT", options).then(
+      async (response) => {
+        const message = (await response.json())["data"];
+        notify({ message: message, isError: false });
+      }
+    );
+  };
+
+  const toggleMeasurementVisible = (measurementId: number) => {
+    setMeasurementVisible((prevVisibility) => {
       if (!prevVisibility) return prevVisibility;
       if (ndviRasterVisible) toggleNdviRasterVisible();
       if (measurementId in prevVisibility) delete prevVisibility[measurementId];
@@ -124,17 +185,10 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
       "PUT",
       deparseMeasurementPosition(measurementPosition)
     )
-      .then(() => {
-        setPositions((prevPositions) =>
-          prevPositions
-            ? {
-                ...prevPositions,
-                [measurementPosition.id]: measurementPosition,
-              }
-            : prevPositions
-        );
+      .then(async (response) => {
+        const message = (await response.json())["data"];
         notify({
-          message: "Successfully updated the measurement position",
+          message: message,
           isError: false,
         });
       })
@@ -146,36 +200,78 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
       });
   };
 
-  const updateSubFieldRecommendedFertilizer = (
-    measurementId: number,
-    updatedRecommendedFertilizer: any
-  ) => {
-    setSubfields((prevSubfields) =>
-      prevSubfields
-        ? {
-            ...prevSubfields,
-            [measurementId]: prevSubfields[measurementId].map((subfield) => ({
-              ...subfield,
-              recommendedFertilizerAmount:
-                updatedRecommendedFertilizer[subfield.id],
-            })),
+  const onEvent = (action: string, payload: any) => {
+    const { field_id: fieldId, season_id: seasonId } = payload;
+    if (fieldId !== selectedFieldId || seasonId !== selectedSeasonId) return;
+    switch (action) {
+      case "create": {
+        const { measurements, subfields } = payload;
+        initializeMeasurements(measurements, subfields);
+        break;
+      }
+      case "update_measurement": {
+        const {
+          measurement,
+          subfield_recommended_fertilizer: subfieldRecommendedFertilizer,
+        } = payload;
+        const updatedMeasurement = parseMeasurement(measurement);
+        setMeasurements((prevMeasurements) => {
+          if (prevMeasurements) {
+            const index = prevMeasurements.findIndex(
+              (prevMeasurement) => prevMeasurement.id === updatedMeasurement.id
+            );
+            if (index !== -1) {
+              prevMeasurements[index] = {
+                ...prevMeasurements[index],
+                ...updatedMeasurement,
+              };
+              prevMeasurements = [...prevMeasurements];
+            }
           }
-        : prevSubfields
-    );
+          return prevMeasurements;
+        });
+        setSubfields((prevSubfields) =>
+          prevSubfields
+            ? {
+                ...prevSubfields,
+                [updatedMeasurement.id]: prevSubfields[
+                  updatedMeasurement.id
+                ].map((subfield) => ({
+                  ...subfield,
+                  recommendedFertilizerAmount:
+                    subfieldRecommendedFertilizer[subfield.id],
+                })),
+              }
+            : prevSubfields
+        );
+        break;
+      }
+      case "update_position": {
+        const position = parseMeasurementPosition(payload.measurement);
+        setPositions((prevPositions) =>
+          prevPositions
+            ? { ...prevPositions, [position.id]: position }
+            : prevPositions
+        );
+        break;
+      }
+    }
   };
 
   return (
     <MeasurementContext.Provider
       value={{
+        measurements,
         positions,
         subfields,
-        visibility,
+        measurementVisible,
         recommendationVisible,
-        setupMeasurementLayer,
-        toggleMeasurementRegion,
+        toggleMeasurementVisible,
         toggleRecommendationVisible,
+        determineMeasurementPositions,
         updateMeasurementPosition,
-        updateSubFieldRecommendedFertilizer,
+        updateMeasurement,
+        onEvent,
       }}
     >
       {props.children}

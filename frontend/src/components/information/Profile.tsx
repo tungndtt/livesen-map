@@ -10,13 +10,8 @@ import UpgradeIcon from "@mui/icons-material/Upgrade";
 import ClearIcon from "@mui/icons-material/Clear";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
-import { useNotificationContext } from "../../contexts/NotificationContext";
-import {
-  UserProfile,
-  UserProfileField,
-  parseUserProfile,
-} from "../../types/profile";
+import { useProfileContext } from "../../contexts/ProfileContext";
+import { UserProfile, UserProfileField } from "../../types/profile";
 
 const fields = [
   { name: "name", label: "Name" },
@@ -26,42 +21,13 @@ const fields = [
 ];
 
 export default function Profile() {
-  const { authenticationToken, doRequest } = useAuthenticationContext();
-  const notify = useNotificationContext();
-  const [user, setUser] = useState<UserProfile | undefined>(undefined);
+  const { user, updateUser } = useProfileContext();
   const [options, setOptions] = useState<UserProfile>({});
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    doRequest("user", "GET")
-      .then(async (response) => {
-        const responseBody = await response.json();
-        const userProfile = parseUserProfile(responseBody);
-        setUser(userProfile);
-        setOptions(userProfile);
-        notify({
-          message: "Successfully retrieve the user information",
-          isError: false,
-        });
-      })
-      .catch((error) => {
-        setUser(undefined);
-        notify({ message: error, isError: true });
-      });
-  }, [authenticationToken]);
-
-  const updateUser = () => {
-    doRequest("user/upgister", "PUT", options)
-      .then(async (response) => {
-        const responseBody = await response.json();
-        setUser(parseUserProfile(responseBody));
-        notify({
-          message: "Successfully update the user information",
-          isError: false,
-        });
-      })
-      .catch((error) => notify({ message: error, isError: true }));
-  };
+    if (user) setOptions(user);
+  }, [user]);
 
   const onChangeOptions = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOptions((prevOptions) => {
@@ -123,7 +89,7 @@ export default function Profile() {
               options?.[name as UserProfileField] ===
               user?.[name as UserProfileField]
           )}
-          onClick={updateUser}
+          onClick={() => updateUser(options)}
         >
           Update profile
         </Button>

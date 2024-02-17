@@ -17,120 +17,26 @@ import GridOnIcon from "@mui/icons-material/GridOn";
 import GridOffIcon from "@mui/icons-material/GridOff";
 import UpgradeIcon from "@mui/icons-material/Upgrade";
 import ClearIcon from "@mui/icons-material/Clear";
-import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useMeasurementContext } from "../../../contexts/MeasurementContext";
-import { useNotificationContext } from "../../../contexts/NotificationContext";
 import {
   Measurement,
   NutrientMeasurement,
   MeasurementNutrientField,
-  parseMeasurement,
 } from "../../../types/measurement";
 
 export default function MeasurementTab() {
-  const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
   const {
-    visibility,
-    setupMeasurementLayer,
-    toggleMeasurementRegion,
+    measurements,
+    determineMeasurementPositions,
+    updateMeasurement,
+    measurementVisible,
+    toggleMeasurementVisible,
     recommendationVisible,
     toggleRecommendationVisible,
-    updateSubFieldRecommendedFertilizer,
   } = useMeasurementContext();
-  const notify = useNotificationContext();
-  const [measurements, setMeasurements] = useState<Measurement[] | undefined>(
-    undefined
-  );
   const [isDetermining, setIsDetermining] = useState(false);
-
-  const initializeMeasurements = (
-    fetchedMeasurements: any[],
-    fetchedSubFields: any[]
-  ) => {
-    const measurements = fetchedMeasurements
-      .map((fetchedMeasurement) => parseMeasurement(fetchedMeasurement))
-      .sort((m1, m2) => m1.ndvi - m2.ndvi);
-    setMeasurements(measurements);
-    setupMeasurementLayer(fetchedMeasurements, fetchedSubFields);
-  };
-
-  useEffect(() => {
-    const reset = () => setMeasurements(undefined);
-    if (selectedFieldId && selectedSeasonId) {
-      Promise.all([
-        doRequest(
-          `measurement/subfield/${selectedFieldId}/${selectedSeasonId}`,
-          "GET"
-        ),
-        doRequest(`measurement/${selectedFieldId}/${selectedSeasonId}`, "GET"),
-      ])
-        .then(async ([subfieldResponse, measurementResponse]) => {
-          const subfieldResponseBody = await subfieldResponse.json();
-          const measurementResponseBody = await measurementResponse.json();
-          initializeMeasurements(measurementResponseBody, subfieldResponseBody);
-        })
-        .catch(reset);
-    } else reset();
-  }, [selectedFieldId, selectedSeasonId]);
-
-  const determineMeasurementPositions = () => {
-    setIsDetermining(true);
-    doRequest(
-      `measurement/position/${selectedFieldId}/${selectedSeasonId}`,
-      "GET"
-    )
-      .then(async (response) => {
-        const responseBody = await response.json();
-        const { measurements, subfields } = responseBody;
-        initializeMeasurements(measurements, subfields);
-        notify({
-          message: "Measurement poisitions were determined",
-          isError: false,
-        });
-      })
-      .catch((error) => notify({ message: error, isError: true }))
-      .finally(() => setIsDetermining(false));
-  };
-
-  const updateMeasurement = (
-    measurementId: number,
-    options: NutrientMeasurement
-  ) => {
-    doRequest(`measurement/upgister/${measurementId}`, "PUT", options).then(
-      async (response) => {
-        const responseBody = await response.json();
-        const measurement = responseBody["measurement"];
-        const updatedMeasurement = parseMeasurement(measurement);
-        setMeasurements((prevMeasurements) => {
-          if (prevMeasurements) {
-            const index = prevMeasurements.findIndex(
-              (prevMeasurement) => prevMeasurement.id === updatedMeasurement.id
-            );
-            if (index !== -1) {
-              prevMeasurements[index] = {
-                ...prevMeasurements[index],
-                ...updatedMeasurement,
-              };
-              prevMeasurements = [...prevMeasurements];
-            }
-          }
-          return prevMeasurements;
-        });
-        const subfieldRecommendedFertilizer =
-          responseBody["subfield_recommended_fertilizer"];
-        updateSubFieldRecommendedFertilizer(
-          updatedMeasurement.id,
-          subfieldRecommendedFertilizer
-        );
-        notify({
-          message: "Successfully updated measurement",
-          isError: false,
-        });
-      }
-    );
-  };
 
   return (
     <Box className="tab-container">
@@ -177,15 +83,15 @@ export default function MeasurementTab() {
                   variant="outlined"
                   color="success"
                   endIcon={
-                    visibility?.[measurement.id] ? (
+                    measurementVisible?.[measurement.id] ? (
                       <VisibilityOffIcon />
                     ) : (
                       <VisibilityIcon />
                     )
                   }
-                  onClick={() => toggleMeasurementRegion(measurement.id)}
+                  onClick={() => toggleMeasurementVisible(measurement.id)}
                 >
-                  {visibility?.[measurement.id]
+                  {measurementVisible?.[measurement.id]
                     ? "Hide measurement subfield"
                     : "Show measurement subfield"}
                 </Button>
@@ -198,7 +104,7 @@ export default function MeasurementTab() {
             variant="outlined"
             sx={{ my: 1 }}
             endIcon={recommendationVisible ? <GridOffIcon /> : <GridOnIcon />}
-            disabled={Object.keys(visibility ?? {}).length === 0}
+            disabled={Object.keys(measurementVisible ?? {}).length === 0}
             onClick={toggleRecommendationVisible}
           >
             {recommendationVisible
@@ -229,7 +135,12 @@ export default function MeasurementTab() {
             color="warning"
             endIcon={<ViewQuiltIcon />}
             disabled={!selectedFieldId || !selectedSeasonId || isDetermining}
-            onClick={determineMeasurementPositions}
+            onClick={() => {
+              setIsDetermining(true);
+              determineMeasurementPositions().finally(() =>
+                setIsDetermining(false)
+              );
+            }}
           >
             Determine measurement positions
           </Button>

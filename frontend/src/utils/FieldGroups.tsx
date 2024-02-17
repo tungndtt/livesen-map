@@ -169,12 +169,12 @@ export default function FieldGroups({
                           key={fieldId}
                           label={label}
                           value={dayjs(option?.[fieldId] ?? null)}
-                          onChange={(value) =>
+                          onChange={(value) => {
                             onChangeOption(fieldId, value?.toDate(), {
                               groupId,
                               index,
-                            })
-                          }
+                            });
+                          }}
                         />
                       ) : type === "category" ? (
                         <Autocomplete
@@ -233,9 +233,9 @@ export default function FieldGroups({
                       label={label}
                       key={fieldId}
                       value={dayjs(options?.[fieldId] ?? null)}
-                      onChange={(value) =>
-                        onChangeOption(fieldId, value?.toDate())
-                      }
+                      onChange={(value) => {
+                        onChangeOption(fieldId, value?.toDate());
+                      }}
                     />
                   ) : type === "category" ? (
                     <Autocomplete
