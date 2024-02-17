@@ -5,6 +5,7 @@ from services.store.storage import DbCursor
 from services.store.dafs.season import get_season
 from services.store.dafs.measurement import list_measurements, get_measurement, insert_measurement, update_measurement
 from services.store.dafs.subfield import list_subfields, insert_subfield, update_subfield_recommended_fertilizer_amount
+from services.notify.notifier import publish_event
 from libs.algo.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from libs.algo.measurement_position import find_measurement_position
 from libs.algo.fertilizer_recommendation import compute_fertilizer_recommendation
@@ -80,7 +81,10 @@ def retrieve_measurement_positions(user_id, _, field_id, season_id):
                                         cursor=cursor)
                     )
     if db_cursor.error is None:
-        return jsonify({"measurements": inserted_measurements, "subfields": inserted_subfields}), 201
+        publish_event(user_id, "measurement.create",
+                      {"field_id": field_id, "season_id": season_id,
+                       "measurements": inserted_measurements, "subfields": inserted_subfields})
+        return jsonify({"data": "Successfully determine the measurement positions"}), 201
     else:
         return jsonify({"data": "Failed to determine the measurement positions"}), 500
 
@@ -120,7 +124,10 @@ def upgister_measurement(user_id, data, measurement_id):
                 recommended_fertilizer = subfield["recommended_fertilizer_amount"]
                 recommended_fertilizer = recommended_fertilizer if recommended_fertilizer is not None else 0
     if db_cursor.error is None:
-        return {"measurement": updated_measurement, "subfield_recommended_fertilizer": subfield_recommended_fertilizer}, 200
+        publish_event(user_id, "measurement.update_measurement",
+                      {"field_id": updated_measurement["field_id"], "season_id": updated_measurement["season_id"],
+                       "measurement": updated_measurement, "subfield_recommended_fertilizer": subfield_recommended_fertilizer})
+        return jsonify({"data": "Successfully update the measurement"}), 200
     else:
         return jsonify({"data": "Failed to update the measurement"}), 500
 
@@ -130,6 +137,9 @@ def upgister_measurement(user_id, data, measurement_id):
 def upgister_measurement_position(user_id, data, measurement_id):
     updated_measurement = update_measurement(user_id, measurement_id, data)
     if updated_measurement is not None:
-        return updated_measurement, 200
+        publish_event(user_id, "measurement.update_position",
+                      {"field_id": updated_measurement["field_id"], "season_id": updated_measurement["season_id"],
+                       "measurement": updated_measurement})
+        return jsonify({"data": "Successfully update the measurement position"}), 200
     else:
         return jsonify({"data": "Failed to update the measurement position"}), 500

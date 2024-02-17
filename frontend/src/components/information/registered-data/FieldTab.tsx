@@ -5,52 +5,16 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import LayersIcon from "@mui/icons-material/Layers";
 import LayersClearIcon from "@mui/icons-material/LayersClear";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { useNdviRasterContext } from "../../../contexts/NdviRasterContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
-import { Field, parseField } from "../../../types/field";
 
 export default function FieldTab() {
-  const { doRequest } = useAuthenticationContext();
-  const { selectedFieldId, refreshFieldOptions, selectedSeasonId } =
-    useSelectionContext();
-  const { fieldVisible, setupFieldLayer, toggleFieldVisible } =
+  const { selectedFieldId, selectedSeasonId } = useSelectionContext();
+  const { field, unregisterField, fieldVisible, toggleFieldVisible } =
     useFieldContext();
   const { ndviRasterVisible, toggleNdviRasterVisible } = useNdviRasterContext();
-  const notify = useNotificationContext();
-  const [field, setField] = useState<Field | undefined>(undefined);
-
-  useEffect(() => {
-    if (selectedFieldId) {
-      doRequest(`field/${selectedFieldId}`, "GET")
-        .then(async (response) => {
-          const responseBody = await response.json();
-          const field = parseField(responseBody);
-          setField(field);
-          setupFieldLayer(field.coordinates);
-        })
-        .catch((error) => {
-          setField(undefined);
-          notify({ message: error, isError: true });
-        });
-    } else setField(undefined);
-  }, [selectedFieldId]);
-
-  const unregisterField = () => {
-    doRequest(`field/unregister/${selectedFieldId}`, "DELETE")
-      .then(() => {
-        refreshFieldOptions();
-        notify({
-          message: "Successfully unregister the field",
-          isError: false,
-        });
-      })
-      .catch(() => {
-        notify({ message: "Failed to unregister the field", isError: true });
-      });
-  };
 
   return (
     <Box className="tab-container">

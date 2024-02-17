@@ -1,13 +1,6 @@
 from typing import Any
 
 
-class Jwtoken:
-    secret: str | None = None
-
-    def parse(self, config: dict[str, Any]) -> None:
-        self.secret = config["secret"]
-
-
 class Mailer:
     email: str | None = None
     password: str | None = None
@@ -17,13 +10,6 @@ class Mailer:
         self.email = config["email"]
         self.password = config["password"]
         self.service_url = config["service_url"]
-
-
-class Ndvi:
-    data_folder: str | None = None
-
-    def parse(self, config: dict[str, Any]) -> None:
-        self.data_folder = config["data_folder"]
 
 
 class Downloader:
@@ -52,6 +38,36 @@ class Storage:
         self.host = config["host"]
         self.port = config["port"]
         self.dbname = config["dbname"]
+
+
+class Recommender:
+    model_path: str | None = None
+
+    def parse(self, config: dict[str, Any]) -> None:
+        self.model_path = config["model_path"]
+
+
+class Notifier:
+    host: str | None = None
+    port: int | None = None
+
+    def parse(self, config: dict[str, Any]) -> None:
+        self.host = config["host"]
+        self.port = config["port"]
+
+
+class Ndvi:
+    data_folder: str | None = None
+
+    def parse(self, config: dict[str, Any]) -> None:
+        self.data_folder = config["data_folder"]
+
+
+class Jwtoken:
+    secret: str | None = None
+
+    def parse(self, config: dict[str, Any]) -> None:
+        self.secret = config["secret"]
 
 
 class App:
@@ -92,18 +108,12 @@ class Metadata:
                 setattr(self, field, file.readline().split(","))
 
 
-class Recommender:
-    model_path: str | None = None
-
-    def parse(self, config: dict[str, Any]) -> None:
-        self.model_path = config["model_path"]
-
-
 __initialized = False
 MAILER = Mailer()
 DOWNLOADER = Downloader()
 STORAGE = Storage()
 RECOMMENDER = Recommender()
+NOTIFIER = Notifier()
 JWTOKEN = Jwtoken()
 NDVI = Ndvi()
 APP = App()
@@ -111,17 +121,18 @@ METADATA = Metadata()
 
 
 def __init():
-    global __initialized, JWTOKEN, MAILER, NDVI, DOWNLOADER, STORAGE, RECOMMENDER, APP, METADATA
+    global __initialized, MAILER, DOWNLOADER, STORAGE, RECOMMENDER, NOTIFIER, JWTOKEN, NDVI, APP, METADATA
     if not __initialized:
         import json
         with open("config.json", "r") as f:
             config = json.load(f)
-        JWTOKEN.parse(config["jwtoken"])
         MAILER.parse(config["mailer"])
-        NDVI.parse(config["ndvi"])
         DOWNLOADER.parse(config["downloader"])
         STORAGE.parse(config["storage"])
         RECOMMENDER.parse(config["recommender"])
+        NOTIFIER.parse(config["notifier"])
+        JWTOKEN.parse(config["jwtoken"])
+        NDVI.parse(config["ndvi"])
         APP.parse(config["app"])
         METADATA.parse(config["metadata"])
         __initialized = True

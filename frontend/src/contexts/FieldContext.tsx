@@ -5,52 +5,105 @@ import {
   ReactNode,
   useEffect,
 } from "react";
+import { useNotificationContext } from "./NotificationContext";
+import { useAuthenticationContext } from "./AuthenticationContext";
 import { useSelectionContext } from "./SelectionContext";
-import { Coordinates } from "../types/coordinate";
+import { useRegionInterestContext } from "./RegionInterestContext";
+import { Field, parseField } from "../types/field";
 
 type FieldContextType = {
-  coordinates: Coordinates | undefined;
-  setupFieldLayer: (coordinates: Coordinates) => void;
+  field: Field | undefined;
+  registerField: () => void;
+  unregisterField: () => void;
   fieldVisible: boolean;
   toggleFieldVisible: () => void;
+  onEvent: (action: string, payload: any) => void;
 };
 
 const FieldContext = createContext<FieldContextType>({
-  coordinates: undefined,
-  setupFieldLayer: () => {},
+  field: undefined,
+  registerField: () => {},
+  unregisterField: () => {},
   fieldVisible: false,
   toggleFieldVisible: () => {},
+  onEvent: () => {},
 });
 
 export default function FieldProvider(props: { children: ReactNode }) {
+  const notify = useNotificationContext();
+  const { doRequest } = useAuthenticationContext();
   const { selectedFieldId } = useSelectionContext();
-  const [coordinates, setCoordinates] = useState<Coordinates | undefined>(
-    undefined
-  );
-  const [regionVisible, setRegionVisible] = useState(false);
+  const { roi, setRoi, roiName, setRoiName } = useRegionInterestContext();
+  const [fieldVisible, setFieldVisible] = useState(false);
+  const [field, setField] = useState<Field | undefined>(undefined);
 
   useEffect(() => {
-    if (selectedFieldId === undefined) {
-      setRegionVisible(false);
-      setCoordinates(undefined);
-    }
+    if (selectedFieldId) {
+      doRequest(`field/${selectedFieldId}`, "GET")
+        .then(async (response) => {
+          const responseBody = await response.json();
+          const field = parseField(responseBody);
+          setField(field);
+        })
+        .catch((error) => {
+          setField(undefined);
+          notify({ message: error, isError: true });
+        });
+    } else setField(undefined);
   }, [selectedFieldId]);
 
-  const setupFieldLayer = (coordinates: Coordinates) => {
-    setCoordinates(coordinates);
+  useEffect(() => {
+    if (selectedFieldId === undefined) setFieldVisible(false);
+  }, [selectedFieldId]);
+
+  const registerField = () => {
+    if (roi && roiName) {
+      doRequest("field/register", "POST", {
+        name: roiName,
+        coordinates: roi.map((r) => r.map(({ lat, lng }) => [lng, lat])),
+      })
+        .then(() => {
+          setRoi(undefined);
+          setRoiName("");
+          notify({
+            message: "Successfully register region of interest",
+            isError: false,
+          });
+        })
+        .catch((error) => notify({ message: error, isError: true }));
+    }
   };
 
-  const toggleFieldRegion = () => {
-    setRegionVisible((prevRegionVisible) => !prevRegionVisible);
+  const unregisterField = () => {
+    doRequest(`field/unregister/${selectedFieldId}`, "DELETE")
+      .then(() => {
+        notify({
+          message: "Successfully unregister the field",
+          isError: false,
+        });
+      })
+      .catch(() => {
+        notify({ message: "Failed to unregister the field", isError: true });
+      });
+  };
+
+  const toggleFieldVisible = () => {
+    setFieldVisible((prevRegionVisible) => !prevRegionVisible);
+  };
+
+  const onEvent = (action: string, payload: any) => {
+    if (action === "delete" && payload?.id === field?.id) setField(undefined);
   };
 
   return (
     <FieldContext.Provider
       value={{
-        coordinates,
-        setupFieldLayer,
-        fieldVisible: regionVisible,
-        toggleFieldVisible: toggleFieldRegion,
+        field,
+        registerField,
+        unregisterField,
+        fieldVisible,
+        toggleFieldVisible,
+        onEvent,
       }}
     >
       {props.children}

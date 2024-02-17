@@ -16,6 +16,7 @@ import { useAuthenticationContext } from "../../../contexts/AuthenticationContex
 import { useNotificationContext } from "../../../contexts/NotificationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useMetadataContext } from "../../../contexts/MetadataContext";
+import { useSeasonContext } from "../../../contexts/SeasonContext";
 import { Season, parseSeason, deparseSeason } from "../../../types/season";
 
 const fieldGroups = [
@@ -132,69 +133,13 @@ type FertilizerRecommendation = {
 };
 
 export default function SeasonInterest() {
-  const { doRequest } = useAuthenticationContext();
-  const { selectedFieldId, selectedSeasonId, refreshSeasonOptions } =
-    useSelectionContext();
-  const { categories } = useMetadataContext();
   const notify = useNotificationContext();
-  const [season, setSeason] = useState<Season | undefined>(undefined);
+  const { doRequest } = useAuthenticationContext();
+  const { selectedFieldId, selectedSeasonId } = useSelectionContext();
+  const { categories } = useMetadataContext();
+  const { season, updateSeason, deleteSeason } = useSeasonContext();
   const [fertilizerRecommendation, setFertilizerRecommendation] =
     useState<FertilizerRecommendation>({ fertilizer: "" });
-
-  useEffect(() => {
-    if (selectedFieldId && selectedSeasonId) {
-      doRequest(`season/${selectedFieldId}/${selectedSeasonId}`, "GET")
-        .then(async (response) => {
-          const responseBody = await response.json();
-          const parsedSeason = parseSeason(responseBody);
-          setSeason(parsedSeason);
-        })
-        .catch(() => setSeason(undefined));
-    } else {
-      setSeason(undefined);
-    }
-  }, [selectedFieldId, selectedSeasonId]);
-
-  const updateSeason = (data: any) => {
-    if (selectedFieldId && selectedSeasonId) {
-      doRequest(
-        `season/${selectedFieldId}/${selectedSeasonId}`,
-        "POST",
-        deparseSeason(data)
-      )
-        .then(async (response) => {
-          const responseBody = await response.json();
-          setSeason(parseSeason(responseBody));
-          notify({
-            message: "Successfully update the season information",
-            isError: false,
-          });
-        })
-        .catch((error) => notify({ message: error, isError: true }));
-    }
-  };
-
-  const deleteSeason = () => {
-    if (selectedFieldId && selectedSeasonId) {
-      doRequest(
-        `season/unregister/${selectedFieldId}/${selectedSeasonId}`,
-        "DELETE"
-      )
-        .then(() => {
-          refreshSeasonOptions();
-          notify({
-            message: "Successfully unregister the season",
-            isError: false,
-          });
-        })
-        .catch(() =>
-          notify({
-            message: "Failed to unregister the season",
-            isError: true,
-          })
-        );
-    }
-  };
 
   const recommendSeasonFertilizer = () => {
     if (selectedFieldId && selectedSeasonId) {

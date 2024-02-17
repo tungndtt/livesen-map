@@ -21,24 +21,24 @@ type SeasonOption = {
 
 type SelectionContextType = {
   fieldOptions: FieldOption[] | undefined;
-  refreshFieldOptions: () => void;
   selectedFieldId: number | undefined;
   setSelectedFieldId: Dispatch<SetStateAction<number | undefined>>;
   seasonOptions: SeasonOption[] | undefined;
-  refreshSeasonOptions: () => void;
   selectedSeasonId: string | undefined;
   setSelectedSeasonId: Dispatch<SetStateAction<string | undefined>>;
+  onFieldEvent: (action: string, payload: any) => void;
+  onSeasonEvent: (action: string, payload: any) => void;
 };
 
 const SelectionContext = createContext<SelectionContextType>({
   fieldOptions: undefined,
-  refreshFieldOptions: () => {},
   selectedFieldId: undefined,
   setSelectedFieldId: () => {},
   seasonOptions: undefined,
-  refreshSeasonOptions: () => {},
   selectedSeasonId: undefined,
   setSelectedSeasonId: () => {},
+  onFieldEvent: () => {},
+  onSeasonEvent: () => {},
 });
 
 export default function SelectionProvider(props: { children: ReactNode }) {
@@ -56,7 +56,7 @@ export default function SelectionProvider(props: { children: ReactNode }) {
     undefined
   );
 
-  const refreshFieldOptions = () => {
+  useEffect(() => {
     if (authenticationToken) {
       doRequest("field", "GET")
         .then(async (response) => {
@@ -72,11 +72,9 @@ export default function SelectionProvider(props: { children: ReactNode }) {
       setFieldOptions(undefined);
       setSelectedFieldId(undefined);
     }
-  };
+  }, [authenticationToken]);
 
-  useEffect(refreshFieldOptions, [authenticationToken]);
-
-  const refreshSeasonOptions = () => {
+  const fetchSeasonOptions = () => {
     const reset = () => {
       setSeasonOptions(undefined);
       setSelectedSeasonId(undefined);
@@ -100,19 +98,97 @@ export default function SelectionProvider(props: { children: ReactNode }) {
     } else reset();
   };
 
-  useEffect(refreshSeasonOptions, [authenticationToken, selectedFieldId]);
+  useEffect(fetchSeasonOptions, [selectedFieldId]);
+
+  const onFieldEvent = (action: string, payload: any) => {
+    const { id, name } = payload;
+    switch (action) {
+      case "create": {
+        setFieldOptions((prevFieldOptions) => {
+          if (
+            !prevFieldOptions?.find(
+              (prevFieldOptions) => prevFieldOptions.id === id
+            )
+          ) {
+            prevFieldOptions = [...(prevFieldOptions ?? []), { id, name }];
+          }
+          return prevFieldOptions;
+        });
+        break;
+      }
+      case "delete": {
+        setFieldOptions((prevFieldOptions) => {
+          if (
+            prevFieldOptions?.find(
+              (prevFieldOptions) => prevFieldOptions.id === id
+            )
+          ) {
+            prevFieldOptions = prevFieldOptions?.filter(
+              (prevFieldOptions) => prevFieldOptions.id !== id
+            );
+            if (selectedFieldId === id) setSelectedFieldId(undefined);
+          }
+          return prevFieldOptions;
+        });
+        break;
+      }
+    }
+  };
+
+  const onSeasonEvent = (action: string, payload: any) => {
+    const { field_id: fieldId, season_id: seasonId } = payload;
+    if (selectedFieldId !== fieldId) return;
+    switch (action) {
+      case "create": {
+        setSeasonOptions((prevSeasonOptions) => {
+          if (
+            !prevSeasonOptions?.find(
+              (prevSeasonOptions) => prevSeasonOptions.id === seasonId
+            )
+          ) {
+            const year = seasonId.substring(0, 4);
+            const month = seasonId.substring(4, 6);
+            const day = seasonId.substring(6);
+            const label = `${day}-${month}-${year}`;
+            prevSeasonOptions = [
+              ...(prevSeasonOptions ?? []),
+              { id: seasonId, label },
+            ];
+          }
+          return prevSeasonOptions;
+        });
+        break;
+      }
+      case "delete": {
+        setSeasonOptions((prevSeasonOptions) => {
+          if (
+            prevSeasonOptions?.find(
+              (prevSeasonOptions) => prevSeasonOptions.id === seasonId
+            )
+          ) {
+            prevSeasonOptions = prevSeasonOptions?.filter(
+              (prevSeasonOptions) => prevSeasonOptions.id !== seasonId
+            );
+            if (selectedSeasonId === seasonId) setSelectedSeasonId(undefined);
+          }
+          return prevSeasonOptions;
+        });
+        break;
+      }
+    }
+  };
 
   return (
     <SelectionContext.Provider
       value={{
         fieldOptions,
-        refreshFieldOptions,
         selectedFieldId,
         setSelectedFieldId,
         seasonOptions,
-        refreshSeasonOptions,
         selectedSeasonId,
         setSelectedSeasonId,
+        onFieldEvent,
+        onSeasonEvent,
       }}
     >
       {props.children}
