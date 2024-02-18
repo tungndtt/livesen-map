@@ -3,7 +3,7 @@ from services.store.dafs.user import get_user
 from services.mail.mailer import send_email
 from libs.jwt.token import generate_token, verify_token
 from libs.hash.hasher import encrypt, check
-from config import APP, MAILER
+from config import APP
 
 
 def authentication_required(f):
@@ -50,7 +50,6 @@ def sign_up():
         data["password"] = encrypted_password
         duration = 10
         registration_token = generate_token(data, duration)
-        registration_link = f"{MAILER.service_url}/user/register?registration_token={registration_token}"
         subject = "Livesen Registration"
         content = f"""
         <html>
@@ -58,9 +57,11 @@ def sign_up():
                 <p>
                     Dear user,
                     <br><br>
-                    welcome to Livesen-Map platform. In order to activate your account registration, please click on this <a href="{registration_link}">link</a>.
+                    welcome to Livesen-Map platform. In order to activate your account, please paste the following registration token in the registration form:
                     <br>
-                    Note that the link is only valid in {duration} minutes since this email is released!
+                    {registration_token}
+                    <br>
+                    Note that the token is only valid in {duration} minutes since this email is released!
                     <br><br>
                     Best,
                     <br>
