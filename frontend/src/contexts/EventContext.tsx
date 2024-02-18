@@ -52,17 +52,22 @@ export default function EventProvider(props: { children: ReactNode }) {
           }
         }
       };
+
+      eventListener.current.onerror = function (event) {};
     } else if (eventListener.current) {
       eventListener.current.close();
       eventListener.current = null;
     }
+  }, [authenticationToken, selectedFieldId, selectedSeasonId]);
+
+  useEffect(() => {
     return () => {
       if (eventListener.current) {
         eventListener.current.close();
         eventListener.current = null;
       }
     };
-  }, [authenticationToken, selectedFieldId, selectedSeasonId]);
+  });
 
   return <>{props.children}</>;
 }
