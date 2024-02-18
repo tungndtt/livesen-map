@@ -47,8 +47,10 @@ def register_field(user_id, data):
         region = Polygon(shell, holes).__str__()
         inserted_field = insert_field(user_id, name, region)
         if inserted_field is not None:
-            publish_event(user_id, "field.create", inserted_field)
-            return jsonify({"data": "Successfully register the field"}), 201
+            if publish_event(user_id, "field.create", inserted_field):
+                return jsonify({"data": "Successfully register the field"}), 201
+            else:
+                return jsonify({"data": "Successfully register the field but failed to publish sync event"}), 500
         else:
             return jsonify({"data": "Failed to register the field"}), 500
     except:
@@ -60,7 +62,6 @@ def register_field(user_id, data):
 def unregister_field(user_id, __, field_id):
     ndvi_rasters = list_ndvi_rasters(user_id, field_id)
     if delete_field(user_id, field_id):
-        publish_event(user_id, "field.delete", {"id": field_id})
         if ndvi_rasters is not None:
             try:
                 for ndvi_raster in ndvi_rasters.values():
@@ -68,6 +69,9 @@ def unregister_field(user_id, __, field_id):
                 return jsonify({"data": "Successfully unregister the field"}), 204
             except Exception as error:
                 print("[Field API]", error)
-        return jsonify({"data": "Successfully unregister the field"}), 204
+        if publish_event(user_id, "field.delete", {"id": field_id}):
+            return jsonify({"data": "Successfully unregister the field"}), 204
+        else:
+            return jsonify({"data": "Successfully unregister the field but failed to publish sync event"}), 500
     else:
         return jsonify({"data": "Failed to unregister the field"}), 500

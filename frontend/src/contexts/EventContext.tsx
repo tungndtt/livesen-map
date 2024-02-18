@@ -67,7 +67,7 @@ export default function EventProvider(props: { children: ReactNode }) {
         eventListener.current = null;
       }
     };
-  });
+  }, []);
 
   return <>{props.children}</>;
 }

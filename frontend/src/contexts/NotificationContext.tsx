@@ -25,7 +25,7 @@ export default function NotificationProvider(props: { children: ReactNode }) {
       {props.children}
       <Snackbar
         open={Boolean(notification)}
-        autoHideDuration={1500}
+        autoHideDuration={2500}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{ zIndex: 9999 }}
         onClose={onClose}

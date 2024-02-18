@@ -81,10 +81,12 @@ def retrieve_measurement_positions(user_id, _, field_id, season_id):
                                         cursor=cursor)
                     )
     if db_cursor.error is None:
-        publish_event(user_id, "measurement.create",
-                      {"field_id": field_id, "season_id": season_id,
-                       "measurements": inserted_measurements, "subfields": inserted_subfields})
-        return jsonify({"data": "Successfully determine the measurement positions"}), 201
+        if publish_event(user_id, "measurement.create",
+                         {"field_id": field_id, "season_id": season_id,
+                          "measurements": inserted_measurements, "subfields": inserted_subfields}):
+            return jsonify({"data": "Successfully determine the measurement positions"}), 201
+        else:
+            return jsonify({"data": "Successfully determine the measurement positions but failed to publish sync event"}), 500
     else:
         return jsonify({"data": "Failed to determine the measurement positions"}), 500
 
@@ -124,10 +126,12 @@ def upgister_measurement(user_id, data, measurement_id):
                 recommended_fertilizer = subfield["recommended_fertilizer_amount"]
                 recommended_fertilizer = recommended_fertilizer if recommended_fertilizer is not None else 0
     if db_cursor.error is None:
-        publish_event(user_id, "measurement.update_measurement",
-                      {"field_id": updated_measurement["field_id"], "season_id": updated_measurement["season_id"],
-                       "measurement": updated_measurement, "subfield_recommended_fertilizer": subfield_recommended_fertilizer})
-        return jsonify({"data": "Successfully update the measurement"}), 200
+        if publish_event(user_id, "measurement.update_measurement",
+                         {"field_id": updated_measurement["field_id"], "season_id": updated_measurement["season_id"],
+                          "measurement": updated_measurement, "subfield_recommended_fertilizer": subfield_recommended_fertilizer}):
+            return jsonify({"data": "Successfully update the measurement"}), 200
+        else:
+            return jsonify({"data": "Successfully update the measurement but failed to publish sync event"}), 500
     else:
         return jsonify({"data": "Failed to update the measurement"}), 500
 
@@ -137,9 +141,11 @@ def upgister_measurement(user_id, data, measurement_id):
 def upgister_measurement_position(user_id, data, measurement_id):
     updated_measurement = update_measurement(user_id, measurement_id, data)
     if updated_measurement is not None:
-        publish_event(user_id, "measurement.update_position",
-                      {"field_id": updated_measurement["field_id"], "season_id": updated_measurement["season_id"],
-                       "measurement": updated_measurement})
-        return jsonify({"data": "Successfully update the measurement position"}), 200
+        if publish_event(user_id, "measurement.update_position",
+                         {"field_id": updated_measurement["field_id"], "season_id": updated_measurement["season_id"],
+                          "measurement": updated_measurement}):
+            return jsonify({"data": "Successfully update the measurement position"}), 200
+        else:
+            return jsonify({"data": "Successfully update the measurement position but failed to publish sync event"}), 500
     else:
         return jsonify({"data": "Failed to update the measurement position"}), 500

@@ -23,7 +23,7 @@ def __init_connection():
             __server = server
             break
         except SMTPAuthenticationError:
-            print("[Mailer]: Invalid credentials")
+            print("[Mailer] Invalid credentials")
             break
         except Exception as error:
             print("[Mailer]", error)

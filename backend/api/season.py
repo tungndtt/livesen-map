@@ -36,8 +36,10 @@ def retrieve_season(user_id, _, field_id, season_id):
 def register_season(user_id, data, field_id, season_id):
     inserted_season = insert_season(user_id, field_id, season_id, data)
     if inserted_season is not None:
-        publish_event(user_id, "season.create", inserted_season)
-        return jsonify({"data": "Successfully register the season"}), 201
+        if publish_event(user_id, "season.create", inserted_season):
+            return jsonify({"data": "Successfully register the season"}), 201
+        else:
+            return jsonify({"data": "Successfully register the season but failed to publish sync event"}), 500
     else:
         return jsonify({"data": "Failed to register the season"}), 500
 
@@ -47,8 +49,10 @@ def register_season(user_id, data, field_id, season_id):
 def upgister_season(user_id, data, field_id, season_id):
     updated_season = update_season(user_id, field_id, season_id, data)
     if updated_season is not None:
-        publish_event(user_id, "season.update", updated_season)
-        return jsonify({"data": "Successfully update the season"}), 201
+        if publish_event(user_id, "season.update", updated_season):
+            return jsonify({"data": "Successfully update the season"}), 201
+        else:
+            return jsonify({"data": "Successfully update the season but failed to publish sync event"}), 500
     else:
         return jsonify({"data": "Failed to update the season"}), 500
 
@@ -58,8 +62,6 @@ def upgister_season(user_id, data, field_id, season_id):
 def unregister_season(user_id, _, field_id, season_id):
     data = get_ndvi_raster(user_id, field_id, season_id)
     if delete_season(user_id, field_id, season_id):
-        publish_event(user_id, "season.delete",
-                      {"field_id": field_id, "season_id": season_id})
         if data is not None:
             deleted_ndvi_raster, _ = data
             try:
@@ -67,7 +69,10 @@ def unregister_season(user_id, _, field_id, season_id):
             except Exception as error:
                 print("[Season API]", error)
                 return jsonify({"data": "Failed to unregister the associated NDVI raster"}), 500
-        return jsonify({"data": "Successfully unregister the season"}), 204
+        if publish_event(user_id, "season.delete", {"field_id": field_id, "season_id": season_id}):
+            return jsonify({"data": "Successfully unregister the season"}), 204
+        else:
+            return jsonify({"data": "Successfully unregister the season but failed to publish sync event"}), 500
     else:
         return jsonify({"data": "Failed to unregister the associated NDVI raster"}), 500
 
