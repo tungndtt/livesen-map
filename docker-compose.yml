@@ -19,7 +19,7 @@ services:
   livesen-backend:
     build: 
       context: ./backend
-      dockerfile: dockerfile-prod
+      dockerfile: dockerfile
     container_name: livesen-backend
     restart: unless-stopped
     networks:
@@ -27,7 +27,7 @@ services:
     ports:
       - 2204:2204
     volumes:
-      - ./.docker/.backend-config-prod:/livesen/config.json:ro
+      - ./.docker/backend.json:/livesen/config.json:ro
       - ./.docker/data/download:/livesen/data/download
       - ./.docker/data/recommend:/livesen/data/recommend
       - ./.docker/data/ndvi:/livesen/data/ndvi
@@ -38,7 +38,7 @@ services:
   livesen-frontend:
     build: 
       context: ./frontend
-      dockerfile: dockerfile-prod
+      dockerfile: dockerfile
     container_name: livesen-frontend
     restart: unless-stopped
     networks:
@@ -46,7 +46,7 @@ services:
     ports:
       - 3000:3000
     env_file:
-      - ./.docker/.frontend-config-prod
+      - ./.docker/frontend.conf
   
   livesen-proxy:
     build: 
@@ -58,6 +58,8 @@ services:
       - livesen-network
     ports: 
       - 8080:80
+    volumes:
+      - ./.docker/proxy.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - livesen-backend
       - livesen-frontend

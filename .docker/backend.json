@@ -1,8 +1,7 @@
 {
   "mailer": {
     "email": "<replace with your email>",
-    "password": "<replace with your api password>",
-    "service_url": "<replace with your server host>:8080"
+    "password": "<replace with your api password>"
   },
   "downloader": {
     "user": "tungndtt",
@@ -29,7 +28,7 @@
   "app": {
     "host": "livesen-backend",
     "port": 2204,
-    "is_testing": false
+    "is_testing": true
   },
   "metadata": {
     "category_folder": "./data/category",
