@@ -152,12 +152,12 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
     measurementId: number,
     options: NutrientMeasurement
   ) => {
-    doRequest(`measurement/upgister/${measurementId}`, "PUT", options).then(
-      async (response) => {
+    doRequest(`measurement/upgister/${measurementId}`, "PUT", options)
+      .then(async (response) => {
         const message = (await response.json())["data"];
         notify({ message: message, isError: false });
-      }
-    );
+      })
+      .catch((error) => notify({ message: error, isError: true }));
   };
 
   const toggleMeasurementVisible = (measurementId: number) => {
@@ -192,12 +192,7 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
           isError: false,
         });
       })
-      .catch(() => {
-        notify({
-          message: "Failed to update the measurement position",
-          isError: true,
-        });
-      });
+      .catch((error) => notify({ message: error, isError: true }));
   };
 
   const onEvent = (action: string, payload: any) => {

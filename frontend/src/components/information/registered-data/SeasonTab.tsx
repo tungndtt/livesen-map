@@ -17,7 +17,6 @@ import { useNotificationContext } from "../../../contexts/NotificationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useMetadataContext } from "../../../contexts/MetadataContext";
 import { useSeasonContext } from "../../../contexts/SeasonContext";
-import { Season, parseSeason, deparseSeason } from "../../../types/season";
 
 const fieldGroups = [
   {

@@ -22,7 +22,7 @@ def retrieve_measurements(user_id, _, field_id, season_id):
     if measurements is not None and len(measurements) > 0:
         return measurements, 200
     else:
-        return jsonify({"data": "Failed to retrieve measurements within given period"}), 500
+        return jsonify({"data": "Failed to retrieve measurements within given period"}), 404
 
 
 @api.route("/subfield/<int:field_id>/<season_id>", methods=["GET"])
@@ -32,7 +32,7 @@ def retrieve_subfields(user_id, _, field_id, season_id):
     if subfields is not None and len(subfields) > 0:
         return subfields, 200
     else:
-        return jsonify({"data": "Failed to retrieve all subfields"}), 500
+        return jsonify({"data": "Failed to retrieve all subfields"}), 404
 
 
 @api.route("/position/<int:field_id>/<season_id>", methods=["GET"])
@@ -47,7 +47,7 @@ def retrieve_measurement_positions(user_id, _, field_id, season_id):
     )
     # subfield_groups = get_subfields_region_based_split(coordinates, tiff_file)
     if subfield_groups is None:
-        return jsonify({"data": "[Timeout] Field is too large and cannot be splitted into subfields"}), 500
+        return jsonify({"data": "[Timeout] Field is too large and cannot be splitted into subfields"}), 413
     db_cursor = DbCursor()
     inserted_measurements, inserted_subfields = [], []
     with db_cursor as cursor:
@@ -86,7 +86,7 @@ def retrieve_measurement_positions(user_id, _, field_id, season_id):
                           "measurements": inserted_measurements, "subfields": inserted_subfields}):
             return jsonify({"data": "Successfully determine the measurement positions"}), 201
         else:
-            return jsonify({"data": "Successfully determine the measurement positions but failed to publish sync event"}), 500
+            return jsonify({"data": "Successfully determine the measurement positions but failed to publish sync event"}), 503
     else:
         return jsonify({"data": "Failed to determine the measurement positions"}), 500
 
@@ -131,7 +131,7 @@ def upgister_measurement(user_id, data, measurement_id):
                           "measurement": updated_measurement, "subfield_recommended_fertilizer": subfield_recommended_fertilizer}):
             return jsonify({"data": "Successfully update the measurement"}), 200
         else:
-            return jsonify({"data": "Successfully update the measurement but failed to publish sync event"}), 500
+            return jsonify({"data": "Successfully update the measurement but failed to publish sync event"}), 503
     else:
         return jsonify({"data": "Failed to update the measurement"}), 500
 
@@ -146,6 +146,6 @@ def upgister_measurement_position(user_id, data, measurement_id):
                           "measurement": updated_measurement}):
             return jsonify({"data": "Successfully update the measurement position"}), 200
         else:
-            return jsonify({"data": "Successfully update the measurement position but failed to publish sync event"}), 500
+            return jsonify({"data": "Successfully update the measurement position but failed to publish sync event"}), 503
     else:
         return jsonify({"data": "Failed to update the measurement position"}), 500

@@ -1,5 +1,4 @@
 import { ReactNode, createContext, useState, useContext } from "react";
-import { useNotificationContext } from "./NotificationContext";
 import { UserProfile } from "../types/profile";
 
 type AuthenticationContextType = {
@@ -32,7 +31,6 @@ const AuthenticationContext = createContext<AuthenticationContextType>({
 });
 
 export default function AuthenticationProvider(props: { children: ReactNode }) {
-  const notify = useNotificationContext();
   const [authenticationToken, setAuthenticationToken] = useState(
     localStorage.getItem("authentication_token") ??
       (process.env.REACT_APP_IS_TESTING?.toLowerCase() === "true" ? "test" : "")
@@ -57,7 +55,7 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
             reject(data);
           }
         })
-        .catch((error) => reject(error.message));
+        .catch((error) => reject(error));
     });
   };
 
@@ -74,7 +72,7 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
           if (response.ok) resolve(data);
           else reject(data);
         })
-        .catch((error) => reject(error.message));
+        .catch((error) => reject(error));
     });
   };
 
@@ -115,7 +113,7 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
             reject(errorMessage);
           }
         })
-        .catch((error) => reject(error.message));
+        .catch((error) => reject(error));
     });
   };
 

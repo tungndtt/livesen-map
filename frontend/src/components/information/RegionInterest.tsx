@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Box, Button, TextField } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
-import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useRegionInterestContext } from "../../contexts/RegionInterestContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import { useFieldContext } from "../../contexts/FieldContext";
@@ -10,7 +8,6 @@ import { Coordinate, parseCoordinates } from "../../types/coordinate";
 
 export default function RegionInterest() {
   const notify = useNotificationContext();
-  const { doRequest } = useAuthenticationContext();
   const { roi, setRoi, roiName, setRoiName } = useRegionInterestContext();
   const { registerField } = useFieldContext();
 

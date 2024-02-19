@@ -18,7 +18,7 @@ def retrieve_field_options(user_id, _):
     if field_options is not None:
         return field_options, 200
     else:
-        return jsonify({"data": "Failed to retrieve field ids"}), 500
+        return jsonify({"data": "Failed to retrieve field ids"}), 404
 
 
 @api.route("/<int:field_id>", methods=["GET"])
@@ -28,7 +28,7 @@ def retrieve_field(user_id, _, field_id):
     if field is not None:
         return field, 200
     else:
-        return jsonify({"data": "Failed to retrieve field"}), 500
+        return jsonify({"data": "Failed to retrieve field"}), 404
 
 
 @api.route("/register", methods=["POST"])
@@ -38,7 +38,7 @@ def register_field(user_id, data):
         "name" not in data or not data["name"] or
         "coordinates" not in data or not data["coordinates"]
     ):
-        return jsonify({"data": "Cannot register the field without 'name' or 'coordinates'"}), 500
+        return jsonify({"data": "Cannot register the field without 'name' or 'coordinates'"}), 406
     try:
         name = data["name"]
         coordinates = data["coordinates"]
@@ -50,11 +50,11 @@ def register_field(user_id, data):
             if publish_event(user_id, "field.create", inserted_field):
                 return jsonify({"data": "Successfully register the field"}), 201
             else:
-                return jsonify({"data": "Successfully register the field but failed to publish sync event"}), 500
+                return jsonify({"data": "Successfully register the field but failed to publish sync event"}), 503
         else:
             return jsonify({"data": "Failed to register the field"}), 500
     except:
-        return jsonify({"data": "Registered field must be polygon and its coordinates must follow GeoJSON format"}), 500
+        return jsonify({"data": "Registered field must be polygon and its coordinates must follow GeoJSON format"}), 406
 
 
 @api.route("/unregister/<int:field_id>", methods=["DELETE"])
@@ -71,6 +71,6 @@ def unregister_field(user_id, __, field_id):
         if publish_event(user_id, "field.delete", {"id": field_id}):
             return jsonify({"data": "Successfully unregister the field"}), 204
         else:
-            return jsonify({"data": "Successfully unregister the field but failed to publish sync event"}), 500
+            return jsonify({"data": "Successfully unregister the field but failed to publish sync event"}), 503
     else:
         return jsonify({"data": "Failed to unregister the field"}), 500

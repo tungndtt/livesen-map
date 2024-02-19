@@ -8,7 +8,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useFieldContext } from "../../../contexts/FieldContext";
 import { useNdviRasterContext } from "../../../contexts/NdviRasterContext";
-import { useNotificationContext } from "../../../contexts/NotificationContext";
 
 export default function FieldTab() {
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
