@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_cors import CORS
 from api import authentication, metadata, user, field, season, ndvi_raster, measurement, sse
 from services.download import downloader
 from services.store import storage
@@ -17,7 +16,6 @@ if __name__ == "__main__":
         recommender.init()
         notifier.init()
         app = Flask(__name__)
-        CORS(app)
         app.register_blueprint(authentication.api)
         app.register_blueprint(metadata.api)
         app.register_blueprint(user.api)
