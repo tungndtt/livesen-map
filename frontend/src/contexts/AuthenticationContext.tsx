@@ -91,7 +91,8 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
       string
     >;
     return new Promise<Response>((resolve, reject) => {
-      if (!authenticationToken) reject(undefined);
+      if (!authenticationToken)
+        reject("No authentication token to communicate with server");
       let body = undefined as BodyInit | undefined;
       if (payload) {
         headers["Content-Type"] = "application/json";

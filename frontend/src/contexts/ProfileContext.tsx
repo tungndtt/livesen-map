@@ -37,10 +37,7 @@ export default function ProfileProvider(props: { children: ReactNode }) {
           isError: false,
         });
       })
-      .catch((error) => {
-        setUser(undefined);
-        notify({ message: error, isError: true });
-      });
+      .catch(() => setUser(undefined));
   }, [authenticationToken]);
 
   const updateUser = (options: UserProfile) => {

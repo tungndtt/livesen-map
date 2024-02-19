@@ -42,7 +42,7 @@ export default function MetadataProvider(props: { children: ReactNode }) {
           soilTillage: data["soil_tillages"],
         });
       })
-      .catch(() => {});
+      .catch(() => setCategories({}));
   }, [authenticationToken]);
 
   return (

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.store.dafs.user import get_user
+from services.store.dafs.user import get_user, insert_user
 from services.mail.mailer import send_email
 from libs.jwt.token import generate_token, verify_token
 from libs.hash.hasher import encrypt, check
@@ -58,9 +58,9 @@ def sign_up():
                     Dear user,
                     <br><br>
                     welcome to Livesen-Map platform. In order to activate your account, please paste the following registration token in the registration form:
-                    <br>
-                    {registration_token}
-                    <br>
+                    <br><br>
+                    <b>{registration_token}</b>
+                    <br><br>
                     Note that the token is only valid in {duration} minutes since this email is released!
                     <br><br>
                     Best,
@@ -77,3 +77,24 @@ def sign_up():
             return jsonify({"data": "Cannot send the activation email"}), 500
     else:
         return jsonify({"data": "Registered email already existed"}), 406
+
+
+@api.route("/activation", methods=["POST"])
+def activate_registration():
+    if request.is_json:
+        data = request.get_json()
+    if "activation_token" not in data or not data["activation_token"]:
+        return jsonify({"data": "No 'activation_token' found"}), 401
+    activation_token = data["activation_token"]
+    data = verify_token(activation_token)
+    if data is None:
+        return jsonify({"data": "Activation token is invalid"}), 401
+    else:
+        email = data["email"]
+        if get_user(email=email) is None:
+            if insert_user(data):
+                return jsonify({"data": "Account is successfully activated"}), 201
+            else:
+                return jsonify({"data": "Cannot register the account"}), 500
+        else:
+            return jsonify({"data": "Account was already registered"}), 409
