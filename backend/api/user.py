@@ -16,7 +16,7 @@ def retrieve_user(user_id, _):
         del user["password"]
         return user, 200
     else:
-        return jsonify({"data": "Cannot retrieve the user"}), 406
+        return jsonify({"data": "Cannot retrieve the user"}), 404
 
 
 @api.route("/upgister", methods=["PUT"])
@@ -30,9 +30,9 @@ def upgister_user(user_id, data):
         if publish_event(user_id, "user.update", updated_user):
             return jsonify({"data": "Successfully update the user information"}), 200
         else:
-            return jsonify({"data": "Successfully update the user information but failed to publish sync event"}), 406
+            return jsonify({"data": "Successfully update the user information but failed to publish sync event"}), 503
     else:
-        return jsonify({"data": "Cannot update the user information"}), 406
+        return jsonify({"data": "Cannot update the user information"}), 500
 
 
 @api.route("/register", methods=["GET"])
@@ -40,13 +40,13 @@ def register():
     registration_token = request.args.get("registration_token")
     data = verify_token(registration_token)
     if data is None:
-        return jsonify({"data": "Registration token is invalid"}), 408
+        return jsonify({"data": "Registration token is invalid"}), 401
     else:
         email = data["email"]
         if get_user(email=email) is None:
             if insert_user(data):
                 return jsonify({"data": "Registration is successful"}), 201
             else:
-                return jsonify({"data": "Cannot register user"}), 406
+                return jsonify({"data": "Cannot register user"}), 500
         else:
-            return jsonify({"data": "User was already registered"}), 406
+            return jsonify({"data": "User was already registered"}), 409

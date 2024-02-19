@@ -82,9 +82,7 @@ export default function FieldProvider(props: { children: ReactNode }) {
           isError: false,
         });
       })
-      .catch(() => {
-        notify({ message: "Failed to unregister the field", isError: true });
-      });
+      .catch((error) => notify({ message: error, isError: true }));
   };
 
   const toggleFieldVisible = () => {
