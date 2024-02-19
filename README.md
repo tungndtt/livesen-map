@@ -1,44 +1,39 @@
 # Livesen-Map
 
-A web application for fertilizer recommendations for agricultural fields. The application is part of the [project](https://www.livesen-map.eu/), which is the cooperation between bioinformatics department of Technical University Munich and European Innovation Council
+The web application serves as a platform for providing fertilizer recommendations tailored to specific agricultural fields. It is an integral component of the collaborative initiative known as the [Livesen-Map project](https://www.livesen-map.eu/), a partnership between the bioinformatics department of the Technical University Munich and the European Innovation Council
 
 ## Structure
 
-The project has a straight-forward structure including **server** (allocated in `/backend`) and **client** (allocated in `/frontend`)
+The project is organized with a straight-forward structure, consisting of a **server** component located in `backend`, and a **client** component located in `frontend`
 
 ## Configuration
 
-In order to run the application, it is required to setup the server and client configurations. The configurations can be found [here](./.docker)
+Please refer to [server configuration](./backend) and [client configuration](./frontend)
 
-**⚠️ Important Notes: by `APP.IS_TESTING=true` in the server configuration and `REACT_APP_IS_TESTING=true` in the client configuration, application runs in testing mode and no authentication is required. If you want to fully checkout the application, set both fields to `false`. In case you want to register a new user, server email credentials is required, i.e., you need to fill `mailer.email` and `mailer.password`**
-
-## Deployment
+## Development
 
 ### Local
 
-Following instructions to run the application locally:
+If you wish to set up and run the project on your local machine, please refer to the following guides:
 
-1. **In the local enviroment, make sure the following dependencies installed**
+- For instructions on setting up the server locally, please refer to [server local setup](./backend)
+- For instructions on setting up the client locally, please refer to [client local setup](./frontend)
+- For reverse proxy, please install [nginx]() on local machine. Start reverse proxy with [config](./nginx.conf)
 
-- **Postgresql** and its extension **Postgis**
-- **Python**
-- **Node**
-
-2. **Setup the database**
-
-- Create the database: `initdb -U <username> -A password -E utf8 -W -D <data-folder>`
-- Start the database: `pg_ctl -D <data-folder> -l <log-file> start`
-
-3. **Setup the server in `/backend`**
-
-- Install dependencies: `pip install -r requirements.txt`
-- Run the server: `python app.py`
-
-4. **Setup the client in `/frontend`**
-
-- Install dependencies: `npm install -f`
-- Run the client: `npm run start`
+These guides will provide you with step-by-step instructions on how to configure and run both the server and client components of the project on your local environment
 
 ### Docker
 
-Instead of manually setup the local enviroment, it is minimal to run the application with [Docker](https://www.docker.com/) by the command `docker-compose up`. **Note: make sure Docker installed**
+To simplify the process of running the application locally, Docker can be utilized. Ensure Docker is installed on your machine by following the instructions provided in the [installation guide](https://docs.docker.com/get-docker/)
+
+After installation, proceed to configure the server configuration file backend.json and the client configuration file frontend.conf, both located in the [.docker](./.docker) (navigate to [Configuaration](#Configuration) for details on component configurations). These configurations will be mounted into the container and utilized for server and client initialization. Additionally, the data folders used by server services will be mounted into the `./.docker/data` folder, enabling accessibility and configurability
+
+Once Docker is installed, you can run the application with a single command:
+
+```bash
+docker compose up
+```
+
+This command will automatically set up and start the application containers, making the app accessible via http://localhost:8080
+
+## Production
