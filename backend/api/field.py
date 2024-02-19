@@ -66,7 +66,6 @@ def unregister_field(user_id, __, field_id):
             try:
                 for ndvi_raster in ndvi_rasters.values():
                     os.remove(os.path.join(NDVI.data_folder, ndvi_raster))
-                return jsonify({"data": "Successfully unregister the field"}), 204
             except Exception as error:
                 print("[Field API]", error)
         if publish_event(user_id, "field.delete", {"id": field_id}):
