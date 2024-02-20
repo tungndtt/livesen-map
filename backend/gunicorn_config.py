@@ -15,6 +15,13 @@ def on_exit(_):
     downloader.term()
 
 
+def worker_exit(_, __):
+    storage.term()
+    mailer.term()
+    recommender.term()
+    notifier.term()
+
+
 class Worker(GeventWorker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -25,13 +32,6 @@ class Worker(GeventWorker):
 
     def run(self):
         super().run()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        storage.term()
-        mailer.term()
-        recommender.term()
-        notifier.term()
-        super().__exit__(exc_type, exc_val, exc_tb)
 
 
 # Gunicorn settings
