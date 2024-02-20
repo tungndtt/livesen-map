@@ -9,7 +9,7 @@ from services.notify.notifier import publish_event
 from libs.algo.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from libs.algo.measurement_position import find_measurement_position
 from libs.algo.fertilizer_recommendation import compute_fertilizer_recommendation
-from backend.libs.timeout.function_timeout import timeout_function
+from libs.timeout.function_timeout import timeout_function
 
 
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
