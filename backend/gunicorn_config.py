@@ -36,6 +36,6 @@ class Worker(GeventWorker):
 
 # Gunicorn settings
 bind = f"{APP.host}:{APP.port}"
-workers = 2
-threads = 5
+workers = 3
+threads = 8
 worker_class = "gunicorn_config.Worker"
