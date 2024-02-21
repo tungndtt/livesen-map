@@ -24,11 +24,11 @@ def worker_exit(_, __):
 
 class Worker(GeventWorker):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         storage.init()
         mailer.init()
         recommender.init()
         notifier.init()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         super().run()

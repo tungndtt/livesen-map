@@ -46,6 +46,18 @@ services:
       - livesen-storage
       - livesen-notifier
   
+  # # Uncomment the 'livesen-osmap' config for OSM local setup
+  # livesen-osmap:
+  #   image: overv/openstreetmap-tile-server
+  #   container_name: livesen-osmap
+  #   networks:
+  #     - livesen-network
+  #   ports:
+  #     - 1998:80
+  #   volumes:
+  #     - ./.docker/data/osmap:/data/database/
+  #   command: ["run"]
+  
   livesen-frontend:
     build: 
       context: ./frontend
