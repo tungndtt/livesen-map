@@ -35,7 +35,7 @@ export default function GeoMap() {
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         url={`${osmUrl}/{z}/{x}/{y}.png`}
       />
-      <MapValidator></MapValidator>
+      <MapValidator />
       <FieldLayer />
       <NdviRasterLayer />
       <MeasurementLayer />

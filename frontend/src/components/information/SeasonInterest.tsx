@@ -127,7 +127,6 @@ export default function SeasonInterest() {
   const registerSeason = (data: any) => {
     if (fieldId && season) {
       const seasonId = date2YMD(season);
-      console.log(deparseSeason(data));
       doRequest(
         `season/register/${fieldId}/${seasonId}`,
         "POST",

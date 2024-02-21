@@ -64,10 +64,10 @@ export default function EventProvider(props: { children: ReactNode }) {
     };
   };
 
-  useEffect(() => {
-    if (authenticationToken) connect();
-    else close();
-  }, [authenticationToken, selectedFieldId, selectedSeasonId]);
+  // useEffect(() => {
+  //   if (authenticationToken) connect();
+  //   else close();
+  // }, [authenticationToken, selectedFieldId, selectedSeasonId]);
 
   useEffect(() => close, []);
 

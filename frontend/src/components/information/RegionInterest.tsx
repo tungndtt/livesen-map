@@ -15,27 +15,83 @@ export default function RegionInterest() {
     const reader = new FileReader();
     reader.onload = function (event) {
       const content = event.target?.result as string;
-      const regionInterest = JSON.parse(content ?? "{}");
-      const coordinates = regionInterest?.["coordinates"];
-      if (coordinates) {
-        const roi = parseCoordinates(coordinates) as Coordinate[][];
-        if (roi.every((r) => r?.length)) {
-          setRoi(roi);
-          const name = regionInterest?.["name"];
-          if (name) setRoiName(name);
-        } else {
-          notify({
-            message:
-              "The coordinates from uploaded file must follow the example format",
-            isError: true,
-          });
-        }
-      } else {
+      let regionInterest;
+      try {
+        regionInterest = JSON.parse(content ?? "{}");
+      } catch {
         notify({
-          message: "Cannot find the coordinates from uploaded file",
+          message: "The uploaded file must be GeoJson",
           isError: true,
         });
+        return;
       }
+      const properties = regionInterest?.["properties"];
+      if (!properties) {
+        notify({
+          message: "Cannot find 'properties' from uploaded file",
+          isError: true,
+        });
+        return;
+      }
+      const name = properties?.["name"];
+      if (!name) {
+        notify({
+          message: "Cannot find 'name' from uploaded file",
+          isError: true,
+        });
+        return;
+      }
+      const geometry = regionInterest?.["geometry"];
+      if (!geometry) {
+        notify({
+          message: "Cannot find 'geometry' from uploaded file",
+          isError: true,
+        });
+        return;
+      }
+      const type = geometry?.["type"];
+      if (type !== "Polygon") {
+        notify({
+          message: "Cannot find geometry 'type' from uploaded file",
+          isError: true,
+        });
+        return;
+      } else if (type !== "Polygon") {
+        notify({
+          message: "Only support field of type 'Polygon'",
+          isError: true,
+        });
+        return;
+      }
+      const coordinates = geometry?.["coordinates"];
+      if (!coordinates) {
+        notify({
+          message: "Cannot find 'coordinates' from uploaded file",
+          isError: true,
+        });
+        return;
+      }
+      let roi;
+      try {
+        roi = parseCoordinates(coordinates) as Coordinate[][];
+      } catch {
+        notify({
+          message:
+            "The coordinates from uploaded file is incorrect. Please refer to the example",
+          isError: true,
+        });
+        return;
+      }
+      if (!roi?.every((r) => r?.length)) {
+        notify({
+          message:
+            "The coordinates from uploaded file is incorrect. Please refer to the example",
+          isError: true,
+        });
+        return;
+      }
+      setRoiName(name);
+      setRoi(roi);
     };
     reader.readAsText(e.target?.files?.[0] as Blob);
     e.target.value = "";
