@@ -33,10 +33,10 @@ export default function RegionInterest() {
         });
         return;
       }
-      const name = properties?.["name"];
+      const name = properties?.["FeldID"];
       if (!name) {
         notify({
-          message: "Cannot find 'name' from uploaded file",
+          message: "Cannot find 'FeldID' from uploaded file",
           isError: true,
         });
         return;
@@ -149,7 +149,7 @@ export default function RegionInterest() {
           <input
             name="upload-region-interest"
             type="file"
-            accept="application/json"
+            accept=".json,.geojson"
             style={{ display: "none" }}
             onChange={uploadRegionInterest}
           />
