@@ -8,7 +8,7 @@ from services.store.dafs.subfield import list_subfields, insert_subfield, update
 from services.notify.notifier import publish_event
 from libs.algo.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from libs.algo.measurement_position import find_measurement_position
-from libs.algo.fertilizer_recommendation import compute_fertilizer_recommendation
+from services.recommend.recommender import recommend_subfield_fertilizer
 from libs.timeout.function_timeout import timeout_function
 
 
@@ -116,8 +116,8 @@ def upgister_measurement(user_id, data, measurement_id):
         for subfield in subfields:
             if subfield["measurement_id"] == measurement_id:
                 subfield_id = subfield["id"]
-                recommended_fertilizer = compute_fertilizer_recommendation(subfield["ndvi"],
-                                                                           updated_measurement)
+                recommended_fertilizer = recommend_subfield_fertilizer(subfield["ndvi"],
+                                                                       updated_measurement)
                 update_subfield_recommended_fertilizer_amount(subfield_id,
                                                               recommended_fertilizer,
                                                               cursor=cursor)

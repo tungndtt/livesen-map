@@ -1,7 +1,15 @@
 from config import METADATA
 
 
-def compute_fertilizer_recommendation(ndvi: float, data: dict[str, int | float]) -> float | int | None:
+def init():
+    pass
+
+
+def term():
+    pass
+
+
+def recommend_fertilizer(ndvi: float, data: dict[str, int | float]) -> float | int | None:
     """
     This is a dummy calculation of fertilizer recommendation. 
     Feel free to replace with appropriate calculation logic

@@ -79,14 +79,14 @@ def unregister_season(user_id, _, field_id, season_id):
 
 @api.route("/recommend_fertilizer/<int:field_id>/<season_id>", methods=["POST"])
 @authentication_required
-def recommend_fertilizer(user_id, data, field_id, season_id):
+def recommend_fertilizer_season(user_id, data, field_id, season_id):
     season = get_season(user_id, field_id, season_id)
     if season is not None:
         fertilizer = data["fertilizer"]
         season["fertilizer_applications"].append({"fertilizer": fertilizer,
                                                   "amount": -1})
         recommended_fertilizer = recommend_season_fertilizer(season)
-        if recommend_fertilizer is not None:
+        if recommend_season_fertilizer is not None:
             return jsonify({"data": recommended_fertilizer}), 200
         else:
             return jsonify({"data": "Failed to compute the season fertilier recommendation"}), 500
