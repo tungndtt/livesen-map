@@ -4,11 +4,6 @@ import { UserProfile } from "../types/profile";
 type AuthenticationContextType = {
   authenticationToken: string;
   signIn: (email: string, password: string) => Promise<string>;
-  signUp: (
-    email: string,
-    password: string,
-    options: UserProfile
-  ) => Promise<string>;
   signOut: () => void;
   doRequest: (
     endpoint: string,
@@ -20,8 +15,6 @@ type AuthenticationContextType = {
 const AuthenticationContext = createContext<AuthenticationContextType>({
   authenticationToken: "",
   signIn: (_email: string, _password: string) => new Promise<string>(() => {}),
-  signUp: (_email: string, _password: string, _options: UserProfile) =>
-    new Promise<string>(() => {}),
   signOut: () => {},
   doRequest: (
     _endpoint: string,
@@ -54,23 +47,6 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
           } else {
             reject(data);
           }
-        })
-        .catch((error) => reject(error));
-    });
-  };
-
-  const signUp = (email: string, password: string, options: UserProfile) => {
-    return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/sign_up`, {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ email, password, ...options }),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          const data = responseBody["data"];
-          if (response.ok) resolve(data);
-          else reject(data);
         })
         .catch((error) => reject(error));
     });
@@ -123,7 +99,6 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
       value={{
         authenticationToken,
         signIn,
-        signUp,
         signOut,
         doRequest,
       }}

@@ -29,13 +29,51 @@ const fields = [
 
 export default function AuthenticationModal() {
   const notify = useNotificationContext();
-  const { authenticationToken, signIn, signUp } = useAuthenticationContext();
-  const [isSignIn, setIsSignIn] = useState(true);
+  const { authenticationToken, signIn } = useAuthenticationContext();
+  const [mode, setMode] = useState<"sign_in" | "sign_up" | "reset_password">(
+    "sign_in"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [options, setOptions] = useState<UserProfile>({});
   const [registrationToken, setRegistrationToken] = useState("");
+
+  const serverUrl = process.env.REACT_APP_SERVER_URL;
+
+  const signUp = (email: string, password: string, options: UserProfile) => {
+    return new Promise<string>((resolve, reject) => {
+      fetch(`${serverUrl}/authentication/sign_up`, {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ email, password, ...options }),
+      })
+        .then(async (response) => {
+          const responseBody = await response.json();
+          const data = responseBody["data"];
+          if (response.ok) resolve(data);
+          else reject(data);
+        })
+        .catch((error) => reject(error));
+    });
+  };
+
+  const resetPassword = (email: string) => {
+    return new Promise<string>((resolve, reject) => {
+      fetch(`${serverUrl}/authentication/reset_password`, {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ email }),
+      })
+        .then(async (response) => {
+          const responseBody = await response.json();
+          const data = responseBody["data"];
+          if (response.ok) resolve(data);
+          else reject(data);
+        })
+        .catch((error) => reject(error));
+    });
+  };
 
   const reset = () => {
     setEmail("");
@@ -97,13 +135,22 @@ export default function AuthenticationModal() {
             alignItems: "center",
           }}
         >
-          {!isSignIn && (
-            <IconButton onClick={() => setIsSignIn(true)}>
+          {mode !== "sign_in" && (
+            <IconButton onClick={() => setMode("sign_in")}>
               <ChevronLeftIcon />
             </IconButton>
           )}
-          <Typography variant="body1" ml={isSignIn ? "45%" : "30%"}>
-            <b>{isSignIn ? "Login" : "Registration"}</b>
+          <Typography
+            variant="body1"
+            ml={mode === "sign_in" ? "45%" : mode === "sign_up" ? "30%" : "25%"}
+          >
+            <b>
+              {mode === "sign_in"
+                ? "Login"
+                : mode === "sign_up"
+                ? "Registration"
+                : "Reset Password"}
+            </b>
           </Typography>
         </Box>
         <TextField
@@ -115,27 +162,29 @@ export default function AuthenticationModal() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <TextField
-          fullWidth
-          size="small"
-          required
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)}>
-                  {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          type={showPassword ? "text" : "password"}
-          id="password"
-          label="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        {mode !== "reset_password" && (
+          <TextField
+            fullWidth
+            size="small"
+            required
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            type={showPassword ? "text" : "password"}
+            id="password"
+            label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        )}
 
-        {!isSignIn &&
+        {mode === "sign_up" &&
           fields.map(({ name, label, isNumber }) => (
             <TextField
               key={name}
@@ -162,12 +211,15 @@ export default function AuthenticationModal() {
             fullWidth
             size="small"
             variant="outlined"
-            disabled={!email || !password}
-            endIcon={isSignIn ? <LoginIcon /> : <SendIcon />}
+            disabled={!email || (mode !== "reset_password" && !password)}
+            endIcon={mode === "sign_in" ? <LoginIcon /> : <SendIcon />}
             onClick={() => {
-              const promise = isSignIn
-                ? signIn(email, password)
-                : signUp(email, password, options);
+              const promise =
+                mode === "sign_in"
+                  ? signIn(email, password)
+                  : mode === "sign_up"
+                  ? signUp(email, password, options)
+                  : resetPassword(email);
               promise
                 .then((message) => {
                   reset();
@@ -176,9 +228,13 @@ export default function AuthenticationModal() {
                 .catch((error) => notify({ message: error, isError: true }));
             }}
           >
-            {isSignIn ? "Login" : "Register"}
+            {mode === "sign_in"
+              ? "Login"
+              : mode === "sign_up"
+              ? "Register"
+              : "Reset"}
           </Button>
-          {!isSignIn && (
+          {mode === "sign_up" && (
             <Button
               sx={{ width: "30%" }}
               size="small"
@@ -191,12 +247,36 @@ export default function AuthenticationModal() {
             </Button>
           )}
         </Box>
-        {isSignIn && (
-          <Link href="#" fontSize="12px" onClick={() => setIsSignIn(false)}>
-            No account? Go to registration
-          </Link>
+        {mode === "sign_in" && (
+          <Box
+            width="100%"
+            height="20px"
+            display="flex"
+            flexDirection="row"
+            justifyContent="space-evenly"
+            alignItems="center"
+            gap={2}
+          >
+            <Link href="#" fontSize="12px" onClick={() => setMode("sign_up")}>
+              Register an account
+            </Link>
+            <Divider
+              orientation="vertical"
+              sx={{
+                height: "100%",
+                fontSize: "12px",
+              }}
+            />
+            <Link
+              href="#"
+              fontSize="12px"
+              onClick={() => setMode("reset_password")}
+            >
+              Forget password?
+            </Link>
+          </Box>
         )}
-        {!isSignIn && (
+        {mode === "sign_up" && (
           <>
             <Divider
               variant="fullWidth"
