@@ -29,7 +29,8 @@ const fields = [
 
 export default function AuthenticationModal() {
   const notify = useNotificationContext();
-  const { authenticationToken, signIn } = useAuthenticationContext();
+  const { authenticationToken, signIn, signUp, resetPassword, verify } =
+    useAuthenticationContext();
   const [mode, setMode] = useState<"sign_in" | "sign_up" | "reset_password">(
     "sign_in"
   );
@@ -37,43 +38,7 @@ export default function AuthenticationModal() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [options, setOptions] = useState<UserProfile>({});
-  const [registrationToken, setRegistrationToken] = useState("");
-
-  const serverUrl = process.env.REACT_APP_SERVER_URL;
-
-  const signUp = (email: string, password: string, options: UserProfile) => {
-    return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/sign_up`, {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ email, password, ...options }),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          const data = responseBody["data"];
-          if (response.ok) resolve(data);
-          else reject(data);
-        })
-        .catch((error) => reject(error));
-    });
-  };
-
-  const resetPassword = (email: string) => {
-    return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/reset_password`, {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ email }),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          const data = responseBody["data"];
-          if (response.ok) resolve(data);
-          else reject(data);
-        })
-        .catch((error) => reject(error));
-    });
-  };
+  const [verificationToken, setVerificationToken] = useState("");
 
   const reset = () => {
     setEmail("");
@@ -90,23 +55,15 @@ export default function AuthenticationModal() {
     });
   };
 
-  const activateRegistration = () => {
-    const serverUrl = process.env.REACT_APP_SERVER_URL;
-    fetch(`${serverUrl}/authentication/activation`, {
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-      body: JSON.stringify({ activation_token: registrationToken }),
-    })
-      .then(async (response) => {
-        const message = (await response.json())["data"];
-        if (response.ok) {
-          setRegistrationToken("");
+  const verifyToken = () => {
+    if (mode !== "sign_in") {
+      verify(verificationToken, mode)
+        .then(async (message) => {
+          setVerificationToken("");
           notify({ message, isError: false });
-        } else {
-          notify({ message, isError: true });
-        }
-      })
-      .catch((error) => notify({ message: error, isError: true }));
+        })
+        .catch((error) => notify({ message: error, isError: true }));
+    }
   };
 
   return (
@@ -162,27 +119,25 @@ export default function AuthenticationModal() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        {mode !== "reset_password" && (
-          <TextField
-            fullWidth
-            size="small"
-            required
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            type={showPassword ? "text" : "password"}
-            id="password"
-            label="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        )}
+        <TextField
+          fullWidth
+          size="small"
+          required
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          type={showPassword ? "text" : "password"}
+          id="password"
+          label="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
         {mode === "sign_up" &&
           fields.map(({ name, label, isNumber }) => (
@@ -219,7 +174,7 @@ export default function AuthenticationModal() {
                   ? signIn(email, password)
                   : mode === "sign_up"
                   ? signUp(email, password, options)
-                  : resetPassword(email);
+                  : resetPassword(email, password);
               promise
                 .then((message) => {
                   reset();
@@ -276,7 +231,7 @@ export default function AuthenticationModal() {
             </Link>
           </Box>
         )}
-        {mode === "sign_up" && (
+        {mode !== "sign_in" && (
           <>
             <Divider
               variant="fullWidth"
@@ -286,22 +241,22 @@ export default function AuthenticationModal() {
                 fontSize: "12px",
               }}
             >
-              Activation
+              Verification
             </Divider>
             <TextField
               fullWidth
               size="small"
               multiline
               rows={2}
-              label="Registration Token"
-              value={registrationToken}
-              onChange={(e) => setRegistrationToken(e.target.value.trim())}
+              label="Verification Token"
+              value={verificationToken}
+              onChange={(e) => setVerificationToken(e.target.value.trim())}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      disabled={!registrationToken}
-                      onClick={activateRegistration}
+                      disabled={!verificationToken}
+                      onClick={verifyToken}
                       color="primary"
                     >
                       <SendIcon />

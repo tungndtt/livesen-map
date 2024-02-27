@@ -1,15 +1,14 @@
 import { Box, Button, TextField } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ClearIcon from "@mui/icons-material/Clear";
-import { useRegionInterestContext } from "../../contexts/RegionInterestContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
-import { useFieldContext } from "../../contexts/FieldContext";
+import { useRegionInterestContext } from "../../contexts/RegionInterestContext";
 import { Coordinate, parseCoordinates } from "../../types/coordinate";
 
 export default function RegionInterest() {
   const notify = useNotificationContext();
-  const { roi, setRoi, roiName, setRoiName } = useRegionInterestContext();
-  const { registerField } = useFieldContext();
+  const { roi, setRoi, roiName, setRoiName, registerField } =
+    useRegionInterestContext();
 
   const uploadRegionInterest = (e: React.ChangeEvent<HTMLInputElement>) => {
     const reader = new FileReader();
@@ -102,14 +101,6 @@ export default function RegionInterest() {
     setRoiName("");
   };
 
-  const registerRegion = () => {
-    if (!roi) {
-      notify({ message: "No valid region is specified", isError: true });
-      return;
-    }
-    registerField();
-  };
-
   return (
     <Box className="information-container">
       <TextField
@@ -169,7 +160,7 @@ export default function RegionInterest() {
           variant="outlined"
           color="success"
           endIcon={<AddIcon />}
-          onClick={registerRegion}
+          onClick={registerField}
         >
           Register Region
         </Button>

@@ -12,8 +12,8 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FieldGroups, { FieldGroup } from "../../../utils/FieldGroups";
-import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useNotificationContext } from "../../../contexts/NotificationContext";
+import { useAuthenticationContext } from "../../../contexts/AuthenticationContext";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useMetadataContext } from "../../../contexts/MetadataContext";
 import { useSeasonContext } from "../../../contexts/SeasonContext";

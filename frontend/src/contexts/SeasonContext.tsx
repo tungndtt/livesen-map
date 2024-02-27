@@ -14,6 +14,7 @@ type SeasonContextType = {
   season: Season | undefined;
   updateSeason: (data: any) => void;
   deleteSeason: () => void;
+  recommendSeasonFertilizer: (fertilizer: string) => Promise<number>;
   onEvent: (action: string, payload: any) => void;
 };
 
@@ -21,6 +22,7 @@ const SeasonContext = createContext<SeasonContextType>({
   season: undefined,
   updateSeason: () => {},
   deleteSeason: () => {},
+  recommendSeasonFertilizer: async () => 0,
   onEvent: () => {},
 });
 
@@ -75,6 +77,24 @@ export default function SeasonProvider(props: { children: ReactNode }) {
     }
   };
 
+  const recommendSeasonFertilizer = (fertilizer: string) => {
+    return new Promise<number>((resolve) => {
+      if (selectedFieldId && selectedSeasonId) {
+        doRequest(
+          `season/recommend_fertilizer/${selectedFieldId}/${selectedSeasonId}`,
+          "POST",
+          { fertilizer }
+        )
+          .then(async (response) => {
+            const data = (await response.json())["data"];
+            if (response.ok) resolve(data);
+            else notify({ message: data, isError: true });
+          })
+          .catch((error) => notify({ message: error, isError: true }));
+      }
+    });
+  };
+
   const onEvent = (action: string, payload: any) => {
     const { field_id: fieldId, season_id: seasonId } = payload;
     if (selectedFieldId !== fieldId || selectedSeasonId !== seasonId) return;
@@ -96,6 +116,7 @@ export default function SeasonProvider(props: { children: ReactNode }) {
         season,
         updateSeason,
         deleteSeason,
+        recommendSeasonFertilizer,
         onEvent,
       }}
     >

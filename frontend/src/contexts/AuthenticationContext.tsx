@@ -4,7 +4,17 @@ import { UserProfile } from "../types/profile";
 type AuthenticationContextType = {
   authenticationToken: string;
   signIn: (email: string, password: string) => Promise<string>;
+  signUp: (
+    email: string,
+    password: string,
+    options: UserProfile
+  ) => Promise<string>;
   signOut: () => void;
+  resetPassword: (email: string, password: string) => Promise<string>;
+  verify: (
+    verificationToken: string,
+    type: "sign_up" | "reset_password"
+  ) => Promise<string>;
   doRequest: (
     endpoint: string,
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
@@ -14,13 +24,12 @@ type AuthenticationContextType = {
 
 const AuthenticationContext = createContext<AuthenticationContextType>({
   authenticationToken: "",
-  signIn: (_email: string, _password: string) => new Promise<string>(() => {}),
+  signIn: async () => "",
+  signUp: async () => "",
   signOut: () => {},
-  doRequest: (
-    _endpoint: string,
-    _method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-    _payload?: any
-  ) => new Promise<Response>(() => {}),
+  resetPassword: async () => "",
+  verify: async () => "",
+  doRequest: async () => new Response(),
 });
 
 export default function AuthenticationProvider(props: { children: ReactNode }) {
@@ -52,9 +61,62 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
     });
   };
 
+  const signUp = (email: string, password: string, options: UserProfile) => {
+    return new Promise<string>((resolve, reject) => {
+      fetch(`${serverUrl}/authentication/sign_up`, {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ email, password, ...options }),
+      })
+        .then(async (response) => {
+          const responseBody = await response.json();
+          const data = responseBody["data"];
+          if (response.ok) resolve(data);
+          else reject(data);
+        })
+        .catch((error) => reject(error));
+    });
+  };
+
   const signOut = () => {
     setAuthenticationToken("");
     localStorage.setItem("authentication_token", "");
+  };
+
+  const resetPassword = (email: string, password: string) => {
+    return new Promise<string>((resolve, reject) => {
+      fetch(`${serverUrl}/authentication/reset_password`, {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      })
+        .then(async (response) => {
+          const responseBody = await response.json();
+          const data = responseBody["data"];
+          if (response.ok) resolve(data);
+          else reject(data);
+        })
+        .catch((error) => reject(error));
+    });
+  };
+
+  const verify = (
+    verificationToken: string,
+    type: "sign_up" | "reset_password"
+  ) => {
+    return new Promise<string>((resolve, reject) => {
+      fetch(`${serverUrl}/authentication/verification`, {
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        body: JSON.stringify({ verification_token: verificationToken, type }),
+      })
+        .then(async (response) => {
+          const data = (await response.json())["data"];
+          if (response.ok) resolve(data);
+          else reject(data);
+        })
+        .catch((error) => reject(error));
+    });
   };
 
   const doRequest = (
@@ -99,7 +161,10 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
       value={{
         authenticationToken,
         signIn,
+        signUp,
         signOut,
+        resetPassword,
+        verify,
         doRequest,
       }}
     >
