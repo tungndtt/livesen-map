@@ -18,7 +18,8 @@ type AuthenticationContextType = {
   doRequest: (
     endpoint: string,
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-    payload?: any
+    payload?: any,
+    isBlob?: boolean
   ) => Promise<Response>;
 };
 
@@ -122,7 +123,8 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
   const doRequest = (
     endpoint: string,
     method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-    payload?: any
+    payload?: any,
+    isBlob?: boolean
   ) => {
     let headers = { "Auth-Token": authenticationToken } as Record<
       string,
@@ -133,8 +135,12 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
         reject("No authentication token to communicate with server");
       let body = undefined as BodyInit | undefined;
       if (payload) {
-        headers["Content-Type"] = "application/json";
-        body = JSON.stringify(payload);
+        if (isBlob) {
+          body = payload;
+        } else {
+          headers["Content-Type"] = "application/json";
+          body = JSON.stringify(payload);
+        }
       }
       fetch(`${serverUrl}/${endpoint}`, { headers, method, body })
         .then(async (response) => {

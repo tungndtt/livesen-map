@@ -61,6 +61,13 @@ class Ndvi:
         self.data_folder = config["data_folder"]
 
 
+class Measurement:
+    data_folder: str | None = None
+
+    def parse(self, config: dict[str, Any]) -> None:
+        self.data_folder = config["data_folder"]
+
+
 class Jwtoken:
     secret: str | None = None
 
@@ -88,6 +95,7 @@ class Metadata:
     fertilizer_types: list[str] | None = None
     crop_protections: list[str] | None = None
     soil_tillages: list[str] | None = None
+    soil_conditions: list[str] | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.max_recommended_fertilizer = config["max_recommended_fertilizer"]
@@ -100,7 +108,8 @@ class Metadata:
             ["fertilizers", "fertilizer.csv"],
             ["fertilizer_types", "fertilizer_type.csv"],
             ["crop_protections", "crop_protection.csv"],
-            ["soil_tillages", "soil_tillage.csv"]
+            ["soil_tillages", "soil_tillage.csv"],
+            ["soil_conditions", "soil_condition.csv"]
         ]:
             with open(os.path.join(category_folder, filename), "r", encoding="utf-8") as file:
                 setattr(self, field, file.readline().split(","))
@@ -114,12 +123,13 @@ RECOMMENDER = Recommender()
 NOTIFIER = Notifier()
 JWTOKEN = Jwtoken()
 NDVI = Ndvi()
+MEASUREMENT = Measurement()
 APP = App()
 METADATA = Metadata()
 
 
 def __init():
-    global __initialized, MAILER, DOWNLOADER, STORAGE, RECOMMENDER, NOTIFIER, JWTOKEN, NDVI, APP, METADATA
+    global __initialized, MAILER, DOWNLOADER, STORAGE, RECOMMENDER, NOTIFIER, JWTOKEN, NDVI, MEASUREMENT, APP, METADATA
     if not __initialized:
         import json
         with open("config.json", "r") as f:
@@ -131,6 +141,7 @@ def __init():
         NOTIFIER.parse(config["notifier"])
         JWTOKEN.parse(config["jwtoken"])
         NDVI.parse(config["ndvi"])
+        MEASUREMENT.parse(config["measurement"])
         APP.parse(config["app"])
         METADATA.parse(config["metadata"])
         __initialized = True

@@ -3,6 +3,7 @@ import { Coordinates, parseCoordinates } from "./coordinate";
 export type SubField = {
   id: number;
   measurementId: number;
+  measurementIdx?: number;
   coordinates: Coordinates;
   area: number;
   ndvi: number;

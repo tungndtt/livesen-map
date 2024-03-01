@@ -107,12 +107,27 @@ const fieldGroups = [
   {
     group: "Harvestment",
     fields: [
+      { fieldId: "harvestDate", label: "Harvest Date", type: "date" },
       {
         fieldId: "harvestWeight",
         label: "Harvest Weight (kg)",
         type: "number",
       },
-      { fieldId: "harvestDate", label: "Harvest Date", type: "date" },
+      {
+        fieldId: "fallingNumber",
+        label: "Falling Number",
+        type: "number",
+      },
+      {
+        fieldId: "moisture",
+        label: "Moisture",
+        type: "number",
+      },
+      {
+        fieldId: "proteinContent",
+        label: "Protein Content",
+        type: "number",
+      },
     ],
   },
 ] as FieldGroup[];

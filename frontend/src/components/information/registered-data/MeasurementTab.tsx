@@ -1,11 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
   Button,
+  Card,
+  CardMedia,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Modal,
+  Select,
   TextField,
   Typography,
 } from "@mui/material";
@@ -17,13 +24,12 @@ import GridOnIcon from "@mui/icons-material/GridOn";
 import GridOffIcon from "@mui/icons-material/GridOff";
 import UpgradeIcon from "@mui/icons-material/Upgrade";
 import ClearIcon from "@mui/icons-material/Clear";
+import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import ImageIcon from "@mui/icons-material/Image";
 import { useSelectionContext } from "../../../contexts/SelectionContext";
 import { useMeasurementContext } from "../../../contexts/MeasurementContext";
-import {
-  Measurement,
-  NutrientMeasurement,
-  MeasurementNutrientField,
-} from "../../../types/measurement";
+import { useMetadataContext } from "../../../contexts/MetadataContext";
+import { Measurement, MeasurementValues } from "../../../types/measurement";
 
 export default function MeasurementTab() {
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
@@ -31,12 +37,17 @@ export default function MeasurementTab() {
     measurements,
     determineMeasurementPositions,
     updateMeasurement,
+    updateMeasurementSample,
+    showMeasurementSample,
     measurementVisible,
     toggleMeasurementVisible,
     recommendationVisible,
+    toggleAllMeasurementVisible,
     toggleRecommendationVisible,
   } = useMeasurementContext();
   const [isDetermining, setIsDetermining] = useState(false);
+  const [sampleImageUrl, setSampleImageUrl] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   return (
     <Box className="tab-container">
@@ -55,7 +66,7 @@ export default function MeasurementTab() {
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography>
-                  <b>Measurement {measurement.id}</b>
+                  <b>Measurement {measurement.idx}</b>
                 </Typography>
               </AccordionSummary>
               <AccordionDetails
@@ -73,10 +84,59 @@ export default function MeasurementTab() {
                   label="NDVI"
                   value={measurement.ndvi.toFixed(3)}
                 />
-                <MeasurementValues
+                <TextField
+                  fullWidth
+                  size="small"
+                  disabled
+                  label="Position"
+                  value={`${measurement.position.lng.toFixed(
+                    3
+                  )}, ${measurement.position.lat.toFixed(3)}`}
+                />
+                <MeasurementValuesUpdate
                   measurement={measurement}
                   updateMeasurement={updateMeasurement}
                 />
+                <Box className="button-row-container" pb={0}>
+                  <Button
+                    sx={{ width: "40%" }}
+                    size="small"
+                    variant="outlined"
+                    component="label"
+                    color="secondary"
+                    endIcon={<AddPhotoAlternateIcon />}
+                  >
+                    <input
+                      type="file"
+                      accept=".png,.jpeg,.jpg,.svg,.tiff,.tif,.webp"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        updateMeasurementSample(
+                          measurement.id,
+                          e.target?.files?.[0]!
+                        );
+                        e.target.value = "";
+                      }}
+                    />
+                    Upload sample
+                  </Button>
+                  <Button
+                    sx={{ width: "60%" }}
+                    size="small"
+                    variant="outlined"
+                    endIcon={<ImageIcon />}
+                    disabled={!measurement.sampleImage}
+                    onClick={() => {
+                      if (measurement.sampleImage) {
+                        showMeasurementSample(measurement).then((imageUrl) =>
+                          setSampleImageUrl(imageUrl)
+                        );
+                      }
+                    }}
+                  >
+                    {measurement.sampleImage ? "Show sample" : "No sample"}
+                  </Button>
+                </Box>
                 <Button
                   fullWidth
                   size="small"
@@ -98,19 +158,54 @@ export default function MeasurementTab() {
               </AccordionDetails>
             </Accordion>
           ))}
-          <Button
-            fullWidth
-            size="small"
-            variant="outlined"
-            sx={{ my: 1 }}
-            endIcon={recommendationVisible ? <GridOffIcon /> : <GridOnIcon />}
-            disabled={Object.keys(measurementVisible ?? {}).length === 0}
-            onClick={toggleRecommendationVisible}
+          <Box className="button-row-container">
+            <Button
+              sx={{ width: "30%" }}
+              size="small"
+              variant="outlined"
+              color="success"
+              endIcon={showAll ? <VisibilityOffIcon /> : <VisibilityIcon />}
+              onClick={() => {
+                toggleAllMeasurementVisible(!showAll);
+                setShowAll(!showAll);
+              }}
+            >
+              {showAll ? "Hide all" : "Show all"}
+            </Button>
+            <Button
+              fullWidth
+              size="small"
+              variant="outlined"
+              endIcon={recommendationVisible ? <GridOffIcon /> : <GridOnIcon />}
+              disabled={Object.keys(measurementVisible ?? {}).length === 0}
+              onClick={toggleRecommendationVisible}
+            >
+              {recommendationVisible
+                ? "Hide Fertilizer Recommendation"
+                : "Show Fertilizer Recommendation"}
+            </Button>
+          </Box>
+          <Modal
+            open={!!sampleImageUrl}
+            onClose={() => setSampleImageUrl("")}
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
           >
-            {recommendationVisible
-              ? "Hide Fertilizer Recommendation"
-              : "Show Fertilizer Recommendation"}
-          </Button>
+            <Card raised>
+              <CardMedia
+                component="img"
+                image={sampleImageUrl}
+                alt="Sample Image"
+                sx={{
+                  objectFit: "contain",
+                  maxHeight: "70vh",
+                }}
+              />
+            </Card>
+          </Modal>
         </>
       ) : (
         <>
@@ -154,19 +249,22 @@ type MeasurementValuesProps = {
   measurement: Measurement;
   updateMeasurement: (
     measurementId: number,
-    options: NutrientMeasurement
+    measurementValues: MeasurementValues
   ) => void;
 };
 
 const fields = [
-  { name: "nitrate", label: "Nitrate" },
-  { name: "phosphor", label: "Phosphor" },
-  { name: "potassium", label: "Potassium" },
+  { name: "nitrate", label: "Nitrate (mg/L)" },
+  { name: "phosphor", label: "Phosphor (mg/L)" },
+  { name: "potassium", label: "Potassium (mg/L)" },
+  { name: "charge", label: "Charge of Plant Juice" },
+  { name: "stadium", label: "Stadium" },
 ];
 
-function MeasurementValues(props: MeasurementValuesProps) {
+function MeasurementValuesUpdate(props: MeasurementValuesProps) {
   const { measurement, updateMeasurement } = props;
-  const [options, setOptions] = useState<NutrientMeasurement>({});
+  const { categories } = useMetadataContext();
+  const [options, setOptions] = useState<MeasurementValues>({});
 
   const resetMeasurementValues = () => {
     setOptions(measurement);
@@ -174,10 +272,12 @@ function MeasurementValues(props: MeasurementValuesProps) {
 
   useEffect(resetMeasurementValues, [measurement]);
 
-  const onChangeOptions = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeOptions = (e: any) => {
     setOptions((prevOptions) => {
       const name = e.target.name;
-      const value = +e.target.value;
+      const value =
+        e.target.type === "number" ? +e.target.value : e.target.value;
+      console.log(name, value);
       return { ...prevOptions, [name]: value };
     });
   };
@@ -194,13 +294,29 @@ function MeasurementValues(props: MeasurementValuesProps) {
           fullWidth
           size="small"
           name={name}
-          label={label + " (mg/L)"}
+          label={label}
           type="number"
-          value={options?.[name as MeasurementNutrientField] ?? ""}
+          //@ts-ignore
+          value={options[name] ?? ""}
           onChange={onChangeOptions}
         />
       ))}
-      <Box className="button-row-container">
+      <FormControl fullWidth size="small">
+        <InputLabel>Soil Condition</InputLabel>
+        <Select
+          value={options.soilCondition ?? ""}
+          name="soilCondition"
+          label="Soil Condition"
+          onChange={onChangeOptions}
+        >
+          {categories["soilCondition"]?.map((soilCondition) => (
+            <MenuItem key={soilCondition} value={soilCondition}>
+              {soilCondition}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <Box className="button-row-container" pb={0}>
         <Button
           fullWidth
           size="small"
@@ -208,8 +324,9 @@ function MeasurementValues(props: MeasurementValuesProps) {
           endIcon={<UpgradeIcon />}
           disabled={fields.every(
             ({ name }) =>
-              options[name as MeasurementNutrientField] ===
-              measurement[name as MeasurementNutrientField]
+              //@ts-ignore
+              options[name] === measurement[name] &&
+              options.soilCondition === measurement.soilCondition
           )}
           onClick={updateMeasurementValues}
         >

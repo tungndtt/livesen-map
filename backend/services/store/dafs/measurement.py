@@ -12,7 +12,8 @@ def __parse_record(record: tuple) -> dict[str, Any] | None:
             "id", "user_id", "field_id", "season_id",
             "longitude", "latitude",
             "nitrate", "phosphor", "potassium",
-            "ndvi"
+            "ndvi", "charge", "stadium", "soil_condition",
+            "sample_image",
         ])
     }
 
@@ -22,7 +23,8 @@ def __extract_nonempty(data: dict[str, Any]) -> tuple[list[str], list[Any]]:
     for col in [
         "longitude", "latitude",
         "nitrate", "phosphor", "potassium",
-        "ndvi"
+        "ndvi", "charge", "stadium", "soil_condition",
+        "sample_image"
     ]:
         if col in data and data[col] is not None:
             cols.append(col)
@@ -88,3 +90,21 @@ def list_measurements(user_id: int, field_id: int, season_id: str) -> list[dict[
         )
         measurements = [__parse_record(record) for record in cursor.fetchall()]
     return measurements if db_cursor.error is None else None
+
+
+def get_measurement_sample_images(user_id: int, field_id: int, season_id: str | None = None) -> list[str] | None:
+    sample_images = None
+    db_cursor = DbCursor()
+    with db_cursor as cursor:
+        if season_id:
+            cursor.execute(
+                "SELECT sample_image FROM measurement WHERE user_id = %s AND field_id = %s AND season_id = %s",
+                (user_id, field_id, season_id,)
+            )
+        else:
+            cursor.execute(
+                "SELECT sample_image FROM measurement WHERE user_id = %s AND field_id = %s",
+                (user_id, field_id,)
+            )
+        sample_images = [record[0] for record in cursor.fetchall()]
+    return sample_images if db_cursor.error is None else None

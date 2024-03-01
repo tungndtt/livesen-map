@@ -92,7 +92,7 @@ export default function RegionInterest() {
       setRoiName(name);
       setRoi(roi);
     };
-    reader.readAsText(e.target?.files?.[0] as Blob);
+    reader.readAsText(e.target?.files?.[0]!);
     e.target.value = "";
   };
 

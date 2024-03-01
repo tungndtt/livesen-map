@@ -29,6 +29,9 @@
   "ndvi": {
     "data_folder": "./data/ndvi"
   },
+  "measurement": {
+    "data_folder": "./data/measurement"
+  },
   "app": {
     "host": "livesen-backend",
     "port": 2204,

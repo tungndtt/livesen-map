@@ -30,7 +30,7 @@ export default function DrawController() {
         if (i === layers.length - 1) return;
         fgRef.current?.removeLayer(layer);
       });
-      map.fitBounds(fgRef.current?.getBounds()!!);
+      map.fitBounds(fgRef.current?.getBounds()!);
     }
   }, [roi, map]);
 

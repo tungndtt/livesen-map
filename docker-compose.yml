@@ -41,6 +41,7 @@ services:
       - ./.docker/data/download:/livesen/data/download
       - ./.docker/data/recommend:/livesen/data/recommend
       - ./.docker/data/ndvi:/livesen/data/ndvi
+      - ./.docker/data/measurement:/livesen/data/measurement
       - ./.docker/data/category:/livesen/data/category
     depends_on:
       - livesen-storage

@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify
+import os
+import uuid
+from flask import Blueprint, jsonify, send_from_directory, request
 from api.authentication import authentication_required
 from api.ndvi_raster import handle_ndvi_raster
 from services.store.storage import DbCursor
@@ -6,18 +8,25 @@ from services.store.dafs.season import get_season
 from services.store.dafs.measurement import list_measurements, get_measurement, insert_measurement, update_measurement
 from services.store.dafs.subfield import list_subfields, insert_subfield, update_subfield_recommended_fertilizer_amount
 from services.notify.notifier import publish_event
+from services.recommend.recommender import recommend_subfield_fertilizer
 from libs.algo.subfield_split import get_subfields_region_based_split, get_subfields_pixel_based_split
 from libs.algo.measurement_position import find_measurement_position
-from services.recommend.recommender import recommend_subfield_fertilizer
 from libs.timeout.function_timeout import timeout_function
+from config import MEASUREMENT
 
 
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
 
 
+@api.route("/sample/<path:sample_image>", methods=["GET"])
+@authentication_required
+def retrieve_sample_image(_, __, sample_image):
+    return send_from_directory(MEASUREMENT.data_folder, sample_image)
+
+
 @api.route("/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def retrieve_measurements(user_id, _, field_id, season_id):
+def retrieve_measurements(user_id, __, field_id, season_id):
     measurements = list_measurements(user_id, field_id, season_id)
     if measurements is not None and len(measurements) > 0:
         return measurements, 200
@@ -27,7 +36,7 @@ def retrieve_measurements(user_id, _, field_id, season_id):
 
 @api.route("/subfield/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def retrieve_subfields(user_id, _, field_id, season_id):
+def retrieve_subfields(user_id, __, field_id, season_id):
     subfields = list_subfields(user_id, field_id, season_id)
     if subfields is not None and len(subfields) > 0:
         return subfields, 200
@@ -37,7 +46,7 @@ def retrieve_subfields(user_id, _, field_id, season_id):
 
 @api.route("/position/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def retrieve_measurement_positions(user_id, _, field_id, season_id):
+def retrieve_measurement_positions(user_id, __, field_id, season_id):
     response, status_code = handle_ndvi_raster(user_id, field_id, season_id)
     if status_code >= 400:
         return response, status_code
@@ -134,6 +143,33 @@ def upgister_measurement(user_id, data, measurement_id):
             return jsonify({"data": "Successfully update the measurement but failed to publish sync event"}), 503
     else:
         return jsonify({"data": "Failed to update the measurement"}), 500
+
+
+@api.route("/sample/<int:measurement_id>", methods=["PUT"])
+@authentication_required
+def upgister_measurement_sample(user_id, __, measurement_id):
+    if "file" not in request.files:
+        return jsonify({"data": "No uploaded measurement sample image"}), 404
+    file = request.files["file"]
+    measurement = get_measurement(user_id, measurement_id)
+    if measurement is None:
+        return jsonify({"data": "Cannot find measurement with the given id"}), 404
+    if measurement["sample_image"]:
+        os.remove(os.path.join(MEASUREMENT.data_folder,
+                  measurement["sample_image"]))
+    sample_image = str(uuid.uuid4())
+    updated_measurement = update_measurement(
+        user_id, measurement_id, {"sample_image": sample_image})
+    if updated_measurement is not None:
+        file.save(os.path.join(MEASUREMENT.data_folder, sample_image))
+        if publish_event(user_id, "measurement.update_sample",
+                         {"field_id": updated_measurement["field_id"], "season_id": updated_measurement["season_id"],
+                          "measurement": updated_measurement}):
+            return jsonify({"data": "Successfully upload the measurement sample image"}), 200
+        else:
+            return jsonify({"data": "Successfully upload the measurement sample image but failed to publish sync event"}), 503
+    else:
+        return jsonify({"data": "Failed to upload the measurement sample image"}), 500
 
 
 @api.route("/position/<int:measurement_id>", methods=["PUT"])

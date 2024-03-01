@@ -3,9 +3,10 @@ from flask import Blueprint, jsonify
 from api.authentication import authentication_required
 from services.store.dafs.season import get_season, list_season_ids, insert_season, update_season, delete_season
 from services.store.dafs.ndvi_raster import get_ndvi_raster
+from services.store.dafs.measurement import get_measurement_sample_images
 from services.recommend.recommender import recommend_season_fertilizer
 from services.notify.notifier import publish_event
-from config import NDVI
+from config import NDVI, MEASUREMENT
 
 
 api = Blueprint("season", __name__, url_prefix="/season")
@@ -60,15 +61,27 @@ def upgister_season(user_id, data, field_id, season_id):
 @api.route("/unregister/<int:field_id>/<season_id>", methods=["DELETE"])
 @authentication_required
 def unregister_season(user_id, _, field_id, season_id):
-    data = get_ndvi_raster(user_id, field_id, season_id)
+    ndvi_rasters = get_ndvi_raster(user_id, field_id, season_id)
+    measurement_sample_images = get_measurement_sample_images(user_id,
+                                                              field_id,
+                                                              season_id)
     if delete_season(user_id, field_id, season_id):
-        if data is not None:
-            deleted_ndvi_raster, _ = data
+        if ndvi_rasters is not None:
+            deleted_ndvi_raster, _ = ndvi_rasters
             try:
                 os.remove(os.path.join(NDVI.data_folder, deleted_ndvi_raster))
             except Exception as error:
                 print("[Season API]", error)
-                return jsonify({"data": "Failed to unregister the associated NDVI raster"}), 500
+        if measurement_sample_images is not None:
+            try:
+                for measurement_sample_image in measurement_sample_images:
+                    if measurement_sample_image is not None:
+                        os.remove(
+                            os.path.join(MEASUREMENT.data_folder,
+                                         measurement_sample_image)
+                        )
+            except Exception as error:
+                print("[Season API]", error)
         if publish_event(user_id, "season.delete", {"field_id": field_id, "season_id": season_id}):
             return jsonify({"data": "Successfully unregister the season"}), 204
         else:

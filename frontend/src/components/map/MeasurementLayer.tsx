@@ -44,7 +44,12 @@ export default function MeasurementLayer() {
       return [low / maxRecommendedFertilizer, high / maxRecommendedFertilizer];
     }, [subfields]);
   const [menuContext, setMenuContext] = useState<
-    | { anchor: PopoverPosition; position: Coordinate; measurementId: number }
+    | {
+        anchor: PopoverPosition;
+        position: Coordinate;
+        measurementId: number;
+        measurementIdx: number;
+      }
     | undefined
   >(undefined);
   const map = useMap();
@@ -70,7 +75,14 @@ export default function MeasurementLayer() {
       {measurementIds.map((measurementId) => (
         <Fragment key={`${measurementId}-${recommendationVisible}`}>
           {subfields?.[measurementId].map(
-            ({ id, coordinates, ndvi, area, recommendedFertilizerAmount }) => (
+            ({
+              id,
+              measurementIdx,
+              coordinates,
+              ndvi,
+              area,
+              recommendedFertilizerAmount,
+            }) => (
               <Polygon
                 key={`${id}-${recommendationVisible}-${recommendedFertilizerAmount}`}
                 positions={coordinates}
@@ -85,6 +97,7 @@ export default function MeasurementLayer() {
                       },
                       position: e.latlng,
                       measurementId: measurementId,
+                      measurementIdx: measurementIdx!,
                     });
                   },
                 }}
@@ -107,7 +120,7 @@ export default function MeasurementLayer() {
                 stroke={false}
               >
                 <Tooltip sticky>
-                  <b>Measurement {measurementId}</b> <br />
+                  <b>Measurement {measurementIdx}</b> <br />
                   Area (ha): <b>{area.toFixed(3)}</b> <br />
                   NDVI: <b>{ndvi.toFixed(3)}</b> <br />
                   {recommendationVisible && (
@@ -124,9 +137,14 @@ export default function MeasurementLayer() {
               </Polygon>
             )
           )}
-          <Marker position={positions?.[measurementId].position!!}>
+          <Marker position={positions?.[measurementId].position!}>
             <Tooltip>
-              <b>Measurement {measurementId}</b>
+              <b>Measurement {positions?.[measurementId].idx}</b> <br />
+              Position:{" "}
+              <b>
+                {positions?.[measurementId].position!.lng.toFixed(3)},{" "}
+                {positions?.[measurementId].position!.lat.toFixed(3)}
+              </b>
             </Tooltip>
           </Marker>
         </Fragment>
@@ -149,7 +167,7 @@ export default function MeasurementLayer() {
           }}
         >
           Update the measuring position of measurement{" "}
-          {menuContext?.measurementId}
+          {menuContext?.measurementIdx}
         </MenuItem>
       </Menu>
     </FeatureGroup>

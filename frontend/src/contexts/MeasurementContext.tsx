@@ -11,12 +11,12 @@ import { useNdviRasterContext } from "./NdviRasterContext";
 import { useNotificationContext } from "./NotificationContext";
 import { SubField, parseSubField } from "../types/subfield";
 import {
-  NutrientMeasurement,
   Measurement,
   MeasurementPosition,
+  MeasurementValues,
   parseMeasurement,
-  parseMeasurementPosition,
   deparseMeasurementPosition,
+  deparseMeasurementValues,
 } from "../types/measurement";
 
 type MeasurementPositionMap = {
@@ -38,13 +38,16 @@ type MeasurementContextType = {
   measurementVisible: MeasurementVisible;
   recommendationVisible: boolean;
   toggleMeasurementVisible: (measurementId: number) => void;
+  toggleAllMeasurementVisible: (isVisible: boolean) => void;
   toggleRecommendationVisible: () => void;
   determineMeasurementPositions: () => Promise<void>;
   updateMeasurementPosition: (measurementPosition: MeasurementPosition) => void;
   updateMeasurement: (
     measurementId: number,
-    options: NutrientMeasurement
+    measurementValues: MeasurementValues
   ) => void;
+  updateMeasurementSample: (measurementId: number, file: File) => void;
+  showMeasurementSample: (measurement: Measurement) => Promise<string>;
   onEvent: (action: string, payload: any) => void;
 };
 
@@ -55,10 +58,13 @@ const MeasurementContext = createContext<MeasurementContextType>({
   measurementVisible: {},
   recommendationVisible: false,
   toggleMeasurementVisible: () => {},
+  toggleAllMeasurementVisible: () => {},
   toggleRecommendationVisible: () => {},
   determineMeasurementPositions: async () => {},
   updateMeasurementPosition: () => {},
   updateMeasurement: () => {},
+  updateMeasurementSample: () => {},
+  showMeasurementSample: async () => "",
   onEvent: () => {},
 });
 
@@ -89,15 +95,16 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
       .sort((m1, m2) => m1.ndvi - m2.ndvi);
     setMeasurements(measurements);
     const positionMap = {} as MeasurementPositionMap;
-    fetchedMeasurements.forEach((measurement) => {
-      const parsedMeasurementPosition = parseMeasurementPosition(measurement);
-      positionMap[parsedMeasurementPosition.id] = parsedMeasurementPosition;
+    measurements.forEach((measurement, idx) => {
+      measurement.idx = idx;
+      positionMap[measurement.id] = measurement;
     });
     setPositions(positionMap);
     const subfieldMap = {} as MeasurementSubFieldMap;
     fetchedSubFields.forEach((subfield) => {
       const parsedSubField = parseSubField(subfield);
       const measurementId = parsedSubField.measurementId;
+      parsedSubField.measurementIdx = positionMap[measurementId].idx;
       if (!subfieldMap?.[measurementId]) {
         subfieldMap[measurementId] = [];
       }
@@ -148,21 +155,8 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
     if (ndviRasterVisible) reset();
   }, [ndviRasterVisible]);
 
-  const updateMeasurement = (
-    measurementId: number,
-    options: NutrientMeasurement
-  ) => {
-    doRequest(`measurement/upgister/${measurementId}`, "PUT", options)
-      .then(async (response) => {
-        const message = (await response.json())["data"];
-        notify({ message: message, isError: false });
-      })
-      .catch((error) => notify({ message: error, isError: true }));
-  };
-
   const toggleMeasurementVisible = (measurementId: number) => {
     setMeasurementVisible((prevVisibility) => {
-      if (!prevVisibility) return prevVisibility;
       if (ndviRasterVisible) toggleNdviRasterVisible();
       if (measurementId in prevVisibility) delete prevVisibility[measurementId];
       else prevVisibility[measurementId] = true;
@@ -170,11 +164,58 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
     });
   };
 
+  const toggleAllMeasurementVisible = (isVisible: boolean) => {
+    if (!isVisible) setMeasurementVisible({});
+    else
+      setMeasurementVisible((prevVisibility) => {
+        if (ndviRasterVisible) toggleNdviRasterVisible();
+        measurements?.forEach(({ id }) => (prevVisibility[id] = true));
+        return { ...prevVisibility };
+      });
+  };
+
   const toggleRecommendationVisible = () => {
     setRecommendationVisible((prevRecommendationVisible) => {
       if (ndviRasterVisible) toggleNdviRasterVisible();
       return !prevRecommendationVisible;
     });
+  };
+
+  const updateMeasurement = (
+    measurementId: number,
+    measurementValues: MeasurementValues
+  ) => {
+    doRequest(
+      `measurement/upgister/${measurementId}`,
+      "PUT",
+      deparseMeasurementValues(measurementValues)
+    )
+      .then(async (response) => {
+        const message = (await response.json())["data"];
+        notify({ message: message, isError: false });
+      })
+      .catch((error) => notify({ message: error, isError: true }));
+  };
+
+  const updateMeasurementSample = (measurementId: number, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    doRequest(`measurement/sample/${measurementId}`, "PUT", formData, true)
+      .then(async (response) => {
+        if (response.status === 413) {
+          notify({
+            message: "Uploaded sample exceeds the allowed size",
+            isError: true,
+          });
+        } else {
+          const message = (await response.json())["data"];
+          notify({
+            message: message,
+            isError: false,
+          });
+        }
+      })
+      .catch((error) => notify({ message: error, isError: true }));
   };
 
   const updateMeasurementPosition = (
@@ -193,6 +234,24 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
         });
       })
       .catch((error) => notify({ message: error, isError: true }));
+  };
+
+  const showMeasurementSample = (measurement: Measurement) => {
+    return new Promise<string>((resolve) =>
+      doRequest(`measurement/sample/${measurement.sampleImage}`, "GET")
+        .then(async (response) => {
+          if (response.ok) {
+            const data = await response.blob();
+            resolve(URL.createObjectURL(data));
+          } else {
+            notify({
+              message: "Cannot retrieve the sample image",
+              isError: true,
+            });
+          }
+        })
+        .catch((error) => notify({ message: error, isError: true }))
+    );
   };
 
   const onEvent = (action: string, payload: any) => {
@@ -241,11 +300,38 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
         );
         break;
       }
+      case "update_sample": {
+        const { measurement } = payload;
+        const updatedMeasurement = parseMeasurement(measurement);
+        setMeasurements((prevMeasurements) => {
+          if (prevMeasurements) {
+            const index = prevMeasurements.findIndex(
+              (prevMeasurement) => prevMeasurement.id === updatedMeasurement.id
+            );
+            if (index !== -1) {
+              prevMeasurements[index] = {
+                ...prevMeasurements[index],
+                ...updatedMeasurement,
+              };
+              prevMeasurements = [...prevMeasurements];
+            }
+          }
+          return prevMeasurements;
+        });
+        break;
+      }
       case "update_position": {
-        const position = parseMeasurementPosition(payload.measurement);
+        const { measurement } = payload;
+        const updatedMeasurement = parseMeasurement(measurement);
         setPositions((prevPositions) =>
           prevPositions
-            ? { ...prevPositions, [position.id]: position }
+            ? {
+                ...prevPositions,
+                [updatedMeasurement.id]: {
+                  ...prevPositions[updatedMeasurement.id],
+                  ...updatedMeasurement,
+                },
+              }
             : prevPositions
         );
         break;
@@ -262,10 +348,13 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
         measurementVisible,
         recommendationVisible,
         toggleMeasurementVisible,
+        toggleAllMeasurementVisible,
         toggleRecommendationVisible,
         determineMeasurementPositions,
         updateMeasurementPosition,
         updateMeasurement,
+        updateMeasurementSample,
+        showMeasurementSample,
         onEvent,
       }}
     >

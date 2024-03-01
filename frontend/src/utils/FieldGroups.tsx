@@ -185,7 +185,7 @@ export default function FieldGroups({
                           onChange={(_, value) => {
                             onChangeOption(fieldId, value, { groupId, index });
                           }}
-                          options={categories[categoryId!!] ?? []}
+                          options={categories[categoryId!] ?? []}
                           renderInput={(params) => (
                             <TextField
                               {...params}
@@ -244,7 +244,7 @@ export default function FieldGroups({
                       size="small"
                       value={options?.[fieldId] ?? ""}
                       onChange={(_, value) => onChangeOption(fieldId, value)}
-                      options={categories[categoryId!!] ?? []}
+                      options={categories[categoryId!] ?? []}
                       renderInput={(params) => (
                         <TextField {...params} name={fieldId} label={label} />
                       )}

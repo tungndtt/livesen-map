@@ -17,5 +17,6 @@ def retrieve_metadata(_, __):
         "fertilizer_types": METADATA.fertilizer_types,
         "crop_protections": METADATA.crop_protections,
         "soil_tillages": METADATA.soil_tillages,
+        "soil_conditions": METADATA.soil_conditions,
     }
     return jsonify({"data": data}), 200

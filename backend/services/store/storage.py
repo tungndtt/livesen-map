@@ -158,8 +158,11 @@ def __init_tables() -> None:
             potassium double precision,
             ph double precision,
             rks double precision,
-            harvest_weight double precision,
             harvest_date timestamp,
+            harvest_weight double precision,
+            falling_number integer,
+            moisture double precision,
+            protein_content double precision,
             PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
@@ -190,6 +193,10 @@ def __init_tables() -> None:
             phosphor double precision,
             potassium double precision,
             ndvi double precision,
+            charge double precision,
+            stadium double precision,
+            soil_condition text,
+            sample_image text,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id, season_id) REFERENCES season(field_id, season_id) ON DELETE CASCADE,
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE

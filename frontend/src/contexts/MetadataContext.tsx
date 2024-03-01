@@ -40,6 +40,7 @@ export default function MetadataProvider(props: { children: ReactNode }) {
           fertilizerType: data["fertilizer_types"],
           cropProtection: data["crop_protections"],
           soilTillage: data["soil_tillages"],
+          soilCondition: data["soil_conditions"],
         });
       })
       .catch(() => setCategories({}));

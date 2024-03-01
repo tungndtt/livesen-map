@@ -49,8 +49,11 @@ export type Season = {
   potassium?: number;
   rks?: number;
   ph?: number;
-  harvestWeight?: number;
   harvestDate?: Date;
+  harvestWeight?: number;
+  fallingNumber?: number;
+  moisture?: number;
+  proteinContent?: number;
 };
 
 export type SeasonField = 
@@ -68,9 +71,12 @@ export type SeasonField =
   | "potassium" 
   | "rks"
   | "ph"
-  | "maxAllowedFertilizer"
-  | "harvestWeight" 
-  | "harvestDate";
+  | "maxAllowedFertilizer" 
+  | "harvestDate"
+  | "harvestWeight"
+  | "fallingNumber"
+  | "moisture"
+  | "proteinContent";
 
 export function parseSeason(season: any) {
   const {
@@ -89,8 +95,11 @@ export function parseSeason(season: any) {
     potassium,
     rks,
     ph,
-    harvest_weight: harvestWeight,
     harvest_date: harvestDate,
+    harvest_weight: harvestWeight,
+    falling_number: fallingNumber,
+    moisture,
+    protein_content: proteinContent
   } = season;
   return {
     maincrop, 
@@ -114,8 +123,11 @@ export function parseSeason(season: any) {
     rks,
     ph,
     maxAllowedFertilizer,
-    harvestWeight,
     harvestDate: harvestDate? new Date(harvestDate) : undefined,
+    harvestWeight,
+    fallingNumber,
+  moisture,
+  proteinContent,
   } as Season;
 }
 
@@ -136,8 +148,11 @@ export function deparseSeason(season: Season) {
     potassium,
     rks,
     ph,
-    harvestWeight,
     harvestDate,
+    harvestWeight,
+    fallingNumber,
+  moisture,
+  proteinContent,
   } = season;
   return {
     maincrop, 
@@ -155,7 +170,10 @@ export function deparseSeason(season: Season) {
     potassium,
     rks,
     ph,
-    harvest_weight: harvestWeight,
     harvest_date: harvestDate,
+    harvest_weight: harvestWeight,
+    falling_number: fallingNumber,
+    moisture,
+    protein_content: proteinContent
   };
 }
