@@ -277,7 +277,6 @@ function MeasurementValuesUpdate(props: MeasurementValuesProps) {
       const name = e.target.name;
       const value =
         e.target.type === "number" ? +e.target.value : e.target.value;
-      console.log(name, value);
       return { ...prevOptions, [name]: value };
     });
   };
