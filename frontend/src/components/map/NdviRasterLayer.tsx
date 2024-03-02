@@ -6,8 +6,6 @@ import { useMap } from "react-leaflet";
 import parseGeoraster from "georaster";
 import GeoRasterLayer, { GeoRaster } from "georaster-layer-for-leaflet";
 import proj4 from "proj4";
-import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
-import { useSelectionContext } from "../../contexts/SelectionContext";
 import { useNdviRasterContext } from "../../contexts/NdviRasterContext";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import ndvi2RBGA from "../../utils/ndvi2RBGA";
@@ -16,9 +14,7 @@ import GradientBar from "../../utils/GradientBar";
 window.proj4 = proj4;
 
 export default function NdviRasterLayer() {
-  const { doRequest } = useAuthenticationContext();
-  const { selectedSeasonId } = useSelectionContext();
-  const { ndviRasterVisible, ndviRasters } = useNdviRasterContext();
+  const { ndviRasterVisible, fetchNdviMap } = useNdviRasterContext();
   const notify = useNotificationContext();
   //@ts-ignore
   const ndviLayerRef = useRef<GeoRasterLayer | undefined>(undefined);
@@ -29,15 +25,10 @@ export default function NdviRasterLayer() {
 
   useEffect(() => {
     const container = context.layerContainer || context.map;
-    if (
-      ndviRasterVisible &&
-      selectedSeasonId &&
-      ndviRasters?.[selectedSeasonId]
-    ) {
+    if (ndviRasterVisible) {
       setIsLoading(true);
-      doRequest(`ndvi_raster/${ndviRasters[selectedSeasonId]}`, "GET")
-        .then(async (response) => {
-          const arrayBuffer = await response.arrayBuffer();
+      fetchNdviMap()
+        .then((arrayBuffer) => {
           parseGeoraster(arrayBuffer).then((georaster: GeoRaster) => {
             if (ndviLayerRef.current) {
               container.removeLayer(ndviLayerRef.current);
@@ -83,7 +74,7 @@ export default function NdviRasterLayer() {
     return () => {
       if (ndviLayerRef.current) container.removeLayer(ndviLayerRef.current);
     };
-  }, [context, map, ndviRasters, ndviRasterVisible, selectedSeasonId]);
+  }, [context, map, ndviRasterVisible]);
 
   return (
     <>

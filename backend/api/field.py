@@ -3,8 +3,8 @@ from flask import Blueprint, jsonify
 from shapely.geometry import Polygon
 from api.authentication import authentication_required
 from services.store.dafs.field import get_field, insert_field, delete_field, list_fields_info
-from services.store.dafs.ndvi_raster import list_ndvi_rasters
-from services.store.dafs.measurement import get_measurement_sample_images
+from services.store.dafs.season import list_ndvi_rasters
+from services.store.dafs.measurement import list_sample_images
 from services.notify.notifier import publish_event
 from config import NDVI, MEASUREMENT
 
@@ -60,14 +60,13 @@ def register_field(user_id, data):
 
 @api.route("/unregister/<int:field_id>", methods=["DELETE"])
 @authentication_required
-def unregister_field(user_id, __, field_id):
+def unregister_field(user_id, _, field_id):
     ndvi_rasters = list_ndvi_rasters(user_id, field_id)
-    measurement_sample_images = get_measurement_sample_images(user_id,
-                                                              field_id)
+    measurement_sample_images = list_sample_images(user_id, field_id)
     if delete_field(user_id, field_id):
         if ndvi_rasters is not None:
             try:
-                for ndvi_raster in ndvi_rasters.values():
+                for ndvi_raster in ndvi_rasters:
                     os.remove(os.path.join(NDVI.data_folder, ndvi_raster))
             except Exception as error:
                 print("[Field API]", error)

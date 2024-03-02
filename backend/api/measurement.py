@@ -2,7 +2,7 @@ import os
 import uuid
 from flask import Blueprint, jsonify, send_from_directory, request
 from api.authentication import authentication_required
-from api.ndvi_raster import handle_ndvi_raster
+from api.season import handle_ndvi_raster
 from services.store.storage import DbCursor
 from services.store.dafs.season import get_season
 from services.store.dafs.measurement import list_measurements, get_measurement, insert_measurement, update_measurement
@@ -18,15 +18,22 @@ from config import MEASUREMENT
 api = Blueprint("measurement", __name__, url_prefix="/measurement")
 
 
-@api.route("/sample/<path:sample_image>", methods=["GET"])
+@api.route("/sample/<int:measurement_id>", methods=["GET"])
 @authentication_required
-def retrieve_sample_image(_, __, sample_image):
-    return send_from_directory(MEASUREMENT.data_folder, sample_image)
+def retrieve_sample_image(user_id, _, measurement_id):
+    measurement = get_measurement(user_id, measurement_id)
+    if measurement is not None:
+        if measurement["sample_image"] is not None:
+            return send_from_directory(MEASUREMENT.data_folder, measurement["sample_image"])
+        else:
+            return jsonify({"data": "No uploaded sample available"}), 404
+    else:
+        return jsonify({"data": "Cannot find measurement with given id"}), 404
 
 
 @api.route("/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def retrieve_measurements(user_id, __, field_id, season_id):
+def retrieve_measurements(user_id, _, field_id, season_id):
     measurements = list_measurements(user_id, field_id, season_id)
     if measurements is not None and len(measurements) > 0:
         return measurements, 200
@@ -36,7 +43,7 @@ def retrieve_measurements(user_id, __, field_id, season_id):
 
 @api.route("/subfield/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def retrieve_subfields(user_id, __, field_id, season_id):
+def retrieve_subfields(user_id, _, field_id, season_id):
     subfields = list_subfields(user_id, field_id, season_id)
     if subfields is not None and len(subfields) > 0:
         return subfields, 200
@@ -46,11 +53,10 @@ def retrieve_subfields(user_id, __, field_id, season_id):
 
 @api.route("/position/<int:field_id>/<season_id>", methods=["GET"])
 @authentication_required
-def retrieve_measurement_positions(user_id, __, field_id, season_id):
-    response, status_code = handle_ndvi_raster(user_id, field_id, season_id)
-    if status_code >= 400:
-        return response, status_code
-    ndvi_raster, _ = response.get_json()["data"]
+def retrieve_measurement_positions(user_id, _, field_id, season_id):
+    ndvi_raster, _ = handle_ndvi_raster(user_id, field_id, season_id)
+    if ndvi_raster is None:
+        return jsonify({"data": "Cannot determine NDVI map to perform subfield split"}), 404
     subfield_groups = timeout_function(
         20, get_subfields_pixel_based_split, ndvi_raster
     )
@@ -147,7 +153,7 @@ def upgister_measurement(user_id, data, measurement_id):
 
 @api.route("/sample/<int:measurement_id>", methods=["PUT"])
 @authentication_required
-def upgister_measurement_sample(user_id, __, measurement_id):
+def upgister_measurement_sample(user_id, _, measurement_id):
     if "file" not in request.files:
         return jsonify({"data": "No uploaded measurement sample image"}), 404
     file = request.files["file"]

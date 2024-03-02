@@ -47,7 +47,7 @@ type MeasurementContextType = {
     measurementValues: MeasurementValues
   ) => void;
   updateMeasurementSample: (measurementId: number, file: File) => void;
-  showMeasurementSample: (measurement: Measurement) => Promise<string>;
+  showMeasurementSample: (measurementId: number) => Promise<string>;
   onEvent: (action: string, payload: any) => void;
 };
 
@@ -236,9 +236,9 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
       .catch((error) => notify({ message: error, isError: true }));
   };
 
-  const showMeasurementSample = (measurement: Measurement) => {
+  const showMeasurementSample = (measurementId: number) => {
     return new Promise<string>((resolve) =>
-      doRequest(`measurement/sample/${measurement.sampleImage}`, "GET")
+      doRequest(`measurement/sample/${measurementId}`, "GET")
         .then(async (response) => {
           if (response.ok) {
             const data = await response.blob();

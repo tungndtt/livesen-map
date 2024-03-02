@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useState,
-  useRef,
   ReactNode,
   useEffect,
 } from "react";
@@ -15,88 +14,58 @@ type NdviRasterMap = {
 };
 
 type NdviRasterContextType = {
-  ndviRasters: NdviRasterMap;
   ndviRasterVisible: boolean | undefined;
   toggleNdviRasterVisible: () => void;
+  fetchNdviMap: () => Promise<ArrayBuffer>;
 };
 
 const NdviRasterContext = createContext<NdviRasterContextType>({
-  ndviRasters: {},
   ndviRasterVisible: false,
   toggleNdviRasterVisible: () => {},
+  fetchNdviMap: async () => new ArrayBuffer(0),
 });
 
 export default function NdviRasterProvider(props: { children: ReactNode }) {
   const notify = useNotificationContext();
   const { doRequest } = useAuthenticationContext();
   const { selectedFieldId, selectedSeasonId } = useSelectionContext();
-  const [ndviRasters, setNdviRasters] = useState<NdviRasterMap>({});
   const [ndviRasterVisible, setNdviRasterVisible] = useState<
     boolean | undefined
   >(false);
-  const seasonId = useRef<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (selectedFieldId) {
-      doRequest(`ndvi_raster/${selectedFieldId}`, "GET")
-        .then(async (response) => setNdviRasters(await response.json()))
-        .catch(() => setNdviRasters({}));
-    } else setNdviRasters({});
-    setNdviRasterVisible(false);
-  }, [selectedFieldId]);
+  useEffect(
+    () => setNdviRasterVisible(false),
+    [selectedFieldId, selectedSeasonId]
+  );
 
-  useEffect(() => {
-    if (ndviRasterVisible && selectedSeasonId !== undefined) getNdviRaster();
-    else {
-      if (!selectedSeasonId && seasonId.current)
-        setNdviRasters((prevNdviMap) => {
-          delete prevNdviMap[seasonId.current!];
-          return { ...prevNdviMap };
-        });
-      setNdviRasterVisible(false);
-    }
-    seasonId.current = selectedSeasonId;
-  }, [selectedSeasonId]);
+  const toggleNdviRasterVisible = () =>
+    setNdviRasterVisible(!ndviRasterVisible);
 
-  const toggleNdviRasterVisible = () => {
-    if (!ndviRasterVisible) getNdviRaster();
-    else setNdviRasterVisible(false);
-  };
-
-  const getNdviRaster = () => {
-    if (selectedFieldId && selectedSeasonId) {
-      setNdviRasterVisible(undefined);
-      doRequest(`ndvi_raster/${selectedFieldId}/${selectedSeasonId}`, "GET")
+  const fetchNdviMap = () => {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      doRequest(`/season/ndvi/${selectedFieldId}/${selectedSeasonId}`, "GET")
         .then(async (response) => {
-          const responseBody = await response.json();
-          const data = responseBody["data"];
-          const [ndviRaster, sourceDate] = data;
-          setNdviRasters((prevNdviMap) => ({
-            ...prevNdviMap,
-            [selectedSeasonId]: ndviRaster,
-          }));
-          const date = new Date(Date.parse(sourceDate));
-          setNdviRasterVisible(true);
-          notify({
-            message: `Fetch NDVI map generated from downloadled data on ${date.getDate()}/${
-              date.getMonth() + 1
-            }/${date.getFullYear()}`,
-            isError: false,
-          });
+          if (response.ok) {
+            const ndviDate = response.headers.get("ndvi_date");
+            notify({
+              message: `Fetch NDVI map generated on ${ndviDate}`,
+              isError: false,
+            });
+            resolve(await response.arrayBuffer());
+          } else {
+            reject((await response.json())["data"]);
+          }
         })
-        .catch((error) => {
-          setNdviRasterVisible(false);
-          notify({ message: error, isError: true });
-        });
-    }
+        .catch((error) => reject(error));
+    });
   };
 
   return (
     <NdviRasterContext.Provider
       value={{
-        ndviRasters,
         ndviRasterVisible,
         toggleNdviRasterVisible,
+        fetchNdviMap,
       }}
     >
       {props.children}

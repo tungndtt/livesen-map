@@ -125,16 +125,13 @@ export default function MeasurementTab() {
                     size="small"
                     variant="outlined"
                     endIcon={<ImageIcon />}
-                    disabled={!measurement.sampleImage}
                     onClick={() => {
-                      if (measurement.sampleImage) {
-                        showMeasurementSample(measurement).then((imageUrl) =>
-                          setSampleImageUrl(imageUrl)
-                        );
-                      }
+                      showMeasurementSample(measurement.id).then((imageUrl) =>
+                        setSampleImageUrl(imageUrl)
+                      );
                     }}
                   >
-                    {measurement.sampleImage ? "Show sample" : "No sample"}
+                    Show sample
                   </Button>
                 </Box>
                 <Button

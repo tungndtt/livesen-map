@@ -110,12 +110,12 @@ export default function MeasurementLayer() {
                               maxRecommendedFertilizer
                         )
                       : UNKNOWN_COLOR
-                    : number2RBG(measurementId)
+                    : number2RBG(measurementIdx!)
                 }
                 fillOpacity={
                   recommendationVisible && recommendedFertilizerAmount
                     ? 1.0
-                    : 0.6
+                    : 0.75
                 }
                 stroke={false}
               >
