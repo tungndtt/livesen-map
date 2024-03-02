@@ -15,10 +15,7 @@ export type MeasurementPosition = {
   position: Coordinate;
 }
 
-export type Measurement = {
-  ndvi: number;
-  sampleImage?: string;
-} & MeasurementPosition & MeasurementValues;
+export type Measurement = {ndvi: number;} & MeasurementPosition & MeasurementValues;
 
 export const parseMeasurement = (measurement: any) => {
   const {
@@ -31,8 +28,7 @@ export const parseMeasurement = (measurement: any) => {
     potassium,
     charge,
     stadium,
-    soil_condition: soilCondition,
-    sample_image: sampleImage
+    soil_condition: soilCondition
   } = measurement;
   return {
     id, 
@@ -43,8 +39,7 @@ export const parseMeasurement = (measurement: any) => {
     potassium,
     charge,
     stadium,
-    soilCondition,
-    sampleImage
+    soilCondition
   } as Measurement;
 };
 

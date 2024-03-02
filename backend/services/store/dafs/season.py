@@ -20,7 +20,8 @@ def __parse_record(record: tuple) -> dict[str, Any] | None:
             "crop_protection_applications",
             "nitrate", "phosphor", "potassium", "ph", "rks",
             "harvest_date", "harvest_weight",
-            "falling_number", "moisture", "protein_content"
+            "falling_number", "moisture", "protein_content",
+            "ndvi_raster", "ndvi_date",
         ])
     }
 
@@ -34,7 +35,8 @@ def __extract_nonempty(data: dict[str, Any]) -> tuple[list[str], list[Any]]:
         "max_allowed_fertilizer",
         "nitrate", "phosphor", "potassium", "ph", "rks",
         "harvest_date", "harvest_weight",
-        "falling_number", "moisture", "protein_content"
+        "falling_number", "moisture", "protein_content",
+        "ndvi_raster", "ndvi_date",
     ]:
         if col in data and data[col] is not None:
             cols.append(col)
@@ -105,7 +107,11 @@ def delete_season(user_id: int, field_id: int, season_id: str) -> bool:
     db_cursor = DbCursor()
     with db_cursor as cursor:
         cursor.execute(
-            "DELETE FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
+            """
+            DELETE FROM season
+            WHERE user_id = %s AND field_id = %s AND season_id = %s
+            RETURNING ndvi_raster
+            """,
             (user_id, field_id, season_id,)
         )
     return db_cursor.error is None
@@ -133,3 +139,21 @@ def list_season_ids(user_id: int, field_id: int) -> list[str] | None:
         )
         season_ids = [record[0] for record in cursor.fetchall()]
     return season_ids if db_cursor.error is None else None
+
+
+def list_ndvi_rasters(user_id: int, field_id: int, season_id: str | None = None) -> list[str] | None:
+    ndvi_rasters = None
+    db_cursor = DbCursor()
+    with db_cursor as cursor:
+        if season_id is None:
+            cursor.execute(
+                "SELECT ndvi_raster FROM season WHERE user_id = %s AND field_id = %s",
+                (user_id, field_id,)
+            )
+        else:
+            cursor.execute(
+                "SELECT ndvi_raster FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
+                (user_id, field_id, season_id,)
+            )
+        ndvi_rasters = [record[0] for record in cursor.fetchall()]
+    return ndvi_rasters if db_cursor.error is None else None

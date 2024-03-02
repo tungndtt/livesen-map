@@ -163,22 +163,11 @@ def __init_tables() -> None:
             falling_number integer,
             moisture double precision,
             protein_content double precision,
+            ndvi_raster text,
+            ndvi_date date,
             PRIMARY KEY (field_id, season_id),
             FOREIGN KEY (user_id) REFERENCES "user"(id),
             FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE
-        )
-        """
-        create_table_ndvi_raster_cmd = """
-        CREATE TABLE IF NOT EXISTS ndvi_raster (
-            user_id integer not null,
-            field_id integer not null,
-            season_id text not null,
-            ndvi_raster text not null,
-            source_date date not null,
-            PRIMARY KEY (field_id, season_id),
-            FOREIGN KEY (user_id) REFERENCES "user"(id),
-            FOREIGN KEY (field_id) REFERENCES field(id) ON DELETE CASCADE,
-            FOREIGN KEY (field_id, season_id) REFERENCES season(field_id, season_id) ON DELETE CASCADE
         )
         """
         create_table_measurement_cmd = """
@@ -221,7 +210,6 @@ def __init_tables() -> None:
             create_table_user_cmd,
             create_table_field_cmd,
             create_table_season_cmd,
-            create_table_ndvi_raster_cmd,
             create_table_measurement_cmd,
             create_table_subfield_cmd,
         ]:

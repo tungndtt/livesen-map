@@ -56,7 +56,11 @@ def insert_measurement(
 
 
 @transaction_decorator
-def update_measurement(user_id: int, measurement_id: int, data: dict[str, Any], cursor: Cursor | None = None) -> dict[str, Any] | None:
+def update_measurement(
+    user_id: int, measurement_id: int,
+    data: dict[str, Any],
+    cursor: Cursor | None = None
+) -> dict[str, Any] | None:
     cols, vals = __extract_nonempty(data)
     updated_measurement = None
     if len(cols) > 0:
@@ -92,7 +96,7 @@ def list_measurements(user_id: int, field_id: int, season_id: str) -> list[dict[
     return measurements if db_cursor.error is None else None
 
 
-def get_measurement_sample_images(user_id: int, field_id: int, season_id: str | None = None) -> list[str] | None:
+def list_sample_images(user_id: int, field_id: int, season_id: str | None = None) -> list[str] | None:
     sample_images = None
     db_cursor = DbCursor()
     with db_cursor as cursor:

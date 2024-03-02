@@ -67,7 +67,7 @@ def __extract_polygon(polygon: Polygon, in_tiff_file: str, out_tiff_file: str) -
                            indexes=1, window=window)
 
 
-def get_field_ndvi(coordinates: Polygon | list[list[list[float]]], season_id: str) -> tuple[str, datetime] | None:
+def get_field_ndvi(coordinates: Polygon | list[list[list[float]]], season_id: str) -> tuple[str | None, datetime | None]:
     year, month, day = season_id[:4], season_id[4:6], season_id[6:]
     source_date = datetime(year=int(year), month=int(month), day=int(day))
     # check whether there is available data within 5 days
@@ -86,7 +86,7 @@ def get_field_ndvi(coordinates: Polygon | list[list[list[float]]], season_id: st
         if nc_file is not None:
             break
     if nc_file is None:
-        return None
+        return None, None
     in_nc_file = os.path.join(DOWNLOADER.data_folder, nc_file)
     if not os.path.isdir(NDVI.data_folder):
         os.mkdir(NDVI.data_folder)

@@ -1,5 +1,5 @@
 from flask import Flask
-from api import authentication, metadata, user, field, season, ndvi_raster, measurement, sse
+from api import authentication, metadata, user, field, season, measurement, sse
 from services.download import downloader
 from services.store import storage
 from services.mail import mailer
@@ -21,7 +21,6 @@ if __name__ == "__main__":
         app.register_blueprint(user.api)
         app.register_blueprint(field.api)
         app.register_blueprint(season.api)
-        app.register_blueprint(ndvi_raster.api)
         app.register_blueprint(measurement.api)
         app.register_blueprint(sse.api)
         app.run(host=APP.host, port=APP.port, threaded=True)

@@ -110,7 +110,7 @@ export default function SelectionProvider(props: { children: ReactNode }) {
               (prevFieldOptions) => prevFieldOptions.id === id
             )
           ) {
-            prevFieldOptions = [...(prevFieldOptions ?? []), { id, name }];
+            prevFieldOptions = [{ id, name }, ...(prevFieldOptions ?? [])];
           }
           return prevFieldOptions;
         });
@@ -151,8 +151,8 @@ export default function SelectionProvider(props: { children: ReactNode }) {
             const day = seasonId.substring(6);
             const label = `${day}-${month}-${year}`;
             prevSeasonOptions = [
-              ...(prevSeasonOptions ?? []),
               { id: seasonId, label },
+              ...(prevSeasonOptions ?? []),
             ];
           }
           return prevSeasonOptions;
