@@ -7,7 +7,6 @@ from threading import Thread, Event
 from psycopg2 import pool, sql, connect
 from psycopg2._psycopg import cursor as Cursor
 from config import STORAGE, APP
-from typing import Any
 
 
 __event = None
@@ -273,15 +272,3 @@ class DbCursor:
                 self.__cursor.close()
                 _dbpool.putconn(self.__conn)
         return True
-
-
-def transaction_decorator(f):
-    def decorator(*args, **kwargs) -> Any | None:
-        if "cursor" in kwargs and kwargs["cursor"] is not None:
-            return f(*args, **kwargs)
-        else:
-            db_cursor = DbCursor()
-            with db_cursor as cursor:
-                kwargs["cursor"] = cursor
-                return f(*args, **kwargs)
-    return decorator

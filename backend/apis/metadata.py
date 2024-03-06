@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify
-from api.authentication import authentication_required
+from apis.authentication import authentication_required
 from config import METADATA
 
 api = Blueprint("metadata", __name__, url_prefix="/metadata")

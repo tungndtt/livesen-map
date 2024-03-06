@@ -1,6 +1,5 @@
-from services.store.storage import DbCursor, transaction_decorator
-from psycopg2._psycopg import cursor as Cursor
 from typing import Any
+from repos.store.storage import Cursor
 
 
 def __parse_record(record: tuple) -> dict[str, Any] | None:
@@ -32,11 +31,10 @@ def __extract_nonempty(data: dict[str, Any]) -> tuple[list[str], list[Any]]:
     return cols, vals
 
 
-@transaction_decorator
 def insert_measurement(
+    cursor: Cursor,
     user_id: int, field_id: int, season_id: str,
     data: dict[str, Any],
-    cursor: Cursor | None,
 ) -> dict[str, Any] | None:
     cols, vals = __extract_nonempty(data)
     inserted_measurement = None
@@ -55,11 +53,10 @@ def insert_measurement(
     return inserted_measurement
 
 
-@transaction_decorator
 def update_measurement(
+    cursor: Cursor,
     user_id: int, measurement_id: int,
     data: dict[str, Any],
-    cursor: Cursor | None = None
 ) -> dict[str, Any] | None:
     cols, vals = __extract_nonempty(data)
     updated_measurement = None
@@ -73,42 +70,37 @@ def update_measurement(
     return updated_measurement
 
 
-def get_measurement(user_id: int, measurement_id: int) -> dict[str, Any] | None:
-    db_cursor = DbCursor()
-    with db_cursor as cursor:
-        cursor.execute(
-            "SELECT * FROM measurement WHERE user_id = %s AND id = %s",
-            (user_id, measurement_id,)
-        )
-        measurement = __parse_record(cursor.fetchone())
-    return measurement if db_cursor.error is None else None
+def select_measurement(cursor: Cursor, user_id: int, measurement_id: int) -> dict[str, Any] | None:
+    cursor.execute(
+        "SELECT * FROM measurement WHERE user_id = %s AND id = %s",
+        (user_id, measurement_id,)
+    )
+    return __parse_record(cursor.fetchone())
 
 
-def list_measurements(user_id: int, field_id: int, season_id: str) -> list[dict[str, Any]] | None:
-    measurements = None
-    db_cursor = DbCursor()
-    with db_cursor as cursor:
+def select_measurements(
+    cursor: Cursor,
+    user_id: int, field_id: int, season_id: str
+) -> list[dict[str, Any]] | None:
+    cursor.execute(
+        "SELECT * FROM measurement WHERE user_id = %s AND field_id = %s AND season_id = %s",
+        (user_id, field_id, season_id,)
+    )
+    return [__parse_record(record) for record in cursor.fetchall()]
+
+
+def select_sample_images(
+    cursor: Cursor,
+    user_id: int, field_id: int, season_id: str | None = None
+) -> list[str] | None:
+    if season_id:
         cursor.execute(
-            "SELECT * FROM measurement WHERE user_id = %s AND field_id = %s AND season_id = %s",
+            "SELECT sample_image FROM measurement WHERE user_id = %s AND field_id = %s AND season_id = %s",
             (user_id, field_id, season_id,)
         )
-        measurements = [__parse_record(record) for record in cursor.fetchall()]
-    return measurements if db_cursor.error is None else None
-
-
-def list_sample_images(user_id: int, field_id: int, season_id: str | None = None) -> list[str] | None:
-    sample_images = None
-    db_cursor = DbCursor()
-    with db_cursor as cursor:
-        if season_id:
-            cursor.execute(
-                "SELECT sample_image FROM measurement WHERE user_id = %s AND field_id = %s AND season_id = %s",
-                (user_id, field_id, season_id,)
-            )
-        else:
-            cursor.execute(
-                "SELECT sample_image FROM measurement WHERE user_id = %s AND field_id = %s",
-                (user_id, field_id,)
-            )
-        sample_images = [record[0] for record in cursor.fetchall()]
-    return sample_images if db_cursor.error is None else None
+    else:
+        cursor.execute(
+            "SELECT sample_image FROM measurement WHERE user_id = %s AND field_id = %s",
+            (user_id, field_id,)
+        )
+    return [record[0] for record in cursor.fetchall()]
