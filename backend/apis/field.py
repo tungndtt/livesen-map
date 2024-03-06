@@ -1,12 +1,7 @@
-import os
 from flask import Blueprint, jsonify
-from shapely.geometry import Polygon
-from api.authentication import authentication_required
-from services.store.dafs.field import get_field, insert_field, delete_field, list_fields_info
-from services.store.dafs.season import list_ndvi_rasters
-from services.store.dafs.measurement import list_sample_images
-from services.notify.notifier import publish_event
-from config import NDVI, MEASUREMENT
+from apis.authentication import authentication_required
+from logics.field import get_field_options, get_field, add_field, remove_field
+from logics.event import publish
 
 
 api = Blueprint("field", __name__, url_prefix="/field")
@@ -15,7 +10,7 @@ api = Blueprint("field", __name__, url_prefix="/field")
 @api.route("", methods=["GET"])
 @authentication_required
 def retrieve_field_options(user_id, _):
-    field_options = list_fields_info(user_id)
+    field_options = get_field_options(user_id)
     if field_options is not None:
         return field_options, 200
     else:
@@ -43,12 +38,9 @@ def register_field(user_id, data):
     try:
         name = data["name"]
         coordinates = data["coordinates"]
-        shell = coordinates[0]
-        holes = coordinates[1:]
-        region = Polygon(shell, holes).__str__()
-        inserted_field = insert_field(user_id, name, region)
+        inserted_field = add_field(user_id, name, coordinates)
         if inserted_field is not None:
-            if publish_event(user_id, "field.create", inserted_field):
+            if publish(user_id, "field.create", inserted_field):
                 return jsonify({"data": "Successfully register the field"}), 201
             else:
                 return jsonify({"data": "Successfully register the field but failed to publish sync event"}), 503
@@ -61,26 +53,8 @@ def register_field(user_id, data):
 @api.route("/unregister/<int:field_id>", methods=["DELETE"])
 @authentication_required
 def unregister_field(user_id, _, field_id):
-    ndvi_rasters = list_ndvi_rasters(user_id, field_id)
-    measurement_sample_images = list_sample_images(user_id, field_id)
-    if delete_field(user_id, field_id):
-        if ndvi_rasters is not None:
-            try:
-                for ndvi_raster in ndvi_rasters:
-                    os.remove(os.path.join(NDVI.data_folder, ndvi_raster))
-            except Exception as error:
-                print("[Field API]", error)
-        if measurement_sample_images is not None:
-            try:
-                for measurement_sample_image in measurement_sample_images:
-                    if measurement_sample_image is not None:
-                        os.remove(
-                            os.path.join(MEASUREMENT.data_folder,
-                                         measurement_sample_image)
-                        )
-            except Exception as error:
-                print("[Season API]", error)
-        if publish_event(user_id, "field.delete", {"id": field_id}):
+    if remove_field(user_id, field_id):
+        if publish(user_id, "field.delete", {"id": field_id}):
             return jsonify({"data": "Successfully unregister the field"}), 204
         else:
             return jsonify({"data": "Successfully unregister the field but failed to publish sync event"}), 503

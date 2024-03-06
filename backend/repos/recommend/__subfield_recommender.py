@@ -9,12 +9,13 @@ def term():
     pass
 
 
-def recommend_fertilizer(ndvi: float, data: dict[str, int | float]) -> float | int | None:
+def recommend_fertilizer(ndvi: float, measurement_data: dict[str, int | float]) -> float | int | None:
     """
     This is a dummy calculation of fertilizer recommendation. 
     Feel free to replace with appropriate calculation logic
     """
-    nitrate, phosphor, potassium = data["nitrate"], data["phosphor"], data["potassium"]
+    nitrate, phosphor, potassium = measurement_data[
+        "nitrate"], measurement_data["phosphor"], measurement_data["potassium"]
     if nitrate is None and phosphor is None and potassium is None:
         return None
     nitrate = nitrate if nitrate is not None else 0

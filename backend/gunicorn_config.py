@@ -1,9 +1,9 @@
 from gunicorn.workers.ggevent import GeventWorker
-from services.download import downloader
-from services.store import storage
-from services.mail import mailer
-from services.recommend import recommender
-from services.notify import notifier
+from repos.download import downloader
+from repos.store import storage
+from repos.mail import mailer
+from repos.recommend import recommender
+from repos.notify import notifier
 from config import APP
 
 
