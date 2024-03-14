@@ -24,7 +24,9 @@ def get_sample_image(user_id: int, measurement_id: int) -> str | None:
         return None
 
 
-def get_measurements(user_id: int, field_id: int, season_id: str):
+def get_measurements(
+    user_id: int, field_id: int, season_id: str
+) -> list[dict[str, Any]] | None:
     measurements = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -34,7 +36,9 @@ def get_measurements(user_id: int, field_id: int, season_id: str):
     return measurements if db_cursor.error is None else None
 
 
-def get_subfields(user_id: int, field_id: int, season_id: str):
+def get_subfields(
+    user_id: int, field_id: int, season_id: str
+) -> list[dict[str, Any]] | None:
     subfields = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -42,7 +46,9 @@ def get_subfields(user_id: int, field_id: int, season_id: str):
     return subfields if db_cursor.error is None else None
 
 
-def get_measurement_positions(user_id: int, field_id: int, season_id: str):
+def get_measurement_positions(
+    user_id: int, field_id: int, season_id: str
+) -> tuple[list, list] | tuple[None, None]:
     ndvi_raster, _ = get_ndvi_raster(user_id, field_id, season_id)
     if ndvi_raster is None:
         return None, None
@@ -91,7 +97,9 @@ def get_measurement_positions(user_id: int, field_id: int, season_id: str):
         return None, None
 
 
-def modify_measurement(user_id: int, measurement_id: int, data: dict[str, Any]):
+def modify_measurement(
+    user_id: int, measurement_id: int, data: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, float | int | None]] | tuple[None, None]:
     updated_measurement = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -110,7 +118,7 @@ def modify_measurement(user_id: int, measurement_id: int, data: dict[str, Any]):
         )
         if updated_measurement is None:
             return None, None
-        subfield_recommended_fertilizer = {}
+        subfield_recommended_fertilizer: dict[str, float | int | None] = {}
         for subfield in subfields:
             if subfield["measurement_id"] == measurement_id:
                 subfield_id = subfield["id"]
@@ -129,7 +137,7 @@ def modify_measurement(user_id: int, measurement_id: int, data: dict[str, Any]):
         return None, None
 
 
-def upload_measurement_sample(user_id: int, measurement_id: int):
+def upload_measurement_sample(user_id: int, measurement_id: int) -> dict[str, Any] | None:
     updated_measurement = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -148,7 +156,9 @@ def upload_measurement_sample(user_id: int, measurement_id: int):
     return updated_measurement if db_cursor.error is None else None
 
 
-def modify_measurement_position(user_id: int, measurement_id: int, lonlat: tuple[float, float]):
+def modify_measurement_position(
+    user_id: int, measurement_id: int, lonlat: tuple[float, float]
+) -> dict[str, Any] | None:
     updated_measurement = None
     db_cursor = DbCursor()
     with db_cursor as cursor:

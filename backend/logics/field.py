@@ -1,3 +1,4 @@
+from typing import Any
 import os
 from shapely.geometry import Polygon
 from repos.store.storage import DbCursor
@@ -7,7 +8,7 @@ from repos.store.dafs.measurement import select_sample_images
 from config import NDVI, MEASUREMENT
 
 
-def get_field_options(user_id: int):
+def get_field_options(user_id: int) -> list[dict[str, Any]] | None:
     field_ids = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -15,7 +16,7 @@ def get_field_options(user_id: int):
     return field_ids if db_cursor.error is None else None
 
 
-def get_field(user_id: int, field_id: int):
+def get_field(user_id: int, field_id: int) -> dict[str, Any] | None:
     field = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -23,11 +24,12 @@ def get_field(user_id: int, field_id: int):
     return field if db_cursor.error is None else None
 
 
-def add_field(user_id: int, name: str, coordinates: list):
+def add_field(
+    user_id: int, name: str, coordinates: list[list[float]]
+) -> dict[str, Any] | None:
     shell = coordinates[0]
     holes = coordinates[1:]
     region = Polygon(shell, holes).__str__()
-    inserted_field = insert_field(user_id, name, region)
     inserted_field = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -35,7 +37,7 @@ def add_field(user_id: int, name: str, coordinates: list):
     return inserted_field if db_cursor.error is None else None
 
 
-def remove_field(user_id: int, field_id: int):
+def remove_field(user_id: int, field_id: int) -> bool:
     db_cursor = DbCursor()
     ndvi_rasters, measurement_sample_images = None, None
     with db_cursor as cursor:
