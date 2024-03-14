@@ -48,10 +48,12 @@ class Recommender:
 class Notifier:
     host: str | None = None
     port: int | None = None
+    password: str | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.host = config["host"]
         self.port = config["port"]
+        self.password = config["password"]
 
 
 class Ndvi:

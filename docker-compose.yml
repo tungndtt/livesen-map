@@ -24,7 +24,7 @@ services:
       - livesen-network
     ports:
       - 6379:6379
-    command: ["redis-server"]
+    command: ["redis-server", "--requirepass", "livesen"]
 
   livesen-backend:
     build: 

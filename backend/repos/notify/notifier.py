@@ -36,8 +36,12 @@ def publish_event(channel_id: int, type: str, payload) -> bool:
 def init():
     global __redis
     if __redis is None:
-        __redis = Redis(host=NOTIFIER.host, port=NOTIFIER.port,
-                        health_check_interval=60)
+        __redis = Redis(
+            host=NOTIFIER.host,
+            port=NOTIFIER.port,
+            password=NOTIFIER.password,
+            health_check_interval=60
+        )
 
 
 def term():

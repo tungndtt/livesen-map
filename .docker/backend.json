@@ -21,7 +21,8 @@
   },
   "notifier": {
     "host": "livesen-notifier",
-    "port": 6379
+    "port": 6379,
+    "password": "livesen"
   },
   "jwtoken": {
     "secret": "livesen"

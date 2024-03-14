@@ -30,7 +30,8 @@ The server component of the project requires a configuration file named `config.
   },
   "notifier": {
     "host": "localhost",
-    "port": 6379
+    "port": 6379,
+    "password": "livesen"
   },
   "jwtoken": {
     "secret": "livesen"
