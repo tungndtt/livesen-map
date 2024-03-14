@@ -1,3 +1,4 @@
+from typing import Any
 import os
 from repos.store.storage import DbCursor
 from repos.store.dafs.field import select_field
@@ -8,7 +9,7 @@ from libs.algo.field_ndvi import get_field_ndvi
 from config import NDVI, MEASUREMENT
 
 
-def get_ndvi_raster(user_id: int, field_id: int, season_id: str):
+def get_ndvi_raster(user_id: int, field_id: int, season_id: str) -> tuple[Any, Any] | tuple[None, None]:
     updated_season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -21,7 +22,8 @@ def get_ndvi_raster(user_id: int, field_id: int, season_id: str):
         if field is None:
             return None, None
         ndvi_raster, ndvi_date = get_field_ndvi(
-            field["coordinates"], season_id)
+            field["coordinates"], season_id
+        )
         if ndvi_raster is None:
             return None, None
         else:
@@ -35,7 +37,7 @@ def get_ndvi_raster(user_id: int, field_id: int, season_id: str):
         return None, None
 
 
-def get_season_options(user_id: int, field_id: int):
+def get_season_options(user_id: int, field_id: int) -> list[str] | None:
     season_ids = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -43,7 +45,7 @@ def get_season_options(user_id: int, field_id: int):
     return season_ids if db_cursor.error is None else None
 
 
-def get_season(user_id: int, field_id: int, season_id: str):
+def get_season(user_id: int, field_id: int, season_id: str) -> dict[str, Any] | None:
     season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -51,7 +53,7 @@ def get_season(user_id: int, field_id: int, season_id: str):
     return season if db_cursor.error is None else None
 
 
-def add_season(user_id: int, field_id: int, season_id: str, data):
+def add_season(user_id: int, field_id: int, season_id: str, data: dict[str, Any]) -> dict[str, Any] | None:
     inserted_season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -61,7 +63,7 @@ def add_season(user_id: int, field_id: int, season_id: str, data):
     return inserted_season if db_cursor.error is None else None
 
 
-def modify_season(user_id: int, field_id: int, season_id: str, data):
+def modify_season(user_id: int, field_id: int, season_id: str, data: dict[str, Any]) -> dict[str, Any] | None:
     updated_season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -71,7 +73,7 @@ def modify_season(user_id: int, field_id: int, season_id: str, data):
     return updated_season if db_cursor.error is None else None
 
 
-def remove_season(user_id: int, field_id: int, season_id: str):
+def remove_season(user_id: int, field_id: int, season_id: str) -> bool:
     db_cursor = DbCursor()
     ndvi_rasters, measurement_sample_images = None, None
     with db_cursor as cursor:
@@ -102,7 +104,9 @@ def remove_season(user_id: int, field_id: int, season_id: str):
         return False
 
 
-def get_season_fertilizer_recommendation(user_id: int, field_id: int, season_id: str, fertilizer: str):
+def get_season_fertilizer_recommendation(
+    user_id: int, field_id: int, season_id: str, fertilizer: str
+) -> float | None:
     season = get_season(user_id, field_id, season_id)
     if season is not None:
         season["fertilizer_applications"].append(

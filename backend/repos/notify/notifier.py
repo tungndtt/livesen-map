@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from json import dumps
 from redis import Redis
 from redis.client import PubSub
@@ -19,7 +19,7 @@ def get_channel(channel_id: int | str) -> PubSub | None:
 
 
 def __json_serial(obj):
-    if isinstance(obj, datetime):
+    if isinstance(obj, (datetime, date)):
         return obj.strftime("%a, %d %b %Y %H:%M:%S GMT")
     raise TypeError("Type %s not serializable" % type(obj))
 

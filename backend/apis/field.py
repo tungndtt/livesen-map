@@ -46,7 +46,8 @@ def register_field(user_id, data):
                 return jsonify({"data": "Successfully register the field but failed to publish sync event"}), 503
         else:
             return jsonify({"data": "Failed to register the field"}), 500
-    except:
+    except Exception as error:
+        print(error)
         return jsonify({"data": "Registered field must be polygon and its coordinates must follow GeoJSON format"}), 406
 
 

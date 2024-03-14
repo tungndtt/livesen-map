@@ -1,9 +1,10 @@
+from typing import Any
 from repos.store.storage import DbCursor
 from repos.store.dafs.user import select_user, insert_user, update_user
 from libs.hash.hasher import encrypt
 
 
-def get_user(user_id: int | None = None, email: str | None = None):
+def get_user(user_id: int | None = None, email: str | None = None) -> dict[str, Any] | None:
     user = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -11,7 +12,7 @@ def get_user(user_id: int | None = None, email: str | None = None):
     return user if db_cursor.error is None else None
 
 
-def add_user(data):
+def add_user(data: dict[str, Any]) -> dict[str, Any] | None:
     inserted_user = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -19,7 +20,7 @@ def add_user(data):
     return inserted_user if db_cursor.error is None else None
 
 
-def modify_user(user_id: int, data):
+def modify_user(user_id: int, data: dict[str, Any]) -> dict[str, Any] | None:
     if "password" in data and data["password"]:
         data["password"] = encrypt(data["password"])
     updated_user = None

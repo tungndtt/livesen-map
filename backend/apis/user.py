@@ -25,7 +25,6 @@ def upgister_user(user_id, data):
         data["password"] = encrypt(data["password"])
     updated_user = modify_user(user_id, data)
     if updated_user is not None:
-        del updated_user["password"]
         if publish(user_id, "user.update", updated_user):
             return jsonify({"data": "Successfully update the user information"}), 200
         else:
