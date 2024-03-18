@@ -182,7 +182,7 @@ def __init_tables() -> None:
             potassium double precision,
             ndvi double precision,
             charge double precision,
-            stadium double precision,
+            stadium integer,
             soil_condition text,
             sample_image text,
             FOREIGN KEY (user_id) REFERENCES "user"(id),
