@@ -1,5 +1,8 @@
+import os
 import random
 from shapely.geometry import Point, Polygon
+import rasterio
+from config import NDVI
 
 
 def find_measurement_position(
@@ -29,3 +32,9 @@ def find_measurement_position(
                 max_distance = distance
                 farthest_point = point
     return farthest_point
+
+
+def get_measurement_position_ndvi(tiff_file: str, coordinate: list[float]) -> float:
+    with rasterio.open(os.path.join(NDVI.data_folder, tiff_file)) as raster_file:
+        ndvi = next(raster_file.sample([coordinate], 1))
+        return float(ndvi[0])

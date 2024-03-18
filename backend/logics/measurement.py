@@ -8,7 +8,7 @@ from repos.store.dafs.subfield import select_subfields, insert_subfield, update_
 from repos.recommend.recommender import recommend_subfield_fertilizer
 from logics.season import get_ndvi_raster
 from libs.algo.subfield_split import get_subfields_pixel_based_split
-from libs.algo.measurement_position import find_measurement_position
+from libs.algo.measurement_position import find_measurement_position, get_measurement_position_ndvi
 from libs.timeout.function_timeout import timeout_function
 from config import MEASUREMENT
 
@@ -63,20 +63,14 @@ def get_measurement_positions(
         for subfield_ndvis in subfield_groups:
             if len(subfield_ndvis) == 0:
                 continue
-            sum_ndvi = 0
-            for _, ndvi in subfield_ndvis:
-                sum_ndvi += ndvi
-            avg_ndvi = sum_ndvi / len(subfield_ndvis)
-            closest_subfield, closest_ndvi = None, 2
-            for subfield, ndvi in subfield_ndvis:
-                if abs(ndvi - avg_ndvi) < abs(closest_ndvi - avg_ndvi):
-                    closest_subfield = subfield
-                    closest_ndvi = ndvi
-            measurement_position = find_measurement_position(closest_subfield)
+            measurement_position = find_measurement_position(subfield_ndvis[0])
+            measurement_ndvi = get_measurement_position_ndvi(
+                ndvi_raster, [measurement_position.x, measurement_position.y]
+            )
             data = {
                 "longitude": measurement_position.x,
                 "latitude": measurement_position.y,
-                "ndvi": avg_ndvi
+                "ndvi": measurement_ndvi
             }
             inserted_measurement = insert_measurement(
                 cursor, user_id, field_id, season_id, data
@@ -162,8 +156,15 @@ def modify_measurement_position(
     updated_measurement = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
+        measurement = select_measurement(cursor, user_id, measurement_id)
+        field_id, season_id = measurement["field_id"], measurement["season_id"]
+        ndvi_raster, _ = get_ndvi_raster(user_id, field_id, season_id)
+        if ndvi_raster is None:
+            return None
         lon, lat = lonlat
-        data = {"longitude": lon, "latitude": lat}
+        ndvi = get_measurement_position_ndvi(ndvi_raster, lonlat)
+        data = {"longitude": lon, "latitude": lat, "ndvi": ndvi}
         updated_measurement = update_measurement(
-            cursor, user_id, measurement_id, data)
+            cursor, user_id, measurement_id, data
+        )
     return updated_measurement if db_cursor.error is None else None

@@ -257,6 +257,23 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
   const onEvent = (action: string, payload: any) => {
     const { field_id: fieldId, season_id: seasonId } = payload;
     if (fieldId !== selectedFieldId || seasonId !== selectedSeasonId) return;
+    const updateMeasurement = (measurement: Measurement) => {
+      setMeasurements((prevMeasurements) => {
+        if (prevMeasurements) {
+          const index = prevMeasurements.findIndex(
+            (prevMeasurement) => prevMeasurement.id === measurement.id
+          );
+          if (index !== -1) {
+            prevMeasurements[index] = {
+              ...prevMeasurements[index],
+              ...measurement,
+            };
+            prevMeasurements = [...prevMeasurements];
+          }
+        }
+        return prevMeasurements;
+      });
+    };
     switch (action) {
       case "create": {
         const { measurements, subfields } = payload;
@@ -269,21 +286,7 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
           subfield_recommended_fertilizer: subfieldRecommendedFertilizer,
         } = payload;
         const updatedMeasurement = parseMeasurement(measurement);
-        setMeasurements((prevMeasurements) => {
-          if (prevMeasurements) {
-            const index = prevMeasurements.findIndex(
-              (prevMeasurement) => prevMeasurement.id === updatedMeasurement.id
-            );
-            if (index !== -1) {
-              prevMeasurements[index] = {
-                ...prevMeasurements[index],
-                ...updatedMeasurement,
-              };
-              prevMeasurements = [...prevMeasurements];
-            }
-          }
-          return prevMeasurements;
-        });
+        updateMeasurement(updatedMeasurement);
         setSubfields((prevSubfields) =>
           prevSubfields
             ? {
@@ -303,21 +306,7 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
       case "update_sample": {
         const { measurement } = payload;
         const updatedMeasurement = parseMeasurement(measurement);
-        setMeasurements((prevMeasurements) => {
-          if (prevMeasurements) {
-            const index = prevMeasurements.findIndex(
-              (prevMeasurement) => prevMeasurement.id === updatedMeasurement.id
-            );
-            if (index !== -1) {
-              prevMeasurements[index] = {
-                ...prevMeasurements[index],
-                ...updatedMeasurement,
-              };
-              prevMeasurements = [...prevMeasurements];
-            }
-          }
-          return prevMeasurements;
-        });
+        updateMeasurement(updatedMeasurement);
         break;
       }
       case "update_position": {
@@ -334,6 +323,7 @@ export default function MeasurementProvider(props: { children: ReactNode }) {
               }
             : prevPositions
         );
+        updateMeasurement(updatedMeasurement);
         break;
       }
     }
