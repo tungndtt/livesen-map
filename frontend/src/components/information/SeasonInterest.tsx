@@ -164,7 +164,7 @@ export default function SeasonInterest() {
         <Select
           labelId="field-select-label"
           id="field-select"
-          value={fieldId ?? ""}
+          value={fieldId ?? -1}
           name="field"
           label="Field"
           onChange={(e) => setFieldId(+e.target.value as number)}

@@ -40,7 +40,7 @@ export default function RegisteredData() {
           <Select
             labelId="field-select-label"
             id="field-select"
-            value={selectedFieldId ?? ""}
+            value={selectedFieldId ?? -1}
             type="number"
             label="Field"
             onChange={(e) => setSelectedFieldId(+e.target.value)}
