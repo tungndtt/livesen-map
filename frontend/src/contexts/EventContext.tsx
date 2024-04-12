@@ -7,7 +7,7 @@ import { useSeasonContext } from "./SeasonContext";
 import { useMeasurementContext } from "./MeasurementContext";
 
 export default function EventProvider(props: { children: ReactNode }) {
-  const { authenticationToken } = useAuthenticationContext();
+  const { authenticationToken, signOut } = useAuthenticationContext();
   const {
     selectedFieldId,
     selectedSeasonId,
@@ -19,11 +19,13 @@ export default function EventProvider(props: { children: ReactNode }) {
   const { onEvent: onSeasonEvent } = useSeasonContext();
   const { onEvent: onMeasurementEvent } = useMeasurementContext();
   const eventListener = useRef<EventSource | null>(null);
+  const connected = useRef(true);
 
   const close = () => {
     if (eventListener.current) {
       eventListener.current.close();
       eventListener.current = null;
+      connected.current = false;
     }
   };
 
@@ -33,6 +35,9 @@ export default function EventProvider(props: { children: ReactNode }) {
       eventListener.current = new EventSource(
         `${serverUrl}/sse?auth_token=${authenticationToken}`
       );
+      eventListener.current.onopen = function () {
+        connected.current = true;
+      };
     }
     eventListener.current.onmessage = function (event) {
       const { type, payload } = JSON.parse(event.data);
@@ -59,6 +64,7 @@ export default function EventProvider(props: { children: ReactNode }) {
       }
     };
     eventListener.current.onerror = function (_) {
+      if (!connected.current) signOut();
       close();
       connect();
     };

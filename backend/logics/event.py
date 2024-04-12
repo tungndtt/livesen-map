@@ -10,6 +10,7 @@ def stream(auth_token: str):
     try:
         user_id = 1 if APP.is_testing else verify_token(auth_token)
         if user_id is not None:
+            yield 'data: {"type": ".", "payload": ""}\n\n'
             channel = get_channel(user_id)
             while channel is None:
                 channel = get_channel(user_id)
