@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from logics.verification import check_password, send_registration_email, activate_registration, reset_password
+from logics.verification import check_password, send_registration_email, send_password_reset_email, activate_registration, activate_password_reset
 from libs.jwt.token import generate_token, verify_token
 from config import APP
 
@@ -43,7 +43,7 @@ def sign_up():
     if "password" not in data or not data["password"]:
         return jsonify({"data": "No 'password' found"}), 401
     email, password = data["email"], data["password"]
-    if send_registration_email(email, password):
+    if send_registration_email(email, password, data):
         return jsonify({"data": "Successfully send the activation email"}), 202
     else:
         return jsonify({"data": "Cannot send the activation email"}), 500
@@ -58,7 +58,7 @@ def reset_password():
         return jsonify({"data": "No 'password' found"}), 401
     email, password = data["email"], data["password"]
     email, password = data["email"], data["password"]
-    if send_registration_email(email, password):
+    if send_password_reset_email(email, password):
         return jsonify({"data": "Successfully send the reset-password email"}), 202
     else:
         return jsonify({"data": "Cannot send the reset-password email"}), 500
@@ -70,18 +70,18 @@ def verify():
         data = request.get_json()
     if "verification_token" not in data or not data["verification_token"]:
         return jsonify({"data": "No 'verification_token' found"}), 401
+    if "type" not in data:
+        return jsonify({"data": "No 'type' defined for the verification request"}), 401
+    verification_type = data["type"]
     verification_token = data["verification_token"]
-    data = verify_token(verification_token)
+    content = verify_token(verification_token)
     if data is None:
         return jsonify({"data": "Verification token is invalid"}), 401
     else:
-        if "type" not in data:
-            return jsonify({"data": "No 'type' defined for the verification request"}), 401
-        verification_type = data["type"]
         if verification_type == "sign_up":
-            return __activate_registration(data)
+            return __activate_registration(content)
         elif verification_type == "reset_password":
-            return __reset_password(data)
+            return __reset_password(content)
         else:
             return jsonify({"data": f"Unsupport verification request of type '{verification_type}'"}), 406
 
@@ -94,8 +94,7 @@ def __activate_registration(data):
 
 
 def __reset_password(data):
-    email = data["email"]
-    if reset_password(data) is not None:
+    if activate_password_reset(data) is not None:
         return jsonify({"data": "Successfully reset password"}), 201
     else:
         return jsonify({"data": "Cannot reset the password"}), 500

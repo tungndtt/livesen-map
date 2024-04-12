@@ -162,12 +162,14 @@ export default function SeasonInterest() {
       <FormControl fullWidth size="small">
         <InputLabel id="field-select-label">Field</InputLabel>
         <Select
+          required
           labelId="field-select-label"
           id="field-select"
           value={fieldId ?? -1}
           name="field"
           label="Field"
           onChange={(e) => setFieldId(+e.target.value as number)}
+          error={fieldId === undefined}
         >
           {fieldOptions?.map(({ id, name }) => (
             <MenuItem key={id} value={id}>
