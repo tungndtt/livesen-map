@@ -35,8 +35,11 @@ const AuthenticationContext = createContext<AuthenticationContextType>({
 
 export default function AuthenticationProvider(props: { children: ReactNode }) {
   const [authenticationToken, setAuthenticationToken] = useState(
-    localStorage.getItem("authentication_token") ??
-      (process.env.REACT_APP_IS_TESTING?.toLowerCase() === "true" ? "test" : "")
+    localStorage.getItem("authentication_token")
+      ? (localStorage.getItem("authentication_token") as string)
+      : process.env.REACT_APP_IS_TESTING?.toLowerCase() === "true"
+      ? "test"
+      : ""
   );
   const serverUrl = process.env.REACT_APP_SERVER_URL;
 

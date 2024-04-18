@@ -54,9 +54,13 @@ export default function NdviRasterProvider(props: { children: ReactNode }) {
             resolve(await response.arrayBuffer());
           } else {
             reject((await response.json())["data"]);
+            setNdviRasterVisible(false);
           }
         })
-        .catch((error) => reject(error));
+        .catch((error) => {
+          reject(error);
+          setNdviRasterVisible(false);
+        });
     });
   };
 
