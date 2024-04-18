@@ -3,12 +3,6 @@
     "email": "<replace with your email>",
     "password": "<replace with your api password>"
   },
-  "downloader": {
-    "user": "tungndtt",
-    "password": "tungndtt",
-    "data_folder": "./data/download",
-    "is_downloading": true
-  },
   "storage": {
     "user": "livesen",
     "password": "livesen",
