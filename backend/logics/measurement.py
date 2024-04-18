@@ -2,6 +2,7 @@ from typing import Any
 import os
 import uuid
 from repos.store.storage import DbCursor
+from repos.store.dafs.field import select_field
 from repos.store.dafs.season import select_season
 from repos.store.dafs.measurement import select_measurements, select_measurement, insert_measurement, update_measurement
 from repos.store.dafs.subfield import select_subfields, insert_subfield, update_subfield
@@ -52,14 +53,17 @@ def get_measurement_positions(
     ndvi_raster, _ = get_ndvi_raster(user_id, field_id, season_id)
     if ndvi_raster is None:
         return None, None
-    subfield_groups = timeout_function(
-        20, get_subfields_pixel_based_split, ndvi_raster
-    )
-    if subfield_groups is None:
-        return None, None
     db_cursor = DbCursor()
     inserted_measurements, inserted_subfields = [], []
     with db_cursor as cursor:
+        field = select_field(cursor, user_id, field_id)
+        if field is None:
+            return None, None
+        subfield_groups = timeout_function(
+            20, get_subfields_pixel_based_split, ndvi_raster, field["coordinates"]
+        )
+        if subfield_groups is None:
+            return None, None
         for subfield_ndvis in subfield_groups:
             if len(subfield_ndvis) == 0:
                 continue

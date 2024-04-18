@@ -1,6 +1,5 @@
 from flask import Flask
 from apis import authentication, metadata, user, field, season, measurement, sse
-from repos.download import downloader
 from repos.store import storage
 from repos.mail import mailer
 from repos.recommend import recommender
@@ -10,7 +9,6 @@ from config import APP
 
 if __name__ == "__main__":
     try:
-        downloader.init()
         storage.init()
         mailer.init()
         recommender.init()
@@ -27,7 +25,6 @@ if __name__ == "__main__":
     except Exception as error:
         print("[App]", error)
     finally:
-        downloader.term()
         storage.term()
         mailer.term()
         recommender.term()

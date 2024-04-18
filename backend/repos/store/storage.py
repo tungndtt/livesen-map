@@ -162,6 +162,7 @@ def __init_tables() -> None:
             falling_number integer,
             moisture double precision,
             protein_content double precision,
+            parcel_id text,
             ndvi_raster text,
             ndvi_date date,
             PRIMARY KEY (field_id, season_id),
