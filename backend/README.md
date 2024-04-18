@@ -12,12 +12,6 @@ The server component of the project requires a configuration file named `config.
     "email": "<server-email>",
     "password": "<server-email-password>"
   },
-  "downloader": {
-    "user": "<copernicus-username>",
-    "password": "<copernicus-password>",
-    "data_folder": "./data/download",
-    "is_downloading": false
-  },
   "storage": {
     "user": "livesen",
     "password": "livesen",
@@ -25,19 +19,21 @@ The server component of the project requires a configuration file named `config.
     "port": 5432,
     "dbname": "livesen"
   },
-  "recommender": {
-    "model_path": "./data/recommend/model.json"
+  "ndvi": {
+    "data_folder": "./data/ndvi",
+    "url": "https://geocledian.com/agknow/api/v4",
+    "api_key": "<geocledian-api-key>"
   },
   "notifier": {
     "host": "localhost",
     "port": 6379,
     "password": "livesen"
   },
+  "recommender": {
+    "model_path": "./data/recommend/model.json"
+  },
   "jwtoken": {
     "secret": "livesen"
-  },
-  "ndvi": {
-    "data_folder": "./data/ndvi"
   },
   "app": {
     "host": "localhost",
@@ -54,12 +50,11 @@ The server component of the project requires a configuration file named `config.
 Configuration fields:
 
 - **mailer**: Configuration for mailer service. The service uses the email with credentials `mailer.email` and `mailer.password` to send activation email to user mailbox for activating account registration
-- **downloader**: Configuration for downloader service. The service downloads geospatial raster data from [copernicus](https://land.copernicus.vgt.vito.be/PDF/portal/Application.html) using the account with credentials `downloader.user` and `downloader.password`. The downloaded data is stored in the specifed data folder `downloader.data_folder`. `downloader.is_downloading` specifies whether to download the data or not
 - **storage**: Configuration for Postgresql storage
 - **recommender**: Configuration for season-fertilizer recommender service. `recommender.model_path` specifies where to load the XGBoost model for fertilizer-regression task
 - **notifier**: Configuration for Redis notifier system
 - **jwtoken**: Specifies the secret used for encoding [JWToken]()
-- **ndvi**: Specifies the data folder where the processed NDVI data is stored
+- **ndvi**: Specifies the information for Geocledian connection and the data folder where the processed NDVI data is stored
 - **app**: Specifies the server general configuration. `app.is_testing` indicates whether the server runs in test mode, i.e., no authentication required
 - **metadata**: The agricultural constant metadata. `metadata.category_folder` specifies the folder where to load the category data such as soil, soil tillage, crop, crop protection, fertilizer, etc
 

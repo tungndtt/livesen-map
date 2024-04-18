@@ -26,7 +26,7 @@ These guides will provide you with step-by-step instructions on how to configure
 
 To simplify the process of running the application locally, Docker can be utilized. Ensure Docker is installed on your machine by following the instructions provided in the [installation guide](https://docs.docker.com/get-docker/)
 
-After installation, proceed to configure the server configuration file backend.json and the client configuration file frontend.conf, both located in the [.docker](./.docker) (navigate to [Configuaration](#Configuration) for details on component configurations). These configurations will be mounted into the container and utilized for server and client initialization. Additionally, the data folders used by server services will be mounted into the `./.docker/data` folder, enabling accessibility and configurability
+After installation, proceed to configure the server configuration file backend.json and the client configuration file frontend.conf, both located in the [.docker](./.docker) (navigate to [Configuaration](#Configuration) for details on component configurations). These configurations will be mounted into the container and utilized for server and client initialization. Additionally, the data folders used by server services will be mounted into the `./.docker/public_data` and `./.docker/private_data` folders, enabling accessibility and configurability
 
 By default, the client fetches map tiles from [OpenStreetMap (OSM) public server](https://www.openstreetmap.org/). If you wish to localize OSM, uncomment the `livesen-osmap` config in [docker-compose.yml](docker-compose.yml), `REACT_APP_OSM_URL` in [frontend.conf](./.docker/frontend.conf) and endpoint `/osm/` in [proxy.conf](./.docker/proxy.conf)
 
