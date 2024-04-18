@@ -41,6 +41,11 @@ const SelectionContext = createContext<SelectionContextType>({
   onSeasonEvent: () => {},
 });
 
+const formulateSeasonDate = (seasonId: string) => {
+  const [year, month, day] = seasonId.split("-");
+  return `${day}-${month}-${year}`;
+};
+
 export default function SelectionProvider(props: { children: ReactNode }) {
   const { authenticationToken, doRequest } = useAuthenticationContext();
   const [fieldOptions, setFieldOptions] = useState<FieldOption[] | undefined>(
@@ -84,10 +89,7 @@ export default function SelectionProvider(props: { children: ReactNode }) {
         .then(async (response) => {
           const responseBody = await response.json();
           const seasonOptions = (responseBody as string[]).map((e) => {
-            const year = e.substring(0, 4);
-            const month = e.substring(4, 6);
-            const day = e.substring(6);
-            return { id: e, label: `${day}-${month}-${year}` };
+            return { id: e, label: formulateSeasonDate(e) };
           }) as SeasonOption[];
           setSeasonOptions(seasonOptions);
           if (!seasonOptions.find(({ id }) => id === selectedSeasonId)) {
@@ -146,12 +148,8 @@ export default function SelectionProvider(props: { children: ReactNode }) {
               (prevSeasonOptions) => prevSeasonOptions.id === seasonId
             )
           ) {
-            const year = seasonId.substring(0, 4);
-            const month = seasonId.substring(4, 6);
-            const day = seasonId.substring(6);
-            const label = `${day}-${month}-${year}`;
             prevSeasonOptions = [
-              { id: seasonId, label },
+              { id: seasonId, label: formulateSeasonDate(seasonId) },
               ...(prevSeasonOptions ?? []),
             ];
           }

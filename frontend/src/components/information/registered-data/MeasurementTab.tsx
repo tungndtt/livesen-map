@@ -49,6 +49,12 @@ export default function MeasurementTab() {
   const [sampleImageUrl, setSampleImageUrl] = useState("");
   const [showAll, setShowAll] = useState(false);
 
+  useEffect(() => {
+    if (measurements?.length === Object.keys(measurementVisible).length)
+      setShowAll(true);
+    else if (Object.keys(measurementVisible).length === 0) setShowAll(false);
+  }, [measurements, measurementVisible]);
+
   return (
     <Box className="tab-container">
       {measurements ? (

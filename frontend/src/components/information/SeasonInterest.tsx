@@ -5,7 +5,6 @@ import FieldGroups, { FieldGroup } from "../../utils/FieldGroups";
 import { useNotificationContext } from "../../contexts/NotificationContext";
 import { useAuthenticationContext } from "../../contexts/AuthenticationContext";
 import { useSelectionContext } from "../../contexts/SelectionContext";
-import date2YMD from "../../utils/date2YMD";
 import dayjs from "dayjs";
 import { deparseSeason } from "../../types/season";
 
@@ -141,7 +140,10 @@ export default function SeasonInterest() {
 
   const registerSeason = (data: any) => {
     if (fieldId && season) {
-      const seasonId = date2YMD(season);
+      const day = season.getDate().toString().padStart(2, "0");
+      const month = (season.getMonth() + 1).toString().padStart(2, "0");
+      const year = season.getFullYear().toString().padStart(4, "0");
+      const seasonId = `${year}-${month}-${day}`;
       doRequest(
         `season/register/${fieldId}/${seasonId}`,
         "POST",
