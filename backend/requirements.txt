@@ -13,5 +13,3 @@ PyJWT
 xgboost
 scikit-learn
 redis
-gunicorn
-gunicorn[gevent]
