@@ -16,19 +16,21 @@
     "port": 5432,
     "dbname": "livesen"
   },
-  "recommender": {
-    "model_path": "./data/recommend/model.json"
+  "ndvi": {
+    "data_folder": "./data/ndvi",
+    "url": "https://geocledian.com/agknow/api/v4",
+    "api_key": "<replace with your api key>"
   },
   "notifier": {
     "host": "livesen-notifier",
     "port": 6379,
     "password": "livesen"
   },
+  "recommender": {
+    "model_path": "./data/recommend/model.json"
+  },
   "jwtoken": {
     "secret": "livesen"
-  },
-  "ndvi": {
-    "data_folder": "./data/ndvi"
   },
   "measurement": {
     "data_folder": "./data/measurement"

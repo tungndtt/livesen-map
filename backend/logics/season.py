@@ -3,13 +3,12 @@ import os
 from repos.store.storage import DbCursor
 from repos.store.dafs.field import select_field
 from repos.store.dafs.season import select_season, list_season_ids, insert_season, update_season, delete_season, select_ndvi_rasters
-from repos.store.dafs.measurement import select_sample_images
 from repos.recommend.recommender import recommend_season_fertilizer
-from libs.algo.field_ndvi import get_field_ndvi
-from config import NDVI, MEASUREMENT
+from repos.ndvi.raster import register_parcel, download_raster
+from logics.callback import season_unregistration_callback, measurement_unregistration_callback
 
 
-def get_ndvi_raster(user_id: int, field_id: int, season_id: str) -> tuple[Any, Any] | tuple[None, None]:
+def get_ndvi_raster(user_id: int, field_id: int, season_id: str):
     updated_season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
@@ -18,19 +17,17 @@ def get_ndvi_raster(user_id: int, field_id: int, season_id: str) -> tuple[Any, A
             return None, None
         if season["ndvi_raster"] is not None:
             return season["ndvi_raster"], season["ndvi_date"]
-        field = select_field(cursor, user_id, field_id)
-        if field is None:
+        parcel_id = season["parcel_id"]
+        if parcel_id is None:
+            field = select_field(cursor, user_id, field_id)
+            if field is None:
+                return None, None
+            parcel_id = register_parcel(season_id, field["coordinates"])
+        if parcel_id is None:
             return None, None
-        ndvi_raster, ndvi_date = get_field_ndvi(
-            field["coordinates"], season_id
-        )
-        if ndvi_raster is None:
-            return None, None
-        else:
-            data = {"ndvi_raster": ndvi_raster, "ndvi_date": ndvi_date}
-            updated_season = update_season(
-                cursor, user_id, field_id, season_id, data
-            )
+        ndvi_raster, ndvi_date = download_raster(season_id, parcel_id)
+        data = {"ndvi_raster": ndvi_raster, "ndvi_date": ndvi_date}
+        updated_season = update_season(cursor, user_id, field_id, season_id, data)
     if db_cursor.error is None and updated_season is not None:
         return updated_season["ndvi_raster"], updated_season["ndvi_date"]
     else:
@@ -57,6 +54,10 @@ def add_season(user_id: int, field_id: int, season_id: str, data: dict[str, Any]
     inserted_season = None
     db_cursor = DbCursor()
     with db_cursor as cursor:
+        field = select_field(cursor, user_id, field_id)
+        if field is None:
+            return None
+        data["parcel_id"] = register_parcel(season_id, field["coordinates"])
         inserted_season = insert_season(
             cursor, user_id, field_id, season_id, data
         )
@@ -75,30 +76,13 @@ def modify_season(user_id: int, field_id: int, season_id: str, data: dict[str, A
 
 def remove_season(user_id: int, field_id: int, season_id: str) -> bool:
     db_cursor = DbCursor()
-    ndvi_rasters, measurement_sample_images = None, None
     with db_cursor as cursor:
-        ndvi_rasters = select_ndvi_rasters(
-            cursor, user_id, field_id, season_id
-        )
-        measurement_sample_images = select_sample_images(
-            cursor, user_id, field_id, season_id
-        )
+        season_callback = season_unregistration_callback(user_id, field_id, season_id)
+        measurement_callback = measurement_unregistration_callback(user_id, field_id, season_id)
         delete_season(cursor, user_id, field_id, season_id)
     if db_cursor.error is None:
-        try:
-            if ndvi_rasters is not None:
-                for ndvi_raster in ndvi_rasters:
-                    if ndvi_raster is not None:
-                        os.remove(os.path.join(NDVI.data_folder, ndvi_raster))
-            if measurement_sample_images is not None:
-                for measurement_sample_image in measurement_sample_images:
-                    if measurement_sample_image is not None:
-                        os.remove(
-                            os.path.join(MEASUREMENT.data_folder,
-                                         measurement_sample_image)
-                        )
-        except Exception as error:
-            print("[Season API]", error)
+        season_callback()
+        measurement_callback()
         return True
     else:
         return False

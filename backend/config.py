@@ -10,19 +10,6 @@ class Mailer:
         self.password = config["password"]
 
 
-class Downloader:
-    user: str | None = None
-    password: str | None = None
-    data_folder: str | None = None
-    is_downloading: bool | None = None
-
-    def parse(self, config: dict[str, Any]) -> None:
-        self.user = config["user"]
-        self.password = config["password"]
-        self.data_folder = config["data_folder"]
-        self.is_downloading = config["is_downloading"]
-
-
 class Storage:
     user: str | None = None
     password: str | None = None
@@ -58,9 +45,13 @@ class Notifier:
 
 class Ndvi:
     data_folder: str | None = None
+    url: str | None = None
+    api_key: str | None = None
 
     def parse(self, config: dict[str, Any]) -> None:
         self.data_folder = config["data_folder"]
+        self.url = config["url"]
+        self.api_key = config["api_key"]
 
 
 class Measurement:
@@ -119,7 +110,6 @@ class Metadata:
 
 __initialized = False
 MAILER = Mailer()
-DOWNLOADER = Downloader()
 STORAGE = Storage()
 RECOMMENDER = Recommender()
 NOTIFIER = Notifier()
@@ -131,13 +121,12 @@ METADATA = Metadata()
 
 
 def __init():
-    global __initialized, MAILER, DOWNLOADER, STORAGE, RECOMMENDER, NOTIFIER, JWTOKEN, NDVI, MEASUREMENT, APP, METADATA
+    global __initialized, MAILER, STORAGE, RECOMMENDER, NOTIFIER, JWTOKEN, NDVI, MEASUREMENT, APP, METADATA
     if not __initialized:
         import json
         with open("config.json", "r") as f:
             config = json.load(f)
         MAILER.parse(config["mailer"])
-        DOWNLOADER.parse(config["downloader"])
         STORAGE.parse(config["storage"])
         RECOMMENDER.parse(config["recommender"])
         NOTIFIER.parse(config["notifier"])

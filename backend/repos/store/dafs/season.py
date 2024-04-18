@@ -20,7 +20,7 @@ def __parse_record(record: tuple) -> dict[str, Any] | None:
             "nitrate", "phosphor", "potassium", "ph", "rks",
             "harvest_date", "harvest_weight",
             "falling_number", "moisture", "protein_content",
-            "ndvi_raster", "ndvi_date",
+            "parcel_id", "ndvi_raster", "ndvi_date",
         ])
     }
 
@@ -35,7 +35,7 @@ def __extract_nonempty(data: dict[str, Any]) -> tuple[list[str], list[Any]]:
         "nitrate", "phosphor", "potassium", "ph", "rks",
         "harvest_date", "harvest_weight",
         "falling_number", "moisture", "protein_content",
-        "ndvi_raster", "ndvi_date",
+        "parcel_id", "ndvi_raster", "ndvi_date",
     ]:
         if col in data and data[col] is not None:
             cols.append(col)
@@ -117,7 +117,7 @@ def select_season(cursor: Cursor, user_id: int, field_id: int, season_id: str) -
     return __parse_record(cursor.fetchone())
 
 
-def list_season_ids(cursor: Cursor, user_id: int, field_id: int) -> list[str] | None:
+def list_season_ids(cursor: Cursor, user_id: int, field_id: int) -> list[str]:
     cursor.execute(
         "SELECT season_id FROM season WHERE user_id = %s AND field_id = %s",
         (user_id, field_id,)
@@ -128,15 +128,15 @@ def list_season_ids(cursor: Cursor, user_id: int, field_id: int) -> list[str] | 
 def select_ndvi_rasters(
     cursor: Cursor,
     user_id: int, field_id: int, season_id: str | None = None
-) -> list[str] | None:
+) -> list[tuple[str, str]]:
     if season_id is None:
         cursor.execute(
-            "SELECT ndvi_raster FROM season WHERE user_id = %s AND field_id = %s",
+            "SELECT ndvi_raster, parcel_id FROM season WHERE user_id = %s AND field_id = %s",
             (user_id, field_id,)
         )
     else:
         cursor.execute(
-            "SELECT ndvi_raster FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
+            "SELECT ndvi_raster, parcel_id FROM season WHERE user_id = %s AND field_id = %s AND season_id = %s",
             (user_id, field_id, season_id,)
         )
-    return [record[0] for record in cursor.fetchall()]
+    return cursor.fetchall()

@@ -1,11 +1,8 @@
 from typing import Any
-import os
 from shapely.geometry import Polygon
 from repos.store.storage import DbCursor
 from repos.store.dafs.field import select_field, insert_field, delete_field, select_fields_ids
-from repos.store.dafs.season import select_ndvi_rasters
-from repos.store.dafs.measurement import select_sample_images
-from config import NDVI, MEASUREMENT
+from logics.callback import season_unregistration_callback, measurement_unregistration_callback
 
 
 def get_field_options(user_id: int) -> list[dict[str, Any]] | None:
@@ -39,32 +36,13 @@ def add_field(
 
 def remove_field(user_id: int, field_id: int) -> bool:
     db_cursor = DbCursor()
-    ndvi_rasters, measurement_sample_images = None, None
     with db_cursor as cursor:
-        ndvi_rasters = select_ndvi_rasters(
-            cursor, user_id, field_id
-        )
-        measurement_sample_images = select_sample_images(
-            cursor, user_id, field_id
-        )
+        season_callback = season_unregistration_callback(user_id, field_id)
+        measurement_callback = measurement_unregistration_callback(user_id, field_id)
         delete_field(cursor, user_id, field_id)
     if db_cursor.error is None:
-        if ndvi_rasters is not None:
-            try:
-                for ndvi_raster in ndvi_rasters:
-                    os.remove(os.path.join(NDVI.data_folder, ndvi_raster))
-            except Exception as error:
-                print("[Field API]", error)
-        if measurement_sample_images is not None:
-            try:
-                for measurement_sample_image in measurement_sample_images:
-                    if measurement_sample_image is not None:
-                        os.remove(
-                            os.path.join(MEASUREMENT.data_folder,
-                                         measurement_sample_image)
-                        )
-            except Exception as error:
-                print("[Season API]", error)
+        season_callback()
+        measurement_callback()
         return True
     else:
         return False
