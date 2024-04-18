@@ -14,7 +14,7 @@ services:
       POSTGRES_USER: livesen
       POSTGRES_PASSWORD: livesen
     volumes:
-      - ./.docker/data/store:/var/lib/postgresql/data
+      - ./.docker/private_data/store:/var/lib/postgresql/data
 
   livesen-notifier:
     image: redis:latest
@@ -38,11 +38,10 @@ services:
       - 2204:2204
     volumes:
       - ./.docker/backend.json:/livesen/config.json:ro
-      - ./.docker/data/download:/livesen/data/download
-      - ./.docker/data/recommend:/livesen/data/recommend
-      - ./.docker/data/ndvi:/livesen/data/ndvi
-      - ./.docker/data/measurement:/livesen/data/measurement
-      - ./.docker/data/category:/livesen/data/category
+      - ./.docker/private_data/ndvi:/livesen/data/ndvi
+      - ./.docker/private_data/measurement:/livesen/data/measurement
+      - ./.docker/public_data/recommend:/livesen/data/recommend
+      - ./.docker/public_data/category:/livesen/data/category
     depends_on:
       - livesen-storage
       - livesen-notifier
