@@ -97,7 +97,7 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
       doRequest(
         "authentication/verification",
         "POST",
-        JSON.stringify({ verification_token: verificationToken, type })
+        { verification_token: verificationToken, type }
       )
         .then(async (response) => resolve((await response.json())["data"]))
         .catch((error) => reject(error));
