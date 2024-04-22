@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from logics.verification import check_password, send_registration_email, send_password_reset_email, activate_registration, activate_password_reset
-from libs.jwt.token import generate_token, verify_token
+from libs.jwt.token import verify_token
 from config import APP
 
 
