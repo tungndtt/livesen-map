@@ -48,7 +48,7 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
       doRequest(
         "authentication/sign_in",
         "POST",
-        JSON.stringify({ email, password })
+        { email, password }
       )
         .then(async (response) => {
           const data = (await response.json())["data"];
@@ -65,7 +65,7 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
       doRequest(
         "authentication/sign_up",
         "POST",
-        JSON.stringify({ email, password, ...options })
+        { email, password, ...options }
       )
         .then(async (response) => resolve((await response.json())["data"]))
         .catch((error) => reject(error));
@@ -82,7 +82,7 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
       doRequest(
         "authentication/reset_password",
         "POST",
-        JSON.stringify({ email, password })
+        { email, password }
       )
         .then(async (response) => resolve((await response.json())["data"]))
         .catch((error) => reject(error));
