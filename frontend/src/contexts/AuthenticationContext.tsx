@@ -45,21 +45,16 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
 
   const signIn = (email: string, password: string) => {
     return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/sign_in`, {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      })
+      doRequest(
+        "authentication/sign_in",
+        "POST",
+        JSON.stringify({ email, password })
+      )
         .then(async (response) => {
-          const responseBody = await response.json();
-          const data = responseBody["data"];
-          if (response.ok) {
-            setAuthenticationToken(data);
-            localStorage.setItem("authentication_token", data);
-            resolve("Successfully login");
-          } else {
-            reject(data);
-          }
+          const data = (await response.json())["data"];
+          setAuthenticationToken(data);
+          localStorage.setItem("authentication_token", data);
+          resolve("Successfully login");
         })
         .catch((error) => reject(error));
     });
@@ -67,17 +62,12 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
 
   const signUp = (email: string, password: string, options: UserProfile) => {
     return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/sign_up`, {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ email, password, ...options }),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          const data = responseBody["data"];
-          if (response.ok) resolve(data);
-          else reject(data);
-        })
+      doRequest(
+        "authentication/sign_up",
+        "POST",
+        JSON.stringify({ email, password, ...options })
+      )
+        .then(async (response) => resolve((await response.json())["data"]))
         .catch((error) => reject(error));
     });
   };
@@ -89,17 +79,12 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
 
   const resetPassword = (email: string, password: string) => {
     return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/reset_password`, {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      })
-        .then(async (response) => {
-          const responseBody = await response.json();
-          const data = responseBody["data"];
-          if (response.ok) resolve(data);
-          else reject(data);
-        })
+      doRequest(
+        "authentication/reset_password",
+        "POST",
+        JSON.stringify({ email, password })
+      )
+        .then(async (response) => resolve((await response.json())["data"]))
         .catch((error) => reject(error));
     });
   };
@@ -109,16 +94,12 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
     type: "sign_up" | "reset_password"
   ) => {
     return new Promise<string>((resolve, reject) => {
-      fetch(`${serverUrl}/authentication/verification`, {
-        headers: { "Content-Type": "application/json" },
-        method: "POST",
-        body: JSON.stringify({ verification_token: verificationToken, type }),
-      })
-        .then(async (response) => {
-          const data = (await response.json())["data"];
-          if (response.ok) resolve(data);
-          else reject(data);
-        })
+      doRequest(
+        "authentication/verification",
+        "POST",
+        JSON.stringify({ verification_token: verificationToken, type })
+      )
+        .then(async (response) => resolve((await response.json())["data"]))
         .catch((error) => reject(error));
     });
   };
@@ -152,13 +133,17 @@ export default function AuthenticationProvider(props: { children: ReactNode }) {
           } else {
             let errorMessage = undefined;
             try {
-              errorMessage = (await response.json())?.["data"];
-            } catch (e) {}
-            if (response.status === 401) {
-              signOut();
-              errorMessage = "Access token is outdated";
+              if (response.status === 401) {
+                signOut();
+                errorMessage = "Access token is outdated";
+              } else {
+                errorMessage = (await response.json())?.["data"];
+              }
+            } catch (_) {
+              errorMessage = "Cannot connect with server";
+            } finally {
+              reject(errorMessage);
             }
-            reject(errorMessage);
           }
         })
         .catch((error) => reject(error));
