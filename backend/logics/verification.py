@@ -53,7 +53,7 @@ def send_registration_email(email: str, password: str, data: dict | None) -> boo
 def send_password_reset_email(email: str, password: str) -> bool:
     user = get_user(email=email)
     if user is not None:
-        data = {"password": encrypt(password)}
+        data = {"email": email, "password": encrypt(password)}
         duration = 10
         verification_token = generate_token(data, 10)
         content = f"""
@@ -91,6 +91,6 @@ def activate_registration(data):
 
 def activate_password_reset(data):
     email = data["email"]
-    if get_user(email=email) is not None:
-        return modify_user(data)
+    if (user := get_user(email=email)) is not None:
+        return modify_user(user["id"], data)
     return None

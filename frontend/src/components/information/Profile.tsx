@@ -84,11 +84,14 @@ export default function Profile() {
           variant="outlined"
           color="warning"
           endIcon={<UpgradeIcon />}
-          disabled={fields.every(
-            ({ name }) =>
-              options?.[name as UserProfileField] ===
-              user?.[name as UserProfileField]
-          )}
+          disabled={
+            !options?.["password"] &&
+            fields.every(
+              ({ name }) =>
+                options?.[name as UserProfileField] ===
+                user?.[name as UserProfileField]
+            )
+          }
           onClick={() => updateUser(options)}
         >
           Update profile

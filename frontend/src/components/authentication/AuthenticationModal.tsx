@@ -68,6 +68,7 @@ export default function AuthenticationModal() {
 
   return (
     <Modal
+      disableAutoFocus={true}
       open={!authenticationToken}
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
     >
