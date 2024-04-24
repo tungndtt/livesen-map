@@ -78,6 +78,7 @@ def send_email(recipient: str, subject: str, content: str) -> bool:
     message["To"] = recipient
     message.attach(text.MIMEText(content, "html"))
     try:
+        __check_connection()
         __server.sendmail(MAILER.email, recipient, message.as_string())
         return True
     except Exception as error:
