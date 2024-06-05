@@ -95,9 +95,7 @@ export default function MeasurementTab() {
                   size="small"
                   disabled
                   label="Position"
-                  value={`${measurement.position.lng.toFixed(
-                    3
-                  )}, ${measurement.position.lat.toFixed(3)}`}
+                  value={`${measurement.position.lng}, ${measurement.position.lat}`}
                 />
                 <MeasurementValuesUpdate
                   measurement={measurement}
