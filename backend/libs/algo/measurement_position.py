@@ -2,6 +2,7 @@ import os
 import random
 from shapely.geometry import Point, Polygon
 import rasterio
+from pyproj import Transformer
 from config import NDVI
 
 
@@ -36,5 +37,7 @@ def find_measurement_position(
 
 def get_measurement_position_ndvi(tiff_file: str, coordinate: list[float]) -> float:
     with rasterio.open(os.path.join(NDVI.data_folder, tiff_file)) as raster_file:
-        ndvi = next(raster_file.sample([coordinate], 1))
+        transformer = Transformer.from_crs("epsg:4326", raster_file.crs)
+        transformed_coordinate =  transformer.transform(coordinate[1], coordinate[0])
+        ndvi = next(raster_file.sample([transformed_coordinate], 1))
         return float(ndvi[0])
